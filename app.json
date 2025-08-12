@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "RunWhere1",
-    "slug": "RunWhere1",
+    "name": "RunWhere",
+    "slug": "RunWhere",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "runwhere1",
+    "scheme": "runwhere",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
