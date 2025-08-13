@@ -1,12 +1,12 @@
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
 import {
   Image, SafeAreaView, ScrollView, StyleSheet,
   Text, TouchableOpacity, View,
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-
+import { LikeIcon, LikeIconActive, StarIcon, StarIconActive } from '../../components/IconSVG';
 
 /* ---------- DATA ---------- */
 type SneakerItem = {
@@ -19,15 +19,16 @@ type SneakerItem = {
 
 type ShareRecord = {
    id: number; 
-   image: { uri: string }; }
+   image: { uri: string }; 
+}
 
 type FlashRunEvent = {
   id: number;
   title: string;
   time: string;
   location: string;
-  description: string;      // NEW
-  hashtags: string[];       // NEW
+  description: string;      
+  hashtags: string[];       
   participants: number;
   maxParticipants: number;
   organizer: {
@@ -88,8 +89,8 @@ const flashRunData: FlashRunEvent[] = [
     title: '중산신 즐거운',
     time: '오늘 19:00',
     location: '한양대역 앞',
-    description: '유니스트 앞에서 7시에 가볍게 뛸 사람 구합니다~',   // NEW
-    hashtags: ['#친친런', '#가벼운런', '#런친이', '#번개런'],        // NEW
+    description: '유니스트 앞에서 7시에 가볍게 뛸 사람 구합니다~',
+    hashtags: ['#친친런', '#가벼운런', '#런친이', '#번개런'],
     participants: 3,
     maxParticipants: 5,
     organizer: {
@@ -133,130 +134,172 @@ const flashRunData: FlashRunEvent[] = [
 
 /* 12 sample gallery photos */
 const recordShareData: ShareRecord[] = [
-  { id: 1,  image: { uri: 'https://images.unsplash.com/photo-1544717297-fa95b6ee9643?w=400&h=400&fit=crop' } },
-  { id: 2,  image: { uri: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&h=400&fit=crop' } },
-  { id: 3,  image: { uri: 'https://images.unsplash.com/photo-1544717302-de2939b7ef71?w=400&h=400&fit=crop' } },
-  { id: 4,  image: { uri: 'https://images.unsplash.com/photo-1506629905607-45fa052d9597?w=400&h=400&fit=crop' } },
-  { id: 5,  image: { uri: 'https://images.unsplash.com/photo-1485727749690-d091e8284ef3?w=400&h=400&fit=crop' } },
-  { id: 6,  image: { uri: 'https://images.unsplash.com/photo-1594736797933-d0c4a154e47f?w=400&h=400&fit=crop' } },
-  { id: 7,  image: { uri: 'https://images.unsplash.com/photo-1600185365483-26d7a4cc7519?w=400&h=400&fit=crop' } },
-  { id: 8,  image: { uri: 'https://images.unsplash.com/photo-1608231387042-66d1773070a5?w=400&h=400&fit=crop' } },
-  { id: 9,  image: { uri: 'https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?w=400&h=400&fit=crop' } },
-  { id: 10, image: { uri: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&h=400&fit=crop' } },
-  { id: 11, image: { uri: 'https://images.unsplash.com/photo-1448387473223-5c37445527e7?w=400&h=400&fit=crop' } },
-  { id: 12, image: { uri: 'https://images.unsplash.com/photo-1594736797933-d0c4a154e47f?w=400&h=400&fit=crop' } },
+  { id: 1,  image: { uri: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=400&h=400&fit=crop' } },
+  { id: 2,  image: { uri: 'https://images.unsplash.com/photo-1530549387789-4c1017266635?w=400&h=400&fit=crop' } },
+  { id: 3,  image: { uri: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&h=400&fit=crop' } },
+  { id: 4,  image: { uri: 'https://images.unsplash.com/photo-1486218119243-13883505764c?w=400&h=400&fit=crop' } },
+  { id: 5,  image: { uri: 'https://images.unsplash.com/photo-1544717297-fa95b6ee9643?w=400&h=400&fit=crop' } },
+  { id: 6,  image: { uri: 'https://images.unsplash.com/photo-1605296867304-46d5465a13f1?w=400&h=400&fit=crop' } },
+  { id: 7,  image: { uri: 'https://images.unsplash.com/photo-1513593771513-7b58b6c4af38?w=400&h=400&fit=crop' } },
+  { id: 8,  image: { uri: 'https://images.unsplash.com/photo-1566737236500-c8ac43014a8e?w=400&h=400&fit=crop' } },
+  { id: 9,  image: { uri: 'https://images.unsplash.com/photo-1483721310020-03333e577078?w=400&h=400&fit=crop' } },
+  { id: 10, image: { uri: 'https://images.unsplash.com/photo-1526506118085-60ce8714f8c5?w=400&h=400&fit=crop' } },
+  { id: 11, image: { uri: 'https://images.unsplash.com/photo-1594736797933-d0c4a154e47f?w=400&h=400&fit=crop' } },
+  { id: 12, image: { uri: 'https://images.unsplash.com/photo-1448387473223-5c37445527e7?w=400&h=400&fit=crop' } },
 ];
 
 /* ---------- TABS ---------- */
-const TABS = ['Runwear', '기록공유', '번개런'] as const;
+const TABS = ['런웨어', '기록공유', '번개런'] as const;
 type TabKey = (typeof TABS)[number];
 
 /* ---------- COMPONENT ---------- */
 export default function CommunityPage() {
-  const [activeTab, setActiveTab] = useState<TabKey>('Runwear');
+  const [activeTab, setActiveTab] = useState<TabKey>('런웨어');
+  const [selectedLocation, setSelectedLocation] = useState('울산시 울주군');
+  const [likedItems, setLikedItems] = useState<Set<number>>(new Set());
 
   /* give each tab its dataset */
   const dataByTab: Record<TabKey, any[]> = {
-    Runwear: runwearData,
+    런웨어: runwearData,
     기록공유: recordShareData,
     번개런: flashRunData,
   };
 
-  /* floating-button colour per tab */
+  /* --------------- RENDER HELPERS --------------- */
 
-  const fabColour: Record<TabKey, string> = {
-    Runwear: '#54f895',
-    기록공유: '#adadb2',
-    번개런: '#5E5E5E',
+  const renderStars = (rating: number) => (
+    <View style={{ flexDirection: 'row' }}>
+      {Array.from({ length: 5 }).map((_, index) => (
+        <View key={index} style={{ marginRight: index < 4 ? 10 : 0 }}>
+          {index < rating ? (
+            <StarIconActive width={20} height={20} />
+          ) : (
+            <StarIcon width={20} height={20} color="#ADADB2" />
+          )}
+        </View>
+      ))}
+    </View>
+  );
+
+  const toggleLike = (itemId: number) => {
+    setLikedItems(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(itemId)) {
+        newSet.delete(itemId);
+      } else {
+        newSet.add(itemId);
+      }
+      return newSet;
+    });
   };
 
-  /* --------------- RENDER HELPERS --------------- */
-  const renderStars = (rating: number) =>
-    Array.from({ length: 5 }).map((_, i) => (
-      <Ionicons
-        key={i}
-        name="star"
-        size={14}
-        color={i < rating ? '#54f895' : '#3C3C43'}
-        style={{ marginHorizontal: 1 }}
-      />
-    ));
-
-  /* shoe-card for Runwear / 번개런 */
-  const renderSneakerCard = (item: SneakerItem) => (
-    <TouchableOpacity key={item.id} style={styles.card}>
-      <View style={[styles.cardInner, { backgroundColor: item.backgroundColor }]}>
-        <Image source={item.image} style={styles.shoeImg} resizeMode="contain" />
-        <View style={styles.likeBox}>
-          <Ionicons name="heart" size={14} color="#54f895" />
-          <Text style={styles.likeTxt}>{item.likes}</Text>
+  /* shoe-card for Runwear with staggered layout */
+  const renderSneakerCard = (item: SneakerItem, index: number) => {
+    const isLiked = likedItems.has(item.id);
+    
+    return (
+      <TouchableOpacity 
+        key={item.id} 
+        style={[
+          styles.card, 
+          { marginTop: index % 2 === 1 ? 20 : 0 }
+        ]}
+      >
+        <View style={[styles.cardInner, { backgroundColor: item.backgroundColor }]}>
+          <Image source={item.image} style={styles.shoeImg} resizeMode="contain" />
+          <View style={styles.likeBox}>
+            <TouchableOpacity onPress={() => toggleLike(item.id)}>
+            <View style={styles.likeContent}>
+              <Text style={[styles.likeTxt, { color: isLiked ? '#54F895' : '#D9D9D9' }]}>
+                {item.likes}
+              </Text>
+              {isLiked ? (
+                <LikeIconActive width={18} height={17} />
+              ) : (
+                <LikeIcon width={18} height={17} color="#D9D9D9" />
+              )}
+            </View>
+          </TouchableOpacity>
+          </View>
         </View>
+        <View style={styles.starRow}>{renderStars(item.rating)}</View>
+      </TouchableOpacity>
+    );
+  };
+
+  /* Location and Filter Section for Flash Run */
+  const LocationAndFilterSection = () => (
+    <View style={styles.locationFilterContainer}>
+      <View style={styles.locationSection}>
+        <TouchableOpacity style={styles.locationButton}>
+          <Ionicons name="location" size={16} color="#54f895" />
+          <Text style={styles.locationButtonText}>{selectedLocation}</Text>
+          <Ionicons name="chevron-down" size={16} color="#54f895" />
+        </TouchableOpacity>
       </View>
-      <View style={styles.starRow}>{renderStars(item.rating)}</View>
-    </TouchableOpacity>
+    </View>
   );
 
   // Flash run event card renderer
-const renderFlashRunCard = (item: FlashRunEvent) => (
-  <TouchableOpacity key={item.id} style={styles.flashRunCard}>
-    {/* header */}
-    <View style={styles.flashRunHeader}>
-      <View style={styles.flashRunTitleSection}>
-        <Ionicons name="flash" size={20} color="#54f895" />
-        <Text style={styles.flashRunTitle}>{item.title}</Text>
+  const renderFlashRunCard = (item: FlashRunEvent) => (
+    <TouchableOpacity key={item.id} style={styles.flashRunCard}>
+      {/* header */}
+      <View style={styles.flashRunHeader}>
+        <View style={styles.flashRunTitleSection}>
+          <Ionicons name="flash" size={20} color="#54f895" />
+          <Text style={styles.flashRunTitle}>{item.title}</Text>
+        </View>
+        <Text style={styles.flashRunTime}>{item.time}</Text>
       </View>
-      <Text style={styles.flashRunTime}>{item.time}</Text>
-    </View>
 
-    {/* description */}
-    <Text style={styles.flashRunDescription}>{item.description}</Text>
+      {/* description */}
+      <Text style={styles.flashRunDescription}>{item.description}</Text>
 
-    {/* hashtags */}
-    <View style={styles.hashRow}>
-      {item.hashtags.map(tag => (
-        <Text key={tag} style={styles.hashTag}>
-          {tag}
-        </Text>
-      ))}
-    </View>
+      {/* hashtags */}
+      <View style={styles.hashRow}>
+        {item.hashtags.map(tag => (
+          <Text key={tag} style={styles.hashTag}>
+            {tag}
+          </Text>
+        ))}
+      </View>
 
-    {/* organizer */}
-    <View style={styles.organizerSection}>
-      <Image source={{ uri: item.organizer.avatar }} style={styles.organizerAvatar} />
-      <View>
-        <Text style={styles.organizerName}>{item.organizer.name}</Text>
-        <View style={styles.locationRow}>
-          <Ionicons name="location-outline" size={14} color="#8E8E93" />
-          <Text style={styles.locationText}>{item.location}</Text>
+      {/* organizer */}
+      <View style={styles.organizerSection}>
+        <Image source={{ uri: item.organizer.avatar }} style={styles.organizerAvatar} />
+        <View>
+          <Text style={styles.organizerName}>{item.organizer.name}</Text>
+          <View style={styles.locationRow}>
+            <Ionicons name="location-outline" size={14} color="#8E8E93" />
+            <Text style={styles.locationText}>{item.location}</Text>
+          </View>
         </View>
       </View>
-    </View>
 
-    {/* join-button (unchanged) */}
-    <LinearGradient
-      colors={
-        item.status === 'full'
-          ? ['#5E5E5E', '#808080']
-          : ['#54f895', '#2afbea']
-      }
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 0 }}
-      style={styles.joinButton}
-    >
-      <Text
-        style={[
-          styles.joinButtonText,
-          item.status === 'full' ? styles.joinButtonTextFull : styles.joinButtonTextActive,
-        ]}
+      {/* join-button */}
+      <LinearGradient
+        colors={
+          item.status === 'full'
+            ? ['#5E5E5E', '#808080']
+            : ['#54f895', '#2afbea']
+        }
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+        style={styles.joinButton}
       >
-        {item.status === 'full'
-          ? '정원마감'
-          : `참가하기 (${item.participants}/${item.maxParticipants})`}
-      </Text>
-    </LinearGradient>
-  </TouchableOpacity>
-);
-
+        <Text
+          style={[
+            styles.joinButtonText,
+            item.status === 'full' ? styles.joinButtonTextFull : styles.joinButtonTextActive,
+          ]}
+        >
+          {item.status === 'full'
+            ? '정원마감'
+            : `참가하기 (${item.participants}/${item.maxParticipants})`}
+        </Text>
+      </LinearGradient>
+    </TouchableOpacity>
+  );
 
   /* pure-image tile for 기록공유 */
   const renderGalleryTile = (item: ShareRecord) => (
@@ -266,25 +309,23 @@ const renderFlashRunCard = (item: FlashRunEvent) => (
   );
 
   /* pick correct renderer */
-  const renderItem = (item: any) => {
+  const renderItem = (item: any, index: number) => {
     if (activeTab === '기록공유') return renderGalleryTile(item);
     if (activeTab === '번개런') return renderFlashRunCard(item);
-    return renderSneakerCard(item);
+    return renderSneakerCard(item, index);
   };
 
   /* --------------- UI --------------- */
   return (
     <SafeAreaView style={styles.container}>
-      {/* Only show floating button for Runwear and 기록공유 tabs */}
-      {(
-        <TouchableOpacity
-          style={[styles.fab, { backgroundColor: fabColour[activeTab] }]}
-          onPress={() => router.push('/runwearWrite')}
-          activeOpacity={0.85}
-        >
-          <Ionicons name="add" size={28} color="#fff" />
-        </TouchableOpacity>
-      )}
+      {/* add button */}
+      <TouchableOpacity
+        style={styles.addbutton}
+        onPress={() => router.push('/runwearWrite')}
+        activeOpacity={0.85}
+      >
+        <Ionicons name="add" size={28} color="#fff" />
+      </TouchableOpacity>
 
       {/* Header */}
       <View style={styles.header}>
@@ -317,7 +358,9 @@ const renderFlashRunCard = (item: FlashRunEvent) => (
             activeTab === '번개런' ? styles.flashRunGrid : styles.cardGrid
           }
         >
-          {dataByTab[activeTab].map(renderItem)}
+          {/* Show location filter only for 번개런 tab */}
+          {activeTab === '번개런' && <LocationAndFilterSection />}
+          {dataByTab[activeTab].map((item, index) => renderItem(item, index))}
         </ScrollView>
       ) : (
         <View style={styles.emptyWrap}>
@@ -330,46 +373,153 @@ const renderFlashRunCard = (item: FlashRunEvent) => (
 
 /* ---------- STYLES ---------- */
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#1C1C1E' },
+  container: { flex: 1, backgroundColor: '#15151C' },
   header: { paddingHorizontal: 20, paddingTop: 20, paddingBottom: 15 },
   title: { fontSize: 24, fontWeight: 'bold', color: '#fff', textAlign: 'center', marginBottom: 20 },
 
-  /* fab */
-  fab: {
-    position: 'absolute', bottom: 30, right: 30, zIndex: 20,
-    borderRadius: 28, width: 56, height: 56,
-    justifyContent: 'center', alignItems: 'center',
-    shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3, shadowRadius: 4, elevation: 6,
+  /* add button colour */
+  addbutton: {
+    position: 'absolute',
+    bottom: 30,
+    right: 30,
+    zIndex: 20,
+    width: 60,
+    height: 60,
+    aspectRatio: 1,
+    borderRadius: 35,
+    backgroundColor: 'rgba(84, 248, 149, 0.80)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: 'rgba(0, 0, 0, 0.20)',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 7,
+    elevation: 6,
   },
 
   /* tabs */
-  tabBar: { flexDirection: 'row', backgroundColor: '#2C2C2E', borderRadius: 25, padding: 4 },
-  tabBtn: { flex: 1, paddingVertical: 10, alignItems: 'center', borderRadius: 20 },
-  tabActive: { backgroundColor: '#54f895' },
-  tabTxt: { color: '#8E8E93', fontSize: 16 },
-  tabTxtActive: { color: '#000', fontWeight: '600', fontSize: 16 },
-
-  /* card list (Runwear ) */
-  scrollArea: { flex: 1 },
-  cardGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', padding: 20 },
-  card: { width: '48%', marginBottom: 20 },
-  cardInner: { borderRadius: 20, padding: 15, height: 160, justifyContent: 'center', alignItems: 'center' },
-  shoeImg: { width: 100, height: 80 },
-  likeBox: {
-    position: 'absolute', top: 15, right: 15, flexDirection: 'row',
-    backgroundColor: 'rgba(0,0,0,0.3)', borderRadius: 15, paddingHorizontal: 6, paddingVertical: 3,
-    alignItems: 'center',
+  tabBar: { flexDirection: 'row', borderRadius: 25, padding: 4 },
+  tabBtn: { flex: 1, paddingVertical: 10, alignItems: 'center', borderRadius: 25 },
+  tabActive: {
+    backgroundColor: '#303034',
   },
-  likeTxt: { color: '#fff', fontSize: 12, marginLeft: 3, fontWeight: '600' },
-  starRow: { flexDirection: 'row', justifyContent: 'center', marginTop: 8 },
+  tabTxt: { 
+    color: '#7C7C7C',
+    textAlign: 'center',
+    fontFamily: 'Pretendard Variable',
+    fontSize: 22,
+    fontStyle: 'normal',
+    fontWeight: '600',
+    lineHeight: 30,
+    letterSpacing: -0.44,
+  },
+  tabTxtActive: {
+    color: '#54F895',
+    textAlign: 'center' as const,
+    fontFamily: 'Pretendard Variable',
+    fontSize: 22,
+    fontStyle: 'normal' as const,
+    fontWeight: 600,
+  },
+
+  /* Location and Filter Section */
+  locationFilterContainer: {
+    marginBottom: 20,
+  },
+  locationSection: {
+    marginBottom: 16,
+  },
+  locationButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#2C2C2E',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    alignSelf: 'flex-start',
+  },
+  locationButtonText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '500',
+    marginHorizontal: 6,
+  },
+
+  /* card list (Runwear) - Updated for staggered layout */
+  scrollArea: { flex: 1 },
+  cardGrid: { 
+    flexDirection: 'row', 
+    flexWrap: 'wrap', 
+    justifyContent: 'space-between', 
+    paddingHorizontal: 20,
+    paddingTop: 20,
+  },
+  card: { 
+    width: '48%', 
+    marginBottom: 20,
+  },
+  cardInner: { 
+    borderRadius: 20, 
+    padding: 15, 
+    height: 130, 
+    justifyContent: 'center', 
+    alignItems: 'center',
+    position: 'relative',
+  },
+  shoeImg: { 
+    width: 100, 
+    height: 100,
+    resizeMode: 'contain',
+  },
+  likeContent: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  gap: 3, // if unsupported, use marginRight on Text
+  },
+  likeBox: {
+    position: 'absolute',
+    bottom: 8,
+    right: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 50,
+    backgroundColor: 'rgba(21, 21, 28, 0.5)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 4,
+    minWidth: 50,
+  },
+
+  likeTxt: {
+    color: '#54F895',
+    fontSize: 16,
+    fontWeight: '600',
+    marginRight: 2,
+  },
+  starRow: { 
+    flexDirection: 'row', 
+    justifyContent: 'center', 
+    marginTop: 10,
+  },
 
   /* gallery (기록공유) */
-  galleryGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', padding: 4 },
-  galleryTile: { width: '32%', aspectRatio: 1, marginBottom: 4, borderRadius: 8, overflow: 'hidden' },
-  galleryImg: { width: '100%', height: '100%' },
+  galleryGrid: { flexDirection: 'row', flexWrap: 'wrap', padding: 4 },
+  galleryTile: { width: '32%', aspectRatio: 1, overflow: 'hidden', margin: 2 },
+  galleryImg: { 
+    width: '100%', 
+    height: '100%',
+    borderWidth: 1,
+    borderColor: '#D9D9D9', 
+    backgroundColor: 'lightgray',
+    borderRadius: 8,
+  },
 
-   /* Flash Run Styles */
+  /* Flash Run Styles */
   flashRunGrid: { padding: 20 },
   flashRunCard: {
     backgroundColor: '#2C2C2E',
