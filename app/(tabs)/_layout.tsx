@@ -5,13 +5,15 @@ import { View } from 'react-native';
 import Svg, { Path, Mask, G, Rect, Defs, LinearGradient, Stop } from 'react-native-svg';
 
 // Custom SVG Components
-const ShoeIcon = ({ focused, size = 28 }: { focused: boolean; size?: number }) => (
+
+// Add styling ShoeIcon component
+const ShoeIcon = ({ active, size = 40 }: { active: boolean; size?: number }) => (
   <Svg width={size} height={size} viewBox="0 0 40 40" fill="none">
     <Mask id="mask0_38_942" maskUnits="userSpaceOnUse" x="0" y="0" width="40" height="40">
       <Rect width="40" height="40" fill="#D9D9D9"/>
     </Mask>
     <G mask="url(#mask0_38_942)">
-      {focused ? (
+      {active ? (
         <>
           <Defs>
             <LinearGradient id="shoeGradient" x1="1.12008" y1="9.21065" x2="33.7379" y2="9.5109" gradientUnits="userSpaceOnUse">
@@ -28,13 +30,14 @@ const ShoeIcon = ({ focused, size = 28 }: { focused: boolean; size?: number }) =
   </Svg>
 );
 
-const PeopleIcon = ({ focused, size = 24 }: { focused: boolean; size?: number }) => (
-  <Svg width={size + 16} height={size + 16} viewBox="0 0 41 40" fill="none">
+// Add styling PeopleIcon component
+const PeopleIcon = ({ active, size = 40 }: { active: boolean; size?: number }) => (
+  <Svg width={size} height={size} viewBox="0 0 41 40" fill="none">
     <Mask id="mask0_38_937" maskUnits="userSpaceOnUse" x="0" y="0" width="41" height="40">
       <Rect x="0.143555" width="40" height="40" fill="#D9D9D9"/>
     </Mask>
     <G mask="url(#mask0_38_937)">
-      {focused ? (
+      {active ? (
         <>
           <Defs>
             <LinearGradient id="peopleGradient" x1="0.85784" y1="15.1429" x2="40.2192" y2="15.8628" gradientUnits="userSpaceOnUse">
@@ -51,13 +54,14 @@ const PeopleIcon = ({ focused, size = 24 }: { focused: boolean; size?: number })
   </Svg>
 );
 
-const ImageIcon = ({ focused, size = 24 }: { focused: boolean; size?: number }) => (
-  <Svg width={size + 16} height={size + 16} viewBox="0 0 41 40" fill="none">
+// Add styling ImageIcon component
+const ImageIcon = ({ active, size = 40 }: { active: boolean; size?: number }) => (
+  <Svg width={size} height={size} viewBox="0 0 41 40" fill="none">
     <Mask id="mask0_38_939" maskUnits="userSpaceOnUse" x="0" y="0" width="41" height="40">
       <Rect x="0.143555" width="40" height="40" fill="#D9D9D9"/>
     </Mask>
     <G mask="url(#mask0_38_939)">
-      {focused ? (
+      {active ? (
         <>
           <Defs>
             <LinearGradient id="imageGradient" x1="5.67927" y1="12.7143" x2="35.2077" y2="12.9843" gradientUnits="userSpaceOnUse">
@@ -74,54 +78,113 @@ const ImageIcon = ({ focused, size = 24 }: { focused: boolean; size?: number }) 
   </Svg>
 );
 
+// Add styling ProfileIcon component
+const ProfileIcon = ({ active, size = 40 }: { active: boolean; size?: number }) => (
+  active ? (
+    <Svg width={size} height={size} viewBox="0 0 34 34" fill="none">
+      <Path d="M6.5599 26.0834C8.19879 24.9814 9.87934 24.1366 11.6016 23.5488C13.3238 22.9607 15.171 22.6667 17.1432 22.6667C19.1155 22.6667 20.9673 22.9607 22.6986 23.5488C24.4303 24.1366 26.1156 24.9814 27.7545 26.0834C28.8934 24.7037 29.7243 23.2638 30.2474 21.7638C30.7705 20.2638 31.032 18.6759 31.032 17C31.032 13.0834 29.6964 9.78935 27.0253 7.11796C24.3539 4.44685 21.0599 3.11129 17.1432 3.11129C13.2266 3.11129 9.93254 4.44685 7.26115 7.11796C4.59004 9.78935 3.25448 13.0834 3.25448 17C3.25448 18.6759 3.52059 20.2638 4.05281 21.7638C4.58531 23.2638 5.42101 24.7037 6.5599 26.0834ZM17.1382 18.3888C15.5213 18.3888 14.1595 17.8339 13.0528 16.7242C11.9464 15.6142 11.3932 14.2507 11.3932 12.6338C11.3932 11.0168 11.9482 9.65518 13.0582 8.54879C14.168 7.44212 15.5313 6.88879 17.1482 6.88879C18.7652 6.88879 20.127 7.44379 21.2336 8.55379C22.34 9.66379 22.8932 11.0273 22.8932 12.6442C22.8932 14.2612 22.3382 15.6228 21.2282 16.7292C20.1185 17.8356 18.7552 18.3888 17.1382 18.3888ZM17.132 33.6667C14.8236 33.6667 12.6545 33.2292 10.6245 32.3542C8.5942 31.4792 6.82823 30.2871 5.32656 28.778C3.82462 27.2685 2.64087 25.5014 1.77531 23.4767C0.909479 21.452 0.476562 19.2885 0.476562 16.9863C0.476562 14.6841 0.914062 12.5205 1.78906 10.4955C2.66406 8.47074 3.85615 6.70837 5.36531 5.20837C6.87476 3.70837 8.64184 2.52087 10.6666 1.64587C12.6913 0.770874 14.8548 0.333374 17.157 0.333374C19.4592 0.333374 21.6228 0.770874 23.6478 1.64587C25.6725 2.52087 27.4349 3.70837 28.9349 5.20837C30.4349 6.70837 31.6224 8.47226 32.4974 10.5C33.3724 12.5278 33.8099 14.692 33.8099 16.9925C33.8099 19.2934 33.3724 21.4555 32.4974 23.4788C31.6224 25.5021 30.4349 27.2685 28.9349 28.778C27.4349 30.2871 25.6698 31.4792 23.6395 32.3542C21.6095 33.2292 19.4403 33.6667 17.132 33.6667Z" fill="url(#paint0_linear_40_82)"/>
+      <Defs>
+        <LinearGradient id="paint0_linear_40_82" x1="1.0718" y1="8.9048" x2="33.8812" y2="9.20484" gradientUnits="userSpaceOnUse">
+          <Stop stopColor="#54F895"/>
+          <Stop offset="1" stopColor="#2AFBEA"/>
+        </LinearGradient>
+      </Defs>
+    </Svg>
+  ) : (
+    <Svg width={size} height={size} viewBox="0 0 41 40" fill="none">
+      <Mask id="mask0_38_938" maskUnits="userSpaceOnUse" x="0" y="0" width="41" height="40">
+        <Rect x="0.143555" width="40" height="40" fill="#D9D9D9"/>
+      </Mask>
+      <G mask="url(#mask0_38_938)">
+        <Path d="M9.5599 29.0834C11.1988 27.9075 12.8839 26.9978 14.6153 26.3542C16.347 25.7106 18.1896 25.3888 20.1432 25.3888C22.0968 25.3888 23.9441 25.7106 25.6849 26.3542C27.4257 26.9978 29.1156 27.9075 30.7545 29.0834C31.8934 27.7037 32.7243 26.2638 33.2474 24.7638C33.7705 23.2638 34.032 21.6759 34.032 20C34.032 16.0834 32.6964 12.7893 30.0253 10.118C27.3539 7.44685 24.0599 6.11129 20.1432 6.11129C16.2266 6.11129 12.9325 7.44685 10.2611 10.118C7.59004 12.7893 6.25448 16.0834 6.25448 20C6.25448 21.6759 6.52059 23.2638 7.05281 24.7638C7.58531 26.2638 8.42101 27.7037 9.5599 29.0834ZM20.1382 21.3888C18.5213 21.3888 17.1595 20.8339 16.0528 19.7242C14.9464 18.6142 14.3932 17.2507 14.3932 15.6338C14.3932 14.0168 14.9482 12.6552 16.0582 11.5488C17.168 10.4421 18.5313 9.88879 20.1482 9.88879C21.7652 9.88879 23.127 10.4438 24.2336 11.5538C25.34 12.6638 25.8932 14.0273 25.8932 15.6442C25.8932 17.2612 25.3382 18.6228 24.2282 19.7292C23.1185 20.8356 21.7552 21.3888 20.1382 21.3888ZM20.1561 36.6667C17.8606 36.6667 15.6989 36.2292 13.6711 35.3542C11.6434 34.4792 9.87476 33.2871 8.36531 31.778C6.85615 30.2685 5.66406 28.5021 4.78906 26.4788C3.91406 24.4555 3.47656 22.2934 3.47656 19.9925C3.47656 17.692 3.91406 15.5324 4.78906 13.5138C5.66406 11.4955 6.85615 9.73157 8.36531 8.22213C9.87476 6.71296 11.6411 5.52087 13.6645 4.64587C15.6878 3.77087 17.8499 3.33337 20.1507 3.33337C22.4513 3.33337 24.6109 3.77087 26.6295 4.64587C28.6478 5.52087 30.4117 6.71296 31.9211 8.22213C33.4303 9.73157 34.6224 11.4957 35.4974 13.5146C36.3724 15.5338 36.8099 17.6913 36.8099 19.9871C36.8099 22.2827 36.3724 24.4443 35.4974 26.4721C34.6224 28.4999 33.4303 30.2685 31.9211 31.778C30.4117 33.2871 28.6475 34.4792 26.6286 35.3542C24.6095 36.2292 22.452 36.6667 20.1561 36.6667ZM20.1432 33.8888C21.6524 33.8888 23.1107 33.6689 24.5182 33.2292C25.9257 32.7895 27.2823 32.0649 28.5878 31.0555C27.2823 30.1205 25.9211 29.4052 24.5045 28.9096C23.0878 28.4143 21.6341 28.1667 20.1432 28.1667C18.6524 28.1667 17.1986 28.4143 15.782 28.9096C14.3653 29.4052 13.0042 30.1205 11.6986 31.0555C13.0042 32.0649 14.3607 32.7895 15.7682 33.2292C17.1757 33.6689 18.6341 33.8888 20.1432 33.8888ZM20.1432 18.6113C21.0135 18.6113 21.7264 18.3335 22.282 17.778C22.8375 17.2224 23.1153 16.5093 23.1153 15.6388C23.1153 14.7685 22.8375 14.0556 22.282 13.5C21.7264 12.9445 21.0135 12.6667 20.1432 12.6667C19.273 12.6667 18.56 12.9445 18.0045 13.5C17.4489 14.0556 17.1711 14.7685 17.1711 15.6388C17.1711 16.5093 17.4489 17.2224 18.0045 17.778C18.56 18.3335 19.273 18.6113 20.1432 18.6113Z" fill="#FAFAF8"/>
+      </G>
+    </Svg>
+  )
+);
+
+// Reusable TabBarIcon Component
+const TabBarIcon = ({ 
+  focused, 
+  children 
+}: { 
+  focused: boolean; 
+  children: React.ReactNode; 
+}) => {
+  if (focused) {
+    return (
+      <View
+        style={{
+          width: 65,
+          height: 55,
+          justifyContent: 'center',
+          alignItems: 'center',
+          borderRadius: 50,
+          backgroundColor: 'rgba(236, 236, 236, 0.2)',
+          shadowColor: '#54f895',
+          shadowOffset: { width: 0, height: 0 },
+          shadowOpacity: 0.8,
+          shadowRadius: 10,
+          marginTop: 10,
+        }}
+      >
+        {children}
+      </View>
+    );
+  }
+  
+  // Add styling for inactive icons too
+  return (
+    <View
+      style={{
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginTop: 10,
+      }}
+    >
+      {children}
+    </View>
+  );
+};
+
+// Main Tab Layout Component
 export default function TabLayout() {
   return (
-    <Tabs
+    <Tabs 
+    // Define the tab navigator as floating tabs
       screenOptions={{
         tabBarActiveTintColor: '#54f895',
         tabBarInactiveTintColor: 'white',
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: '#1C1C1E',
-          borderTopWidth: 3,
-          borderTopColor: '#2C2C2E',
-          height: 70,
-          paddingBottom: 10,
-          paddingTop: 10,
+          position: 'absolute',
+          bottom: 20,
+          left: 10,
+          right: 10,
+          height: 75,
+          backgroundColor: 'rgba(21, 21, 28, 0.69)',
+          borderRadius: 50,
+          borderColor: '#d9d9d9af',
+          borderWidth: 0.5,
+          paddingTop: 12,
+          paddingBottom: 12,
+          elevation: 10,
+          shadowColor: '#443f3fff',
+          shadowOffset: { width: 2, height: 2 },
+          shadowOpacity: 0.45,
+          shadowRadius: 15,
         },
       }}
-    >
+      >
       {/* HOME TAB */}
       <Tabs.Screen
         name="home"
         options={{
           title: '',
-          tabBarIcon: ({ focused }) =>
-            focused ? (
-              <View
-                style={{
-                width: 46,
-                height: 40,
-                paddingTop: 8,
-                paddingRight: 13,
-                paddingBottom: 8,
-                paddingLeft: 14,
-                justifyContent: 'center',
-                alignItems: 'center',
-                flexShrink: 0,
-                borderRadius: 50,
-                backgroundColor: 'rgba(236, 236, 236, 0.26)',
-                shadowColor: '#54f895',
-                shadowOffset: { width: 0, height: 0 },
-                shadowOpacity: 0.8,
-                shadowRadius: 10,
-              }}
-              >
-                <ShoeIcon focused={true} size={28} />
-              </View>
-            ) : (
-              <ShoeIcon focused={false} size={28} />
-            ),
+          tabBarIcon: ({ focused }) => (
+            <TabBarIcon focused={focused}>
+              <ShoeIcon active={focused} size={focused ? 35 : 37} />
+            </TabBarIcon>
+          ),
         }}
       />
 
@@ -130,32 +193,11 @@ export default function TabLayout() {
         name="community"
         options={{
           title: '',
-          tabBarIcon: ({ focused }) =>
-            focused ? (
-              <View
-                style={{
-                width: 46,
-                height: 40,
-                paddingTop: 8,
-                paddingRight: 13,
-                paddingBottom: 8,
-                paddingLeft: 14,
-                justifyContent: 'center',
-                alignItems: 'center',
-                flexShrink: 0,
-                borderRadius: 50,
-                backgroundColor: 'rgba(236, 236, 236, 0.26)',
-                shadowColor: '#54f895',
-                shadowOffset: { width: 0, height: 0 },
-                shadowOpacity: 0.8,
-                shadowRadius: 10,
-                }}
-              >
-                <PeopleIcon focused={true} size={24} />
-              </View>
-            ) : (
-              <PeopleIcon focused={false} size={24} />
-            ),
+          tabBarIcon: ({ focused }) => (
+            <TabBarIcon focused={focused}>
+              <PeopleIcon active={focused} size={focused ? 40 : 37} />
+            </TabBarIcon>
+          ),
         }}
       />
 
@@ -164,67 +206,24 @@ export default function TabLayout() {
         name="watermark"
         options={{
           title: '',
-          tabBarIcon: ({ focused }) =>
-            focused ? (
-              <View
-                style={{
-                width: 46,
-                height: 40,
-                paddingTop: 8,
-                paddingRight: 13,
-                paddingBottom: 8,
-                paddingLeft: 14,
-                justifyContent: 'center',
-                alignItems: 'center',
-                flexShrink: 0,
-                borderRadius: 50,
-                backgroundColor: 'rgba(236, 236, 236, 0.26)',
-                shadowColor: '#54f895',
-                shadowOffset: { width: 0, height: 0 },
-                shadowOpacity: 0.8,
-                shadowRadius: 10,
-                }}
-              >
-                <ImageIcon focused={true} size={24} />
-              </View>
-            ) : (
-              <ImageIcon focused={false} size={24} />
-            ),
-          tabBarLabelStyle: { display: 'none' },
+          tabBarIcon: ({ focused }) => (
+            <TabBarIcon focused={focused}>
+              <ImageIcon active={focused} size={focused ? 40 : 37} />
+            </TabBarIcon>
+          ),
         }}
       />
 
-      {/* PROFILE TAB - keeping Ionicons */}
+      {/* PROFILE TAB */}
       <Tabs.Screen
         name="profile"
         options={{
           title: '',
-          tabBarIcon: ({ size, focused }) =>
-            focused ? (
-              <View
-                style={{
-                width: 46,
-                height: 40,
-                paddingTop: 8,
-                paddingRight: 13,
-                paddingBottom: 8,
-                paddingLeft: 14,
-                justifyContent: 'center',
-                alignItems: 'center',
-                flexShrink: 0,
-                borderRadius: 50,
-                backgroundColor: 'rgba(236, 236, 236, 0.26)',
-                shadowColor: '#54f895',
-                shadowOffset: { width: 0, height: 0 },
-                shadowOpacity: 0.8,
-                shadowRadius: 10,
-                }}
-              >
-                <Ionicons name="person-circle" size={size || 30} color="#54f895" />
-              </View>
-            ) : (
-              <Ionicons name="person-circle-outline" size={size || 30} color="white" />
-            ),
+          tabBarIcon: ({ focused }) => (
+            <TabBarIcon focused={focused}>
+              <ProfileIcon active={focused} size={focused ? 35 : 37} />
+            </TabBarIcon>
+          ),
         }}
       />
     </Tabs>
