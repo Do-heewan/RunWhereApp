@@ -145,7 +145,7 @@ const profile: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: '#15151c',
   },
   profileHeader: {
     backgroundColor: 'white',

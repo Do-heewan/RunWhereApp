@@ -1,12 +1,19 @@
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
-  Image, SafeAreaView, ScrollView, StyleSheet,
-  Text, TouchableOpacity, View,
+  Alert,
+  Image, 
+  SafeAreaView, 
+  ScrollView, 
+  StyleSheet,
+  Text, 
+  TouchableOpacity, 
+  View,
 } from 'react-native';
 import { LikeIcon, LikeIconActive, StarIcon, StarIconActive } from '../../components/IconSVG';
+import * as Location from 'expo-location';
 
 /* ---------- DATA ---------- */
 type SneakerItem = {
@@ -35,7 +42,19 @@ type FlashRunEvent = {
     name: string;
     avatar: string;
   };
-  status: 'upcoming' | 'full' | 'completed';
+  status: 'upcoming' | 'full' | 'past';
+};
+
+// Add filter type
+type FilterType = '최신순' | '임박순' | '목표페이스';
+
+const TAB_BAR_HEIGHT = 75;
+const TAB_BAR_BOTTOM = 10;
+const ADD_BUTTON_SPACING = 30;
+
+const isPast24h = (iso: string) => {
+  const ONE_DAY = 24 * 60 * 60 * 1000;
+  return Date.now() - new Date(iso).getTime() > ONE_DAY;
 };
 
 const runwearData: SneakerItem[] = [
@@ -95,8 +114,7 @@ const flashRunData: FlashRunEvent[] = [
     maxParticipants: 5,
     organizer: {
       name: '러닝러버',
-      avatar:
-        'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face',
+      avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face',
     },
     status: 'upcoming',
   },
@@ -149,24 +167,161 @@ const recordShareData: ShareRecord[] = [
 ];
 
 /* ---------- TABS ---------- */
-const TABS = ['런웨어', '기록공유', '번개런'] as const;
+const TABS = ['러닝템', '기록공유', '번개런'] as const;
 type TabKey = (typeof TABS)[number];
 
 /* ---------- COMPONENT ---------- */
 export default function CommunityPage() {
-  const [activeTab, setActiveTab] = useState<TabKey>('런웨어');
-  const [selectedLocation, setSelectedLocation] = useState('울산시 울주군');
+  const [activeTab, setActiveTab] = useState<TabKey>('러닝템');
+  const [selectedLocation, setSelectedLocation] = useState('위치 감지 중...');
   const [likedItems, setLikedItems] = useState<Set<number>>(new Set());
+  const [showFilterDropdown, setShowFilterDropdown] = useState(false);
+  const [selectedFilter, setSelectedFilter] = useState<FilterType>('최신순');
 
-  /* give each tab its dataset */
+  // Location detection - only get 동 (district/subregion)
+  const getCurrentLocation = async () => {
+    try {
+      setSelectedLocation('위치 감지 중...');
+      
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('권한 필요', '위치 권한이 필요합니다.');
+        setSelectedLocation('위치 권한 없음');
+        return;
+      }
+
+      let location = await Location.getCurrentPositionAsync({});
+      let addresses = await Location.reverseGeocodeAsync({
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+      });
+
+      if (addresses.length > 0) {
+        const address = addresses[0];
+        // Extract only 동 information
+        const dong = address.subregion || address.district || address.name || '';
+        setSelectedLocation(dong || '위치 불명');
+      } else {
+        setSelectedLocation('위치 불명');
+      }
+    } catch (error) {
+      console.error('Location error:', error);
+      setSelectedLocation('위치 감지 실패');
+      Alert.alert('오류', '위치를 가져올 수 없습니다.');
+    }
+  };
+
+  // Get current location on component mount
+  useEffect(() => {
+    getCurrentLocation();
+  }, []);
+
+  /* Location and Filter Section for Flash Run */
+  const LocationAndFilterSection = () => (
+    <View style={styles.locationFilterContainer}>
+      <View style={styles.locationSection}>
+        <TouchableOpacity 
+          style={styles.locationButton}
+          onPress={getCurrentLocation}
+        >
+          <Ionicons name="location" size={16} color="#54f895" />
+          <Text style={styles.locationButtonText}>{selectedLocation}</Text>
+          <Ionicons name="refresh" size={16} color="#54f895" />
+        </TouchableOpacity>
+        
+        {/* Filter Dropdown Button */}
+        <View style={styles.filterDropdownContainer}>
+          <TouchableOpacity 
+            style={styles.filterDropdownButton}
+            onPress={() => setShowFilterDropdown(!showFilterDropdown)}
+          >
+            <Ionicons
+              name={showFilterDropdown ? 'chevron-up' : 'chevron-down'}
+              size={18}
+              color="#8E8E93"
+              style={{ marginRight: 8 }}
+            />
+            <Text style={styles.filterDropdownText}>{selectedFilter}</Text>
+          </TouchableOpacity>
+          
+          {/* Dropdown Menu */}
+          {showFilterDropdown && (
+            <View style={styles.dropdownMenu}>
+              {(['최신순', '임박순', '목표페이스'] as FilterType[]).map((filter) => (
+                <TouchableOpacity
+                  key={filter}
+                  style={[
+                    styles.dropdownItem,
+                    selectedFilter === filter && styles.dropdownItemActive
+                  ]}
+                  onPress={() => {
+                    setSelectedFilter(filter);
+                    setShowFilterDropdown(false);
+                  }}
+                >
+                  <Text style={[
+                    styles.dropdownItemText,
+                    selectedFilter === filter && styles.dropdownItemTextActive
+                  ]}>
+                    {filter}
+                  </Text>
+                  {selectedFilter === filter && (
+                    <Ionicons name="checkmark" size={16} color="#fff" />
+                  )}
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
+        </View>
+      </View>
+    </View>
+  );
+
+  // Sort flashRunData based on selected filter
+  const getSortedFlashRunData = () => {
+    const data = [...flashRunData];
+    
+    switch (selectedFilter) {
+      case '최신순':
+        return data.sort((a, b) => b.id - a.id); // Newest first
+        
+      case '임박순':
+        // Sort by time - you'd need to parse the time string
+        return data.sort((a, b) => {
+          // Simple sort by time string for demo
+          return a.time.localeCompare(b.time);
+        });
+        
+      default:
+        return data;
+    }
+  };
+
+  // Update dataByTab to use sorted data for 번개런
   const dataByTab: Record<TabKey, any[]> = {
-    런웨어: runwearData,
+    러닝템: runwearData,
     기록공유: recordShareData,
-    번개런: flashRunData,
+    번개런: getSortedFlashRunData(),
+  };
+
+  /* ---------- ADD BUTTON NAVIGATION ---------- */
+  const handleAddButtonPress = () => {
+    switch (activeTab) {
+      case '러닝템':
+        router.push('/community/createRunwear');
+        break;
+      case '기록공유':
+        router.push('/community/createRecord');
+        break;
+      case '번개런':
+        router.push('/community/createRun');
+        break;
+      default:
+        router.push('/community/createRunwear');
+    }
   };
 
   /* --------------- RENDER HELPERS --------------- */
-
   const renderStars = (rating: number) => (
     <View style={{ flexDirection: 'row' }}>
       {Array.from({ length: 5 }).map((_, index) => (
@@ -198,7 +353,7 @@ export default function CommunityPage() {
     const isLiked = likedItems.has(item.id);
     
     return (
-      <TouchableOpacity 
+      <TouchableOpacity onPress={() => router.push('/community/runwear')}
         key={item.id} 
         style={[
           styles.card, 
@@ -209,17 +364,17 @@ export default function CommunityPage() {
           <Image source={item.image} style={styles.shoeImg} resizeMode="contain" />
           <View style={styles.likeBox}>
             <TouchableOpacity onPress={() => toggleLike(item.id)}>
-            <View style={styles.likeContent}>
-              <Text style={[styles.likeTxt, { color: isLiked ? '#54F895' : '#D9D9D9' }]}>
-                {item.likes}
-              </Text>
-              {isLiked ? (
-                <LikeIconActive width={18} height={17} />
-              ) : (
-                <LikeIcon width={18} height={17} color="#D9D9D9" />
-              )}
-            </View>
-          </TouchableOpacity>
+              <View style={styles.likeContent}>
+                <Text style={[styles.likeTxt, { color: isLiked ? '#54F895' : '#D9D9D9' }]}>
+                  {item.likes}
+                </Text>
+                {isLiked ? (
+                  <LikeIconActive width={18} height={17} />
+                ) : (
+                  <LikeIcon width={18} height={17} color="#D9D9D9" />
+                )}
+              </View>
+            </TouchableOpacity>
           </View>
         </View>
         <View style={styles.starRow}>{renderStars(item.rating)}</View>
@@ -227,83 +382,89 @@ export default function CommunityPage() {
     );
   };
 
-  /* Location and Filter Section for Flash Run */
-  const LocationAndFilterSection = () => (
-    <View style={styles.locationFilterContainer}>
-      <View style={styles.locationSection}>
-        <TouchableOpacity style={styles.locationButton}>
-          <Ionicons name="location" size={16} color="#54f895" />
-          <Text style={styles.locationButtonText}>{selectedLocation}</Text>
-          <Ionicons name="chevron-down" size={16} color="#54f895" />
-        </TouchableOpacity>
-      </View>
-    </View>
-  );
-
   // Flash run event card renderer
-  const renderFlashRunCard = (item: FlashRunEvent) => (
-    <TouchableOpacity key={item.id} style={styles.flashRunCard}>
-      {/* header */}
-      <View style={styles.flashRunHeader}>
-        <View style={styles.flashRunTitleSection}>
-          <Ionicons name="flash" size={20} color="#54f895" />
-          <Text style={styles.flashRunTitle}>{item.title}</Text>
+  const renderFlashRunCard = (item: FlashRunEvent) => {
+    const disabled = item.status === 'full';
+    
+    return (
+      <View key={item.id} style={styles.flashRunCard}>
+        {/* header */}
+        <View style={styles.flashRunHeader}>
+          <View style={styles.flashRunTitleSection}>
+            <Ionicons name="flash" size={20} color="#54f895" />
+            <Text style={styles.flashRunTitle}>{item.title}</Text>
+          </View>
+          <Text style={styles.flashRunTime}>{item.time}</Text>
         </View>
-        <Text style={styles.flashRunTime}>{item.time}</Text>
-      </View>
 
-      {/* description */}
-      <Text style={styles.flashRunDescription}>{item.description}</Text>
+        {/* description */}
+        <Text style={styles.flashRunDescription}>{item.description}</Text>
 
-      {/* hashtags */}
-      <View style={styles.hashRow}>
-        {item.hashtags.map(tag => (
-          <Text key={tag} style={styles.hashTag}>
-            {tag}
-          </Text>
-        ))}
-      </View>
+        {/* hashtags */}
+        <View style={styles.hashRow}>
+          {item.hashtags.map(tag => (
+            <Text key={tag} style={styles.hashTag}>
+              {tag}
+            </Text>
+          ))}
+        </View>
 
-      {/* organizer */}
-      <View style={styles.organizerSection}>
-        <Image source={{ uri: item.organizer.avatar }} style={styles.organizerAvatar} />
-        <View>
-          <Text style={styles.organizerName}>{item.organizer.name}</Text>
-          <View style={styles.locationRow}>
-            <Ionicons name="location-outline" size={14} color="#8E8E93" />
-            <Text style={styles.locationText}>{item.location}</Text>
+        {/* organizer */}
+        <View style={styles.organizerSection}>
+          <Image source={{ uri: item.organizer.avatar }} style={styles.organizerAvatar} />
+          <View>
+            <Text style={styles.organizerName}>{item.organizer.name}</Text>
+            <View style={styles.locationRow}>
+              <Ionicons name="location-outline" size={14} color="#8E8E93" />
+              <Text style={styles.locationText}>{item.location}</Text>
+            </View>
           </View>
         </View>
-      </View>
 
-      {/* join-button */}
-      <LinearGradient
-        colors={
-          item.status === 'full'
-            ? ['#5E5E5E', '#808080']
-            : ['#54f895', '#2afbea']
-        }
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 0 }}
-        style={styles.joinButton}
-      >
-        <Text
-          style={[
-            styles.joinButtonText,
-            item.status === 'full' ? styles.joinButtonTextFull : styles.joinButtonTextActive,
-          ]}
-        >
-          {item.status === 'full'
-            ? '정원마감'
-            : `참가하기 (${item.participants}/${item.maxParticipants})`}
-        </Text>
-      </LinearGradient>
-    </TouchableOpacity>
-  );
+        {/* join-button */}
+        <View>
+          <TouchableOpacity
+            disabled={disabled}
+            activeOpacity={disabled ? 1 : 0.8}
+            onPress={() => !disabled && router.push({
+              pathname: '/community/flashRunChat',
+              params: {
+                current: item.participants.toString(),
+                max: item.maxParticipants.toString(),
+              },
+            })}
+          >
+            <LinearGradient
+              colors={
+                item.status === 'full'
+                  ? ['#5E5E5E', '#808080']
+                  : ['#54f895', '#2afbea']
+              }
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.joinButton}
+            >
+              <Text
+                style={[
+                  styles.joinButtonText,
+                  item.status === 'full' ? styles.joinButtonTextFull : styles.joinButtonTextActive,
+                ]}
+              >
+                {item.status === 'full'
+                  ? '정원마감'
+                  : `참가하기 (${item.participants}/${item.maxParticipants})`}
+              </Text>
+            </LinearGradient>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  };
 
   /* pure-image tile for 기록공유 */
   const renderGalleryTile = (item: ShareRecord) => (
-    <TouchableOpacity key={item.id} style={styles.galleryTile}>
+    <TouchableOpacity onPress={() => router.push('/community/share')}
+      key={item.id} style={styles.galleryTile}>
       <Image source={item.image} style={styles.galleryImg} />
     </TouchableOpacity>
   );
@@ -318,13 +479,13 @@ export default function CommunityPage() {
   /* --------------- UI --------------- */
   return (
     <SafeAreaView style={styles.container}>
-      {/* add button */}
+      {/* Dynamic Add Button */}
       <TouchableOpacity
         style={styles.addbutton}
-        onPress={() => router.push('/runwearWrite')}
+        onPress={handleAddButtonPress}
         activeOpacity={0.85}
       >
-        <Ionicons name="add" size={28} color="#fff" />
+        <Ionicons name="add" size={40} color="#fff" />
       </TouchableOpacity>
 
       {/* Header */}
@@ -361,6 +522,8 @@ export default function CommunityPage() {
           {/* Show location filter only for 번개런 tab */}
           {activeTab === '번개런' && <LocationAndFilterSection />}
           {dataByTab[activeTab].map((item, index) => renderItem(item, index))}
+          {/* Bottom padding to ensure content doesn't get hidden behind floating button */}
+          <View style={styles.bottomPadding} />
         </ScrollView>
       ) : (
         <View style={styles.emptyWrap}>
@@ -375,19 +538,22 @@ export default function CommunityPage() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#15151C' },
   header: { paddingHorizontal: 20, paddingTop: 20, paddingBottom: 15 },
-  title: { fontSize: 24, fontWeight: 'bold', color: '#fff', textAlign: 'center', marginBottom: 20 },
+  title: { fontSize: 18, fontWeight: 'bold', color: '#fff', textAlign: 'center', marginBottom: 20 },
+  bottomPadding: {
+    height: 80,
+  },
 
   /* add button colour */
   addbutton: {
     position: 'absolute',
-    bottom: 30,
+    bottom: TAB_BAR_BOTTOM + TAB_BAR_HEIGHT + ADD_BUTTON_SPACING,
     right: 30,
     zIndex: 20,
     width: 60,
     height: 60,
     aspectRatio: 1,
     borderRadius: 35,
-    backgroundColor: 'rgba(84, 248, 149, 0.80)',
+    backgroundColor: 'rgba(84, 248, 149, 0.85)',
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: 'rgba(0, 0, 0, 0.20)',
@@ -415,34 +581,13 @@ const styles = StyleSheet.create({
   },
   tabTxtActive: {
     color: '#54F895',
-    textAlign: 'center' as const,
+    textAlign: 'center',
     fontFamily: 'Pretendard Variable',
     fontSize: 22,
-    fontStyle: 'normal' as const,
-    fontWeight: 600,
-  },
-
-  /* Location and Filter Section */
-  locationFilterContainer: {
-    marginBottom: 20,
-  },
-  locationSection: {
-    marginBottom: 16,
-  },
-  locationButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#2C2C2E',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 8,
-    alignSelf: 'flex-start',
-  },
-  locationButtonText: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '500',
-    marginHorizontal: 6,
+    fontStyle: 'normal',
+    fontWeight: '600',
+    lineHeight: 30,
+    letterSpacing: -0.44,
   },
 
   /* card list (Runwear) - Updated for staggered layout */
@@ -472,9 +617,9 @@ const styles = StyleSheet.create({
     resizeMode: 'contain',
   },
   likeContent: {
-  flexDirection: 'row',
-  alignItems: 'center',
-  gap: 3, // if unsupported, use marginRight on Text
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
   },
   likeBox: {
     position: 'absolute',
@@ -516,17 +661,22 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#D9D9D9', 
     backgroundColor: 'lightgray',
-    borderRadius: 8,
   },
 
   /* Flash Run Styles */
-  flashRunGrid: { padding: 20 },
+  flashRunGrid: { 
+    padding: 20,
+    zIndex: 1, // Add this - lower z-index
+  },
   flashRunCard: {
     backgroundColor: '#2C2C2E',
     borderRadius: 16,
     padding: 16,
     marginBottom: 16,
+    zIndex: 1, // Add this - keep cards behind dropdown
+    elevation: 2, // Lower elevation for Android
   },
+
   flashRunHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -608,6 +758,92 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginRight: 6,
     marginTop: 2,
+  },
+
+  /* Location and Filter Section */
+  locationFilterContainer: {
+    marginBottom: 20,
+  },
+  locationSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  locationButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#2C2C2E',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    flex: 1,
+    marginRight: 12,
+  },
+  locationButtonText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '500',
+    marginHorizontal: 6,
+    flex: 1,
+  },
+
+  /* Filter Dropdown */
+  filterDropdownContainer: {
+    position: 'relative',
+    zIndex: 999, // Same high z-index
+  },
+  filterDropdownButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    minWidth: 80,
+    zIndex: 999, // Same high z-index
+
+  },
+  filterDropdownText: {
+    color: '#D9D9D9',
+    fontSize: 14,
+    fontWeight: '500',
+    marginRight: 6,
+  },
+  dropdownMenu: {
+    position: 'absolute',
+    top: '100%',
+    right: 0,
+    backgroundColor: '#7C7C7C',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#3C3C3E',
+    minWidth: 100,
+    zIndex: 10000,
+    elevation: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+  },
+  dropdownItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#3C3C3E',
+  },
+  dropdownItemActive: {
+    backgroundColor: 'rgba(84, 248, 149, 0.1)',
+  },
+  dropdownItemText: {
+    color: '#000',
+    fontSize: 14,
+  },
+  dropdownItemTextActive: {
+    color: '#fff',
+    fontWeight: '600',
   },
   
   /* empty */
