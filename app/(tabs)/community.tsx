@@ -1,12 +1,15 @@
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Image, SafeAreaView, ScrollView, StyleSheet,
   Text, TouchableOpacity, View,
 } from 'react-native';
 import { LikeIcon, LikeIconActive, StarIcon, StarIconActive } from '../../components/IconSVG';
+
+import { collection, getDocs, orderBy, query } from 'firebase/firestore';
+import { db } from '../../backend/db/firebase';
 
 /* ---------- DATA ---------- */
 type SneakerItem = {
@@ -39,13 +42,7 @@ type FlashRunEvent = {
 };
 
 const runwearData: SneakerItem[] = [
-  {
-      id: 1,
-      image: { uri: 'https://static.nike.com/a/images/t_PDP_1728_v1/f_auto,q_auto:eco/68e8fafa-5575-4c2d-9806-3c4ace2debe3/air-max-270-mens-shoes-KkLcGR.png' },
-      likes: 15,
-      rating: 4,
-      backgroundColor: '#2C2C2E',
-    },
+  
     {
       id: 2,
       image: { uri: 'https://static.nike.com/a/images/t_PDP_1728_v1/f_auto,q_auto:eco/e777c881-5b62-4250-92a6-362967f54cca/air-force-1-07-mens-shoes-jBrhbr.png' },
@@ -157,10 +154,22 @@ export default function CommunityPage() {
   const [activeTab, setActiveTab] = useState<TabKey>('런웨어');
   const [selectedLocation, setSelectedLocation] = useState('울산시 울주군');
   const [likedItems, setLikedItems] = useState<Set<number>>(new Set());
+  const [runwearList, setRunwearList] = useState<any[]>([]);
+
+  // Firestore에서 runwear 데이터 불러오기
+  useEffect(() => {
+    async function fetchRunwear() {
+      const q = query(collection(db, 'runwearItem'), orderBy('id', 'desc'));
+      const snapshot = await getDocs(q);
+      const items = snapshot.docs.map(doc => doc.data() as SneakerItem);
+      setRunwearList(items);
+    }
+    fetchRunwear();
+  }, []);
 
   /* give each tab its dataset */
   const dataByTab: Record<TabKey, any[]> = {
-    런웨어: runwearData,
+    런웨어: runwearList,
     기록공유: recordShareData,
     번개런: flashRunData,
   };
