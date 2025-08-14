@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Location from 'expo-location';
 import { router } from 'expo-router';
-import { collection, getDocs, orderBy, query, } from 'firebase/firestore';
+import { collection, getDocs, orderBy, query, updateDoc } from 'firebase/firestore';
 import React, { useEffect, useState } from 'react';
 import {
   Alert,
@@ -60,6 +60,17 @@ const isPast24h = (iso: string) => {
   return Date.now() - new Date(iso).getTime() > ONE_DAY;
 };
 
+// 좋아요 수 업데이트 함수
+  async function updateSneakerLikes(itemId: number, newLikes: number) {
+    // Firestore에서 해당 문서 찾기 (id 필드로)
+    const q = query(collection(db, 'runwearItem'), orderBy('id', 'desc'));
+    const snapshot = await getDocs(q);
+    const docRef = snapshot.docs.find(doc => doc.data().id === itemId)?.ref;
+    if (docRef) {
+      await updateDoc(docRef, { likes: newLikes });
+    }
+  }
+
 const flashRunData: FlashRunEvent[] = [
   {
     id: 1,
@@ -106,22 +117,6 @@ const flashRunData: FlashRunEvent[] = [
   },
   status: 'full',
 }
-];
-
-/* 12 sample gallery photos */
-const recordShareData: ShareRecord[] = [
-  { id: 1,  image: { uri: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=400&h=400&fit=crop' } },
-  { id: 2,  image: { uri: 'https://images.unsplash.com/photo-1530549387789-4c1017266635?w=400&h=400&fit=crop' } },
-  { id: 3,  image: { uri: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&h=400&fit=crop' } },
-  { id: 4,  image: { uri: 'https://images.unsplash.com/photo-1486218119243-13883505764c?w=400&h=400&fit=crop' } },
-  { id: 5,  image: { uri: 'https://images.unsplash.com/photo-1544717297-fa95b6ee9643?w=400&h=400&fit=crop' } },
-  { id: 6,  image: { uri: 'https://images.unsplash.com/photo-1605296867304-46d5465a13f1?w=400&h=400&fit=crop' } },
-  { id: 7,  image: { uri: 'https://images.unsplash.com/photo-1513593771513-7b58b6c4af38?w=400&h=400&fit=crop' } },
-  { id: 8,  image: { uri: 'https://images.unsplash.com/photo-1566737236500-c8ac43014a8e?w=400&h=400&fit=crop' } },
-  { id: 9,  image: { uri: 'https://images.unsplash.com/photo-1483721310020-03333e577078?w=400&h=400&fit=crop' } },
-  { id: 10, image: { uri: 'https://images.unsplash.com/photo-1526506118085-60ce8714f8c5?w=400&h=400&fit=crop' } },
-  { id: 11, image: { uri: 'https://images.unsplash.com/photo-1594736797933-d0c4a154e47f?w=400&h=400&fit=crop' } },
-  { id: 12, image: { uri: 'https://images.unsplash.com/photo-1448387473223-5c37445527e7?w=400&h=400&fit=crop' } },
 ];
 
 /* ---------- TABS ---------- */
@@ -322,11 +317,19 @@ export default function CommunityPage() {
   const toggleLike = (itemId: number) => {
     setLikedItems(prev => {
       const newSet = new Set(prev);
+      const item = runwearList.find(item => item.id === itemId);
+
+      if (!item) return prev;
+
+      let newLikes = item.likes;
       if (newSet.has(itemId)) {
         newSet.delete(itemId);
+        newLikes--;
       } else {
         newSet.add(itemId);
+        newLikes++;
       }
+      updateSneakerLikes(itemId, newLikes);
       return newSet;
     });
   };
@@ -349,7 +352,7 @@ export default function CommunityPage() {
             <TouchableOpacity onPress={() => toggleLike(item.id)}>
               <View style={styles.likeContent}>
                 <Text style={[styles.likeTxt, { color: isLiked ? '#54F895' : '#D9D9D9' }]}>
-                  {item.likes}
+                  {isLiked ? item.likes + 1 : item.likes}
                 </Text>
                 {isLiked ? (
                   <LikeIconActive width={18} height={17} />
