@@ -1,5 +1,6 @@
 import React from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import MapView, { UrlTile } from 'react-native-maps';
 
 export default function HomeScreen() {
   return (
@@ -12,15 +13,30 @@ export default function HomeScreen() {
         <Text style={styles.cardValue}>3.2 km</Text>
       </View>
 
-      <View style={styles.card}>
+      {/* <View style={styles.card}>
         <Text style={styles.cardTitle}>Steps Taken</Text>
         <Text style={styles.cardValue}>4,876</Text>
-      </View>
-
+      </View> */}
+      <MapView
+        style={styles.map}
+        mapType="none"
+        initialRegion={{
+          latitude: 37.5665,
+          longitude: 126.9780,
+          latitudeDelta: 0.01,
+          longitudeDelta: 0.01,
+        }}
+      >
+        <UrlTile
+          urlTemplate="https://api.maptiler.com/maps/aquarelle/{z}/{x}/{y}.png?key=zj59kKsjCm6jcyYTg7qQ"
+          zIndex={-1}
+        />
+      </MapView>
       {/* Add more cards or components here */}
     </ScrollView>
   );
 }
+
 
 const styles = StyleSheet.create({
   container: {
@@ -28,6 +44,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#1C1C1E',
     paddingHorizontal: 20,
     paddingTop: 30,
+  },
+  map: {
+    width: "100%",
+    height: 400,
   },
   header: {
     fontSize: 28,

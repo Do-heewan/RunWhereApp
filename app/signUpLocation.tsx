@@ -1,7 +1,7 @@
 // TapToDropPin.tsx
 import React, { useRef, useState } from "react";
 import { Button, StyleSheet, TextInput, View } from "react-native";
-import MapView, { Camera, LatLng, MapPressEvent, Marker } from "react-native-maps";
+import MapView, { Camera, LatLng, MapPressEvent, Marker, UrlTile } from "react-native-maps";
 
 export default function TapToDropPin(){
   const mapRef = useRef<MapView | null>(null);
@@ -28,6 +28,7 @@ export default function TapToDropPin(){
       <MapView
         ref={mapRef}
         style={styles.map}
+        mapType="none"
         initialRegion={{
           latitude: 37.5665,
           longitude: 126.9780,
@@ -36,6 +37,10 @@ export default function TapToDropPin(){
         }}
         onPress={handlePress} // ← 지도 탭 이벤트
       >
+        <UrlTile
+          urlTemplate="https://api.maptiler.com/maps/aquarelle/{z}/{x}/{y}.png?key=zj59kKsjCm6jcyYTg7qQ"
+          maximumZ={20}
+        />
         {pin && <Marker coordinate={pin} title="여기에 마커!" />}
       </MapView>
 
