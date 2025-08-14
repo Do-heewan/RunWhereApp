@@ -15,10 +15,10 @@ import { db } from '../../backend/db/firebase';
 
 type SneakerItem = {
   id: number;
-  brand: string;
-  model: string;
-  size: number;
-  color: string;
+  review: string;
+  likes: number;
+  rating: number;
+  backgroundColor: string;
   image: { uri: string };
   createdAt: Date;
 };
@@ -45,56 +45,6 @@ type FlashRunEvent = {
   status: 'upcoming' | 'full' | 'completed';
 };
 
-const flashRunData: FlashRunEvent[] = [
-  {
-    id: 1,
-    title: '중산신 즐거운',
-    time: '오늘 19:00',
-    location: '한양대역 앞',
-    description: '유니스트 앞에서 7시에 가볍게 뛸 사람 구합니다~',
-    hashtags: ['#친친런', '#가벼운런', '#런친이', '#번개런'],
-    participants: 3,
-    maxParticipants: 5,
-    organizer: {
-      name: '러닝러버',
-      avatar:
-        'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face',
-    },
-    status: 'upcoming',
-  },
-  {
-  id: 2,
-  title: '한강 야경 러닝',
-  time: '오늘 20:30',
-  location: '뚝섬유원지역 3번 출구',
-  description: '야경 보면서 천천히 5km 러닝할 분들 모여요!',
-  hashtags: ['#야경런', '#힐링러닝', '#한강뷰', '#느긋하게'],
-  participants: 4,
-  maxParticipants: 8,
-  organizer: {
-    name: '야경러너',
-    avatar: 'https://images.unsplash.com/photo-1502767089025-6572583495b4?w=100&h=100&fit=crop&crop=face',
-  },
-  status: 'upcoming',
-},
-{
-  id: 3,
-  title: '아침 러닝 번개',
-  time: '내일 06:30',
-  location: '서울숲 입구',
-  description: '출근 전에 상쾌하게 뛰고 싶은 분들 함께해요!',
-  hashtags: ['#모닝런', '#상쾌한하루', '#출근전운동', '#서울숲'],
-  participants: 2,
-  maxParticipants: 6,
-  organizer: {
-    name: '모닝러버',
-    avatar: 'https://images.unsplash.com/photo-1544723795-3fb6469f5b39?w=100&h=100&fit=crop&crop=face',
-  },
-  status: 'full',
-}
-];
-
-
 /* ---------- TABS ---------- */
 const TABS = ['런웨어', '기록공유', '번개런'] as const;
 type TabKey = (typeof TABS)[number];
@@ -104,8 +54,10 @@ export default function CommunityPage() {
   const [activeTab, setActiveTab] = useState<TabKey>('런웨어');
   const [selectedLocation, setSelectedLocation] = useState('울산시 울주군');
   const [likedItems, setLikedItems] = useState<Set<number>>(new Set());
+
   const [runwearList, setRunwearList] = useState<any[]>([]);
   const [sharedRecordList, setSharedRecordList] = useState<any[]>([]);
+  const [flashRunList, setFlashRunList] = useState<any[]>([]);
 
   // Firestore에서 runwear 데이터 불러오기
   useEffect(() => {
@@ -118,6 +70,7 @@ export default function CommunityPage() {
     fetchRunwear();
   }, []);
 
+  // Firestore에서 sharedRecord 데이터 불러오기
   useEffect(() => {
     async function fetchRecordShare() {
       const q = query(collection(db, 'sharedRecord'), orderBy('id', 'desc'));
@@ -128,11 +81,24 @@ export default function CommunityPage() {
     fetchRecordShare();
   }, []);
 
+  // Firestore에서 flashRun 데이터 불러오기
+  useEffect(() => {
+    async function fetchFlashRun() {
+      const q = query(collection(db, 'flashRun'), orderBy('id', 'desc'));
+      const snapshot = await getDocs(q);
+      const items = snapshot.docs.map(doc => doc.data());
+      setFlashRunList(items);
+    }
+    fetchFlashRun();
+  }, []);
+
+  
+
   /* give each tab its dataset */
   const dataByTab: Record<TabKey, any[]> = {
     런웨어: runwearList,
     기록공유: sharedRecordList,
-    번개런: flashRunData,
+    번개런: flashRunList,
   };
 
   /* --------------- RENDER HELPERS --------------- */
@@ -181,7 +147,7 @@ export default function CommunityPage() {
             <TouchableOpacity onPress={() => toggleLike(item.id)}>
             <View style={styles.likeContent}>
               <Text style={[styles.likeTxt, { color: isLiked ? '#54F895' : '#D9D9D9' }]}>
-                {item.likes}
+                {isLiked ? item.likes + 1 : item.likes}
               </Text>
               {isLiked ? (
                 <LikeIconActive width={18} height={17} />
@@ -274,7 +240,7 @@ export default function CommunityPage() {
   /* pure-image tile for 기록공유 */
   const renderGalleryTile = (item: ShareRecord) => (
     <TouchableOpacity key={item.id} style={styles.galleryTile}>
-      <Image source={item.image} style={styles.galleryImg} />
+      <Image source={{ uri: item.image.url }} style={styles.galleryImg} />
     </TouchableOpacity>
   );
 
