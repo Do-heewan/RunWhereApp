@@ -12,17 +12,21 @@ import { collection, getDocs, orderBy, query } from 'firebase/firestore';
 import { db } from '../../backend/db/firebase';
 
 /* ---------- DATA ---------- */
+
 type SneakerItem = {
   id: number;
+  brand: string;
+  model: string;
+  size: number;
+  color: string;
   image: { uri: string };
-  likes: number;
-  rating: number;
-  backgroundColor: string;
+  createdAt: Date;
 };
 
 type ShareRecord = {
-   id: number; 
-   image: { uri: string }; 
+   id: number;
+   image: { uri: string };
+   createdAt: Date;
 }
 
 type FlashRunEvent = {
@@ -40,45 +44,6 @@ type FlashRunEvent = {
   };
   status: 'upcoming' | 'full' | 'completed';
 };
-
-const runwearData: SneakerItem[] = [
-  
-    {
-      id: 2,
-      image: { uri: 'https://static.nike.com/a/images/t_PDP_1728_v1/f_auto,q_auto:eco/e777c881-5b62-4250-92a6-362967f54cca/air-force-1-07-mens-shoes-jBrhbr.png' },
-      likes: 15,
-      rating: 3,
-      backgroundColor: '#E5E5EA',
-    },
-    {
-      id: 3,
-      image: { uri: 'https://static.nike.com/a/images/t_PDP_1728_v1/f_auto,q_auto:eco/b1bcbca4-e853-4df7-b329-5be3c61ee057/dunk-low-mens-shoes-DDDR8X.png' },
-      likes: 7,
-      rating: 5,
-      backgroundColor: '#FFB3BA',
-    },
-    {
-      id: 4,
-      image: { uri: 'https://static.nike.com/a/images/t_PDP_1728_v1/f_auto,q_auto:eco/59c9d62b-2490-46ac-b0c1-691a8e0b8b27/air-jordan-1-low-mens-shoes-459b4T.png' },
-      likes: 15,
-      rating: 2,
-      backgroundColor: '#FF8C42',
-    },
-    {
-      id: 5,
-      image: { uri: 'https://static.nike.com/a/images/t_PDP_1728_v1/f_auto,q_auto:eco/350e7f3a-979a-402b-9396-a8a998dd76ab/react-infinity-run-flyknit-3-mens-road-running-shoes-XhzpPH.png' },
-      likes: 9,
-      rating: 4,
-      backgroundColor: '#9AFF9A',
-    },
-    {
-      id: 6,
-      image: { uri: 'https://static.nike.com/a/images/t_PDP_1728_v1/f_auto,q_auto:eco/9a8efb03-8eeb-4cb1-88b3-4292f4c8b255/zoom-freak-4-basketball-shoes-PJ6tM8.png' },
-      likes: 8,
-      rating: 3,
-      backgroundColor: '#87CEEB',
-    },
-];
 
 const flashRunData: FlashRunEvent[] = [
   {
@@ -129,21 +94,6 @@ const flashRunData: FlashRunEvent[] = [
 }
 ];
 
-/* 12 sample gallery photos */
-const recordShareData: ShareRecord[] = [
-  { id: 1,  image: { uri: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=400&h=400&fit=crop' } },
-  { id: 2,  image: { uri: 'https://images.unsplash.com/photo-1530549387789-4c1017266635?w=400&h=400&fit=crop' } },
-  { id: 3,  image: { uri: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&h=400&fit=crop' } },
-  { id: 4,  image: { uri: 'https://images.unsplash.com/photo-1486218119243-13883505764c?w=400&h=400&fit=crop' } },
-  { id: 5,  image: { uri: 'https://images.unsplash.com/photo-1544717297-fa95b6ee9643?w=400&h=400&fit=crop' } },
-  { id: 6,  image: { uri: 'https://images.unsplash.com/photo-1605296867304-46d5465a13f1?w=400&h=400&fit=crop' } },
-  { id: 7,  image: { uri: 'https://images.unsplash.com/photo-1513593771513-7b58b6c4af38?w=400&h=400&fit=crop' } },
-  { id: 8,  image: { uri: 'https://images.unsplash.com/photo-1566737236500-c8ac43014a8e?w=400&h=400&fit=crop' } },
-  { id: 9,  image: { uri: 'https://images.unsplash.com/photo-1483721310020-03333e577078?w=400&h=400&fit=crop' } },
-  { id: 10, image: { uri: 'https://images.unsplash.com/photo-1526506118085-60ce8714f8c5?w=400&h=400&fit=crop' } },
-  { id: 11, image: { uri: 'https://images.unsplash.com/photo-1594736797933-d0c4a154e47f?w=400&h=400&fit=crop' } },
-  { id: 12, image: { uri: 'https://images.unsplash.com/photo-1448387473223-5c37445527e7?w=400&h=400&fit=crop' } },
-];
 
 /* ---------- TABS ---------- */
 const TABS = ['런웨어', '기록공유', '번개런'] as const;
@@ -155,22 +105,33 @@ export default function CommunityPage() {
   const [selectedLocation, setSelectedLocation] = useState('울산시 울주군');
   const [likedItems, setLikedItems] = useState<Set<number>>(new Set());
   const [runwearList, setRunwearList] = useState<any[]>([]);
+  const [sharedRecordList, setSharedRecordList] = useState<any[]>([]);
 
   // Firestore에서 runwear 데이터 불러오기
   useEffect(() => {
     async function fetchRunwear() {
       const q = query(collection(db, 'runwearItem'), orderBy('id', 'desc'));
       const snapshot = await getDocs(q);
-      const items = snapshot.docs.map(doc => doc.data() as SneakerItem);
+      const items = snapshot.docs.map(doc => doc.data());
       setRunwearList(items);
     }
     fetchRunwear();
   }, []);
 
+  useEffect(() => {
+    async function fetchRecordShare() {
+      const q = query(collection(db, 'sharedRecord'), orderBy('id', 'desc'));
+      const snapshot = await getDocs(q);
+      const items = snapshot.docs.map(doc => doc.data());
+      setSharedRecordList(items);
+    }
+    fetchRecordShare();
+  }, []);
+
   /* give each tab its dataset */
   const dataByTab: Record<TabKey, any[]> = {
     런웨어: runwearList,
-    기록공유: recordShareData,
+    기록공유: sharedRecordList,
     번개런: flashRunData,
   };
 
