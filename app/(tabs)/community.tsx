@@ -353,6 +353,7 @@ export default function CommunityPage() {
         ],
         messages: [],
       });
+      return docRef.id;
     } catch (error) {
       Alert.alert('오류', '채팅방 생성에 실패했습니다.');
       return null;
