@@ -1,8 +1,34 @@
-import React from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import React, { useState } from 'react';
+import { Button, ScrollView, StyleSheet, Text, View } from 'react-native';
 import MapView, { UrlTile } from 'react-native-maps';
 
 export default function HomeScreen() {
+  const urlList = [
+    "aquarelle",
+    "backdrop",
+    "basic",
+    "bright",
+    "dataviz",
+    "landscape",
+    "ocean",
+    "openstreetmap",
+    "outdoor",
+    "satellite",
+    "streets",
+    "toner",
+    "topo",
+    "winter"
+  ];
+  
+  // 선택된 스타일 (기본값: aquarelle)
+  const [styleIndex, setStyleIndex] = useState(0);
+  let url = `https://api.maptiler.com/maps/${urlList[styleIndex]}/{z}/{x}/{y}.png?key=zj59kKsjCm6jcyYTg7qQ`;
+  const handleStyleChange = () => {
+    setStyleIndex((prevIndex) => (prevIndex + 1) % urlList.length);
+    url = `https://api.maptiler.com/maps/${urlList[styleIndex]}/{z}/{x}/{y}.png?key=zj59kKsjCm6jcyYTg7qQ`;
+  };
+
+  // 템플릿 리터럴을 사용해서 동적으로 URL 생성
   return (
     <ScrollView style={styles.container}>
       <Text style={styles.header}>Welcome Back 👋</Text>
@@ -28,10 +54,11 @@ export default function HomeScreen() {
         }}
       >
         <UrlTile
-          urlTemplate="https://api.maptiler.com/maps/aquarelle/{z}/{x}/{y}.png?key=zj59kKsjCm6jcyYTg7qQ"
+          urlTemplate={url}
           zIndex={-1}
         />
       </MapView>
+      <Button title="Change Style" onPress={handleStyleChange} />
       {/* Add more cards or components here */}
     </ScrollView>
   );
