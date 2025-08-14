@@ -1,19 +1,22 @@
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import * as Location from 'expo-location';
 import { router } from 'expo-router';
-import React, { useState, useEffect } from 'react';
+import { collection, getDocs, orderBy, query, } from 'firebase/firestore';
+import React, { useEffect, useState } from 'react';
 import {
   Alert,
-  Image, 
-  SafeAreaView, 
-  ScrollView, 
+  Image,
+  SafeAreaView,
+  ScrollView,
   StyleSheet,
-  Text, 
-  TouchableOpacity, 
+  Text,
+  TouchableOpacity,
   View,
 } from 'react-native';
+import { db } from '../../backend/db/firebase';
 import { LikeIcon, LikeIconActive, StarIcon, StarIconActive } from '../../components/IconSVG';
-import * as Location from 'expo-location';
+
 
 /* ---------- DATA ---------- */
 type SneakerItem = {
@@ -25,9 +28,9 @@ type SneakerItem = {
 };
 
 type ShareRecord = {
-   id: number; 
-   image: { uri: string }; 
-}
+  id: number;
+  image: { uri: string };
+};
 
 type FlashRunEvent = {
   id: number;
@@ -56,51 +59,6 @@ const isPast24h = (iso: string) => {
   const ONE_DAY = 24 * 60 * 60 * 1000;
   return Date.now() - new Date(iso).getTime() > ONE_DAY;
 };
-
-const runwearData: SneakerItem[] = [
-  {
-      id: 1,
-      image: { uri: 'https://static.nike.com/a/images/t_PDP_1728_v1/f_auto,q_auto:eco/68e8fafa-5575-4c2d-9806-3c4ace2debe3/air-max-270-mens-shoes-KkLcGR.png' },
-      likes: 15,
-      rating: 4,
-      backgroundColor: '#2C2C2E',
-    },
-    {
-      id: 2,
-      image: { uri: 'https://static.nike.com/a/images/t_PDP_1728_v1/f_auto,q_auto:eco/e777c881-5b62-4250-92a6-362967f54cca/air-force-1-07-mens-shoes-jBrhbr.png' },
-      likes: 15,
-      rating: 3,
-      backgroundColor: '#E5E5EA',
-    },
-    {
-      id: 3,
-      image: { uri: 'https://static.nike.com/a/images/t_PDP_1728_v1/f_auto,q_auto:eco/b1bcbca4-e853-4df7-b329-5be3c61ee057/dunk-low-mens-shoes-DDDR8X.png' },
-      likes: 7,
-      rating: 5,
-      backgroundColor: '#FFB3BA',
-    },
-    {
-      id: 4,
-      image: { uri: 'https://static.nike.com/a/images/t_PDP_1728_v1/f_auto,q_auto:eco/59c9d62b-2490-46ac-b0c1-691a8e0b8b27/air-jordan-1-low-mens-shoes-459b4T.png' },
-      likes: 15,
-      rating: 2,
-      backgroundColor: '#FF8C42',
-    },
-    {
-      id: 5,
-      image: { uri: 'https://static.nike.com/a/images/t_PDP_1728_v1/f_auto,q_auto:eco/350e7f3a-979a-402b-9396-a8a998dd76ab/react-infinity-run-flyknit-3-mens-road-running-shoes-XhzpPH.png' },
-      likes: 9,
-      rating: 4,
-      backgroundColor: '#9AFF9A',
-    },
-    {
-      id: 6,
-      image: { uri: 'https://static.nike.com/a/images/t_PDP_1728_v1/f_auto,q_auto:eco/9a8efb03-8eeb-4cb1-88b3-4292f4c8b255/zoom-freak-4-basketball-shoes-PJ6tM8.png' },
-      likes: 8,
-      rating: 3,
-      backgroundColor: '#87CEEB',
-    },
-];
 
 const flashRunData: FlashRunEvent[] = [
   {
@@ -209,7 +167,32 @@ export default function CommunityPage() {
       setSelectedLocation('위치 감지 실패');
       Alert.alert('오류', '위치를 가져올 수 없습니다.');
     }
-  };
+  }
+
+  const [runwearList, setRunwearList] = useState<SneakerItem[]>([]);
+  const [sharedRecordList, setSharedRecordList] = useState<ShareRecord[]>([]);
+
+  useEffect(() => {
+    async function fetchRunwear() {
+      const q = query(collection(db, 'runwearItem'), orderBy('id', 'desc'));
+      const snapshot = await getDocs(q);
+      const items = snapshot.docs.map(doc => doc.data() as SneakerItem);
+      setRunwearList(items);
+    }
+
+    fetchRunwear();
+  }, []);
+
+  useEffect(() => {
+    async function fetchSharedRecords() {
+      const q = query(collection(db, 'sharedRecord'), orderBy('id', 'desc'));
+      const snapshot = await getDocs(q);
+      const items = snapshot.docs.map(doc => doc.data() as ShareRecord);
+      setSharedRecordList(items);
+    }
+
+    fetchSharedRecords();
+  }, []);
 
   // Get current location on component mount
   useEffect(() => {
@@ -299,8 +282,8 @@ export default function CommunityPage() {
 
   // Update dataByTab to use sorted data for 번개런
   const dataByTab: Record<TabKey, any[]> = {
-    러닝템: runwearData,
-    기록공유: recordShareData,
+    러닝템: runwearList,
+    기록공유: sharedRecordList,
     번개런: getSortedFlashRunData(),
   };
 
@@ -465,7 +448,7 @@ export default function CommunityPage() {
   const renderGalleryTile = (item: ShareRecord) => (
     <TouchableOpacity onPress={() => router.push('/community/share')}
       key={item.id} style={styles.galleryTile}>
-      <Image source={item.image} style={styles.galleryImg} />
+      <Image source={item.image.url} style={styles.galleryImg} />
     </TouchableOpacity>
   );
 
@@ -532,7 +515,7 @@ export default function CommunityPage() {
       )}
     </SafeAreaView>
   );
-}
+};
 
 /* ---------- STYLES ---------- */
 const styles = StyleSheet.create({
