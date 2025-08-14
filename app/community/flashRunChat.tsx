@@ -1,62 +1,75 @@
-import React, { useState, useRef } from 'react';
+import { Ionicons } from '@expo/vector-icons';
+import { router, useLocalSearchParams } from 'expo-router';
+import { addDoc, collection, onSnapshot, orderBy, query } from 'firebase/firestore';
+import React, { useEffect, useRef, useState } from 'react';
 import {
-  SafeAreaView,
-  View,
-  Text,
   FlatList,
-  TextInput,
-  TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
+  SafeAreaView,
   StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { router } from 'expo-router';
+import { db } from '../../backend/db/firebase';
+
 
 type ChatMessage = {
   id: string;
   user: string;
   text: string;
   createdAt: number;
-  isMe?: boolean; // Add this to identify current user's messages
+  isMe: boolean;
 };
-
-import { useLocalSearchParams } from 'expo-router';
 
 export default function FlashRunChatPage() {
   /* ---------- params ---------- */
-  const { current = '0', max = '0' } = useLocalSearchParams<{
+  const { chatRoomId, current = '0', max = '0' } = useLocalSearchParams<{
+    chatRoomId: string;
     current: string;
     max: string;
   }>();
-  /* ---------- state ---------- */
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    { id: '1', user: '러닝러버', text: '안녕하세요! 7시에 뛸 분?', createdAt: Date.now() - 100000, isMe: false },
-    { id: '2', user: '야경러너', text: '저 갈게요 🙋‍♂️', createdAt: Date.now() - 80000, isMe: false },
-    { id: '3', user: 'Me', text: '저도 참여하고 싶어요!', createdAt: Date.now() - 60000, isMe: true },
-  ]);
 
   // +1 because the user who just joined is now inside
   const initCount = Math.min(parseInt(current, 10) + 1, parseInt(max, 10));
   const [participants, setParticipants] = useState(initCount);
   const [input, setInput] = useState('');
   const flatListRef = useRef<FlatList>(null);
+  const [currentChatRoom, setCurrentChatRoom] = useState("general");
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
 
-  /* ---------- helpers ---------- */
-  const sendMessage = () => {
-    if (!input.trim()) return;
-    setMessages(prev => [
-      {
-        id: Date.now().toString(),
-        user: 'Me',
-        text: input.trim(),
-        createdAt: Date.now(),
-        isMe: true,
-      },
-      ...prev,
-    ]);
+  // Firebase에서 메시지 실시간 구독 (루틴별 채팅방 지원)
+  useEffect(() => {
+    if (!chatRoomId) return;
+    const q = query(
+      collection(db, `flashRunChats/${chatRoomId}/messages`),
+      orderBy('createdAt', 'desc')
+    );
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const messageList: ChatMessage[] = snapshot.docs.map(doc => ({
+        id: doc.id,
+        user: doc.data().user,
+        text: doc.data().text,
+        createdAt: doc.data().createdAt,
+        isMe: doc.data().user === 'Me', // 실제 로그인 유저와 비교 필요
+      }));
+      setMessages(messageList);
+    });
+    return () => unsubscribe();
+  }, [chatRoomId]);
+
+  // 메시지 전송
+  const sendMessage = async () => {
+    if (!input.trim() || !chatRoomId) return;
+    await addDoc(collection(db, `flashRunChats/${chatRoomId}/messages`), {
+      user: 'Me', // 실제 로그인 유저로 변경 필요
+      text: input.trim(),
+      createdAt: Date.now(),
+      isMe: true, // 현재 유저가 보낸 메시지
+    });
     setInput('');
-
     setTimeout(() => flatListRef.current?.scrollToOffset({ offset: 0, animated: true }), 50);
   };
 

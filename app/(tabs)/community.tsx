@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Location from 'expo-location';
 import { router } from 'expo-router';
-import { collection, getDocs, onSnapshot, orderBy, query, updateDoc } from 'firebase/firestore';
+import { addDoc, collection, getDocs, onSnapshot, orderBy, query, serverTimestamp, updateDoc } from 'firebase/firestore';
 import React, { useEffect, useState } from 'react';
 import {
   Alert,
@@ -341,6 +341,24 @@ export default function CommunityPage() {
     );
   };
 
+  // 채팅창 생성 함수
+  async function createFlashRunChatRoom(item: FlashRunEvent) {
+    try {
+      const docRef = await addDoc(collection(db, `flashRunChats/${item.title}/messages`), {
+        flashRunId: item.id,
+        title: item.title,
+        createdAt: serverTimestamp(),
+        participants: [
+          // 필요하다면 현재 유저 정보 추가
+        ],
+        messages: [],
+      });
+    } catch (error) {
+      Alert.alert('오류', '채팅방 생성에 실패했습니다.');
+      return null;
+    }
+  }
+
   // Flash run event card renderer
   const renderFlashRunCard = (item: FlashRunEvent) => {
     const disabled = item.status === 'full';
@@ -385,13 +403,21 @@ export default function CommunityPage() {
           <TouchableOpacity
             disabled={disabled}
             activeOpacity={disabled ? 1 : 0.8}
-            onPress={() => !disabled && router.push({
-              pathname: '/community/flashRunChat',
-              params: {
-                current: item.participants.toString(),
-                max: item.maxParticipants.toString(),
-              },
-            })}
+            onPress={async () => {
+              if (disabled) return;
+              
+              const chatRoomId = await createFlashRunChatRoom(item);
+              if (chatRoomId) {
+                router.push({
+                  pathname: '/community/flashRunChat',
+                  params: {
+                    chatRoomId,
+                    current: item.participants.toString(),
+                    max: item.maxParticipants.toString(),
+                  },
+                });
+              }
+            }}
           >
             <LinearGradient
               colors={
