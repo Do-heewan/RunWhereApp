@@ -2,10 +2,12 @@ import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
 import {
-  Image, SafeAreaView, ScrollView, StyleSheet,
+  Image, ScrollView, StyleSheet,
   Text, TouchableOpacity, View,
 } from 'react-native';
 import { LikeIcon, LikeIconActive, StarIcon, StarIconActive } from '../../components/IconSVG';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import Eclipse from '../../components/EclipseSVG';
 
 // Sample data for runwear posts
 type RunwearPost = {
@@ -139,6 +141,7 @@ export default function RunwearPage() {
 
   return (
     <SafeAreaView style={styles.container}>
+      <Eclipse />
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity 
