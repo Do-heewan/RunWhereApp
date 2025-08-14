@@ -8,7 +8,7 @@ import {
 } from 'react-native';
 import { LikeIcon, LikeIconActive, StarIcon, StarIconActive } from '../../components/IconSVG';
 
-import { collection, getDocs, orderBy, query } from 'firebase/firestore';
+import { collection, getDocs, orderBy, query, updateDoc } from 'firebase/firestore';
 import { db } from '../../backend/db/firebase';
 
 /* ---------- DATA ---------- */
@@ -92,7 +92,16 @@ export default function CommunityPage() {
     fetchFlashRun();
   }, []);
 
-  
+  // 좋아요 수 업데이트 함수
+  async function updateSneakerLikes(itemId: number, newLikes: number) {
+    // Firestore에서 해당 문서 찾기 (id 필드로)
+    const q = query(collection(db, 'runwearItem'), orderBy('id', 'desc'));
+    const snapshot = await getDocs(q);
+    const docRef = snapshot.docs.find(doc => doc.data().id === itemId)?.ref;
+    if (docRef) {
+      await updateDoc(docRef, { likes: newLikes });
+    }
+  }
 
   /* give each tab its dataset */
   const dataByTab: Record<TabKey, any[]> = {
@@ -120,11 +129,19 @@ export default function CommunityPage() {
   const toggleLike = (itemId: number) => {
     setLikedItems(prev => {
       const newSet = new Set(prev);
+      const item = runwearList.find(item => item.id === itemId);
+
+      if (!item) return prev;
+
+      let newLikes = item.likes;
       if (newSet.has(itemId)) {
         newSet.delete(itemId);
+        newLikes--;
       } else {
         newSet.add(itemId);
+        newLikes++;
       }
+      updateSneakerLikes(itemId, newLikes);
       return newSet;
     });
   };
