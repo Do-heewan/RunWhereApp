@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Location from 'expo-location';
 import { router } from 'expo-router';
-import { collection, getDocs, orderBy, query, updateDoc } from 'firebase/firestore';
+import { collection, getDocs, onSnapshot, orderBy, query, updateDoc } from 'firebase/firestore';
 import React, { useEffect, useState } from 'react';
 import {
   Alert,
@@ -71,54 +71,6 @@ const isPast24h = (iso: string) => {
     }
   }
 
-const flashRunData: FlashRunEvent[] = [
-  {
-    id: 1,
-    title: '중산신 즐거운',
-    time: '오늘 19:00',
-    location: '한양대역 앞',
-    description: '유니스트 앞에서 7시에 가볍게 뛸 사람 구합니다~',
-    hashtags: ['#친친런', '#가벼운런', '#런친이', '#번개런'],
-    participants: 3,
-    maxParticipants: 5,
-    organizer: {
-      name: '러닝러버',
-      avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face',
-    },
-    status: 'upcoming',
-  },
-  {
-  id: 2,
-  title: '한강 야경 러닝',
-  time: '오늘 20:30',
-  location: '뚝섬유원지역 3번 출구',
-  description: '야경 보면서 천천히 5km 러닝할 분들 모여요!',
-  hashtags: ['#야경런', '#힐링러닝', '#한강뷰', '#느긋하게'],
-  participants: 4,
-  maxParticipants: 8,
-  organizer: {
-    name: '야경러너',
-    avatar: 'https://images.unsplash.com/photo-1502767089025-6572583495b4?w=100&h=100&fit=crop&crop=face',
-  },
-  status: 'upcoming',
-},
-{
-  id: 3,
-  title: '아침 러닝 번개',
-  time: '내일 06:30',
-  location: '서울숲 입구',
-  description: '출근 전에 상쾌하게 뛰고 싶은 분들 함께해요!',
-  hashtags: ['#모닝런', '#상쾌한하루', '#출근전운동', '#서울숲'],
-  participants: 2,
-  maxParticipants: 6,
-  organizer: {
-    name: '모닝러버',
-    avatar: 'https://images.unsplash.com/photo-1544723795-3fb6469f5b39?w=100&h=100&fit=crop&crop=face',
-  },
-  status: 'full',
-}
-];
-
 /* ---------- TABS ---------- */
 const TABS = ['러닝템', '기록공유', '번개런'] as const;
 type TabKey = (typeof TABS)[number];
@@ -166,13 +118,17 @@ export default function CommunityPage() {
 
   const [runwearList, setRunwearList] = useState<SneakerItem[]>([]);
   const [sharedRecordList, setSharedRecordList] = useState<ShareRecord[]>([]);
+  const [flashRunList, setFlashRunList] = useState<FlashRunEvent[]>([]);
 
   useEffect(() => {
     async function fetchRunwear() {
       const q = query(collection(db, 'runwearItem'), orderBy('id', 'desc'));
-      const snapshot = await getDocs(q);
-      const items = snapshot.docs.map(doc => doc.data() as SneakerItem);
-      setRunwearList(items);
+      const unsubscribe = onSnapshot(q, (snapshot) => {
+        const items = snapshot.docs.map(doc => doc.data() as SneakerItem);
+        setRunwearList(items);
+      });
+
+      return unsubscribe;
     }
 
     fetchRunwear();
@@ -181,12 +137,29 @@ export default function CommunityPage() {
   useEffect(() => {
     async function fetchSharedRecords() {
       const q = query(collection(db, 'sharedRecord'), orderBy('id', 'desc'));
-      const snapshot = await getDocs(q);
-      const items = snapshot.docs.map(doc => doc.data() as ShareRecord);
-      setSharedRecordList(items);
+      const unsubscribe = onSnapshot(q, (snapshot) => {
+        const items = snapshot.docs.map(doc => doc.data() as ShareRecord);
+        setSharedRecordList(items);
+      });
+
+      return unsubscribe;
     }
 
     fetchSharedRecords();
+  }, []);
+
+  useEffect(() => {
+    async function fetchFlashRuns() {
+      const q = query(collection(db, 'flashRun'), orderBy('id', 'desc'));
+      const unsubscribe = onSnapshot(q, (snapshot) => {
+        const items = snapshot.docs.map(doc => doc.data() as FlashRunEvent);
+        setFlashRunList(items);
+      });
+
+      return unsubscribe;
+    }
+
+    fetchFlashRuns();
   }, []);
 
   // Get current location on component mount
@@ -257,7 +230,7 @@ export default function CommunityPage() {
 
   // Sort flashRunData based on selected filter
   const getSortedFlashRunData = () => {
-    const data = [...flashRunData];
+    const data = [...flashRunList];
     
     switch (selectedFilter) {
       case '최신순':
@@ -451,7 +424,7 @@ export default function CommunityPage() {
   const renderGalleryTile = (item: ShareRecord) => (
     <TouchableOpacity onPress={() => router.push('/community/share')}
       key={item.id} style={styles.galleryTile}>
-      <Image source={item.image.url} style={styles.galleryImg} />
+      <Image source={item.image} style={styles.galleryImg} />
     </TouchableOpacity>
   );
 

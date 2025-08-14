@@ -2,9 +2,9 @@ import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
+import { addDoc, collection } from 'firebase/firestore';
 import React, { useState } from 'react';
 import {
-  Alert,
   Image,
   SafeAreaView,
   ScrollView,
@@ -12,12 +12,14 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  View,
+  View
 } from 'react-native';
+import { db } from '../../backend/db/firebase';
 
 const CreateRecord = () => {
   const [reviewText, setReviewText] = useState('');
   const [imageUri, setImageUri] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
   // Check if all fields are filled
   const isFormComplete = imageUri && reviewText.trim().length > 0 ;
@@ -33,15 +35,33 @@ const CreateRecord = () => {
     }
   };
 
-  const handleSubmit = () => {
-    if (!isFormComplete) {
-      Alert.alert('알림', '모든 항목을 입력해주세요.');
-      return;
-    }
+  const handleSubmit = async () => {
+        if (!reviewText) {
+          alert('모든 필드를 채워주세요.');
+          return;
+        }
     
-    Alert.alert('완료', '게시물이 작성되었습니다.');
-    router.back();
-  };
+        setLoading(true);
+    
+        try {
+          const docRef = await addDoc(collection(db, 'sharedRecord'), {
+            id: Date.now(), // 간단한 고유값
+            image: { uri: imageUri },
+            review: reviewText,
+            createdAt: new Date(),
+          });
+          console.log('리뷰가 성공적으로 저장되었습니다. ID:', docRef.id);
+          alert('등록 완료!');
+          // Reset form
+          setReviewText('');
+          setImageUri(null);
+        } catch (error) {
+          console.error('리뷰 저장 중 오류 발생:', error);
+          alert('리뷰 저장에 실패했습니다. 다시 시도해주세요.');
+        } finally {
+          setLoading(false);
+        }
+      };
 
   return (
     <SafeAreaView style={styles.container}>
