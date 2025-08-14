@@ -6,7 +6,6 @@ import { addDoc, collection } from 'firebase/firestore';
 import React, { useState } from 'react';
 import {
   Image,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
@@ -15,6 +14,9 @@ import {
   View
 } from 'react-native';
 import { db } from '../../backend/db/firebase';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import Eclipse from '../../components/EclipseSVG';
+
 
 const CreateRecord = () => {
   const [reviewText, setReviewText] = useState('');
@@ -65,6 +67,8 @@ const CreateRecord = () => {
 
   return (
     <SafeAreaView style={styles.container}>
+    <Eclipse />
+
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity 

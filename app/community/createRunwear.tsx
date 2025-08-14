@@ -6,7 +6,6 @@ import { addDoc, collection } from 'firebase/firestore';
 import React, { useState } from 'react';
 import {
   Image,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
@@ -16,6 +15,8 @@ import {
 } from 'react-native';
 import { db } from '../../backend/db/firebase';
 import { StarIcon, StarIconActive } from '../../components/IconSVG';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import Eclipse from '../../components/EclipseSVG';
 
 const CreateRunwear = () => {
   const [reviewText, setReviewText] = useState('');
@@ -71,6 +72,8 @@ const CreateRunwear = () => {
 
   return (
     <SafeAreaView style={styles.container}>
+      <Eclipse />
+
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity 
@@ -172,7 +175,7 @@ const CreateRunwear = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#1C1C1E',
+    backgroundColor: '#15151C',
   },
   
   // Header styles

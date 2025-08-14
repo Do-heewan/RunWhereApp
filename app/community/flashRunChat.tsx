@@ -1,6 +1,5 @@
 import React, { useState, useRef } from 'react';
 import {
-  SafeAreaView,
   View,
   Text,
   FlatList,
@@ -12,13 +11,16 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import Eclipse from '@/components/EclipseSVG';
+import { SendButtonIcon } from '@/components/IconSVG';
 
 type ChatMessage = {
   id: string;
   user: string;
   text: string;
   createdAt: number;
-  isMe?: boolean; // Add this to identify current user's messages
+  isMe?: boolean;
 };
 
 import { useLocalSearchParams } from 'expo-router';
@@ -29,11 +31,13 @@ export default function FlashRunChatPage() {
     current: string;
     max: string;
   }>();
+  
   /* ---------- state ---------- */
   const [messages, setMessages] = useState<ChatMessage[]>([
-    { id: '1', user: '러닝러버', text: '안녕하세요! 7시에 뛸 분?', createdAt: Date.now() - 100000, isMe: false },
-    { id: '2', user: '야경러너', text: '저 갈게요 🙋‍♂️', createdAt: Date.now() - 80000, isMe: false },
-    { id: '3', user: 'Me', text: '저도 참여하고 싶어요!', createdAt: Date.now() - 60000, isMe: true },
+    { id: '1', user: '슬길버니', text: '안녕하세요', createdAt: Date.now() - 120000, isMe: false },
+    { id: '2', user: '정인하니', text: '안녕하세요', createdAt: Date.now() - 100000, isMe: false },
+    { id: '3', user: '봄바람니', text: '안녕하세요 안녕! 만나서 반갑습니다! 지금 잘하시는지요?', createdAt: Date.now() - 80000, isMe: false },
+    { id: '4', user: 'Me', text: '안녕하세요 잘부탁드립니다', createdAt: Date.now() - 60000, isMe: true },
   ]);
 
   // +1 because the user who just joined is now inside
@@ -64,39 +68,39 @@ export default function FlashRunChatPage() {
   const renderItem = ({ item }: { item: ChatMessage }) => (
     <View style={[styles.msgContainer, item.isMe && styles.myMsgContainer]}>
       {!item.isMe && (
-        <View style={styles.avatar} />
+        <View style={styles.avatar}>
+        </View>
       )}
       
-      <View style={[styles.msgBubble, item.isMe && styles.myMsgBubble]}>
+      <View style={styles.messageContent}>
         {!item.isMe && (
           <Text style={styles.msgUser}>{item.user}</Text>
         )}
-        <Text style={[styles.msgText, item.isMe && styles.myMsgText]}>
-          {item.text}
-        </Text>
+        <View style={[styles.msgBubble, item.isMe && styles.myMsgBubble]}>
+          <Text style={[styles.msgText, item.isMe && styles.myMsgText]}>
+            {item.text}
+          </Text>
+        </View>
       </View>
-
-      {item.isMe && (
-        <View style={styles.avatar} />
-      )}
     </View>
   );
 
   return (
     <SafeAreaView style={styles.root}>
+      <Eclipse />
+
       {/* header */}
-      
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-          <Ionicons name="chevron-back" size={26} color="#fff" />
+          <Ionicons name="chevron-back" size={24} color="#fff" />
         </TouchableOpacity>
 
-        <View>
+        <View style={styles.headerCenter}>
           <Text style={styles.title}>유니스트 앞에서 9시</Text>
-          <Text style={styles.participants}>{participants}명 참여중</Text>
+          <Text style={styles.participants}>({participants} / {max})</Text>
         </View>
 
-        <View style={{ width: 26 }} />
+        <View style={{ width: 24 }} />
       </View>
 
       {/* chat area */}
@@ -111,7 +115,7 @@ export default function FlashRunChatPage() {
           keyExtractor={m => m.id}
           renderItem={renderItem}
           inverted
-          contentContainerStyle={{ paddingTop: 10, paddingBottom: 10 }}
+          contentContainerStyle={{ paddingTop: 16, paddingBottom: 16 }}
           showsVerticalScrollIndicator={false}
         />
 
@@ -120,14 +124,20 @@ export default function FlashRunChatPage() {
           <TextInput
             value={input}
             onChangeText={setInput}
-            placeholder="메시지를 입력하세요"
+            placeholder="메시지를 입력하세요..."
             placeholderTextColor="#8E8E93"
             style={styles.input}
             onSubmitEditing={sendMessage}
             returnKeyType="send"
+            multiline
           />
-          <TouchableOpacity onPress={sendMessage} style={styles.sendBtn}>
-            <Ionicons name="send" size={20} color="#000" />
+          <TouchableOpacity 
+            onPress={sendMessage} 
+            style={[styles.sendBtn, !input.trim() && styles.sendBtnDisabled]}
+            disabled={!input.trim()}
+          >
+              <SendButtonIcon width={30} color={input.trim() ? '#303034' : '#8E8E93'}
+              />
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
@@ -143,107 +153,127 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between', // This ensures proper spacing
-    paddingHorizontal: 14,
-    paddingVertical: 10,
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: '#2C2C2E',
   },
   backBtn: {
-    width: 26,
-    height: 26,
+    width: 24,
+    height: 24,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 8,
+  },
+  headerCenter: {
+    flex: 1,
+    alignItems: 'center',
   },
   title: {
-    alignItems: 'center',
-    justifyContent: 'center',
     color: '#fff',
-    fontSize: 18,
+    fontSize: 17,
     fontFamily: 'Pretendard-SemiBold',
+    fontWeight: '600',
   },
   participants: {
     color: '#54F895',
-    fontSize: 12,
+    fontSize: 13,
     marginTop: 2,
-    textAlign: 'center',
-    fontFamily: 'Pretendard-SemiBold',
+    fontWeight: '500',
   },
 
   /* message container */
   msgContainer: {
     flexDirection: 'row',
-    alignItems: 'flex-end',
+    alignItems: 'flex-start',
     marginHorizontal: 16,
-    marginVertical: 4,
+    marginVertical: 6,
   },
   myMsgContainer: {
     justifyContent: 'flex-end',
+    alignItems: 'flex-end',
   },
 
   /* avatar */
   avatar: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#8E8E93',
-    marginHorizontal: 8,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#3A3A3C',
+    marginRight: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 
-  /* message bubble */
+  /* message content */
+  messageContent: {
+    flex: 1,
+    maxWidth: '75%',
+  },
+
+  /* message bubble - FIXED */
   msgBubble: {
-    maxWidth: '70%',
-    padding: 12,
-    backgroundColor: '#2C2C2E',
-    borderRadius: 16,
-    borderBottomLeftRadius: 4, // Sharp corner for other users (left side)
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    backgroundColor: '#54F895',
+    borderRadius: 20,
+    borderTopLeftRadius: 6, // Sharp corner on the left (near avatar)
   },
   myMsgBubble: {
-    backgroundColor: '#54F895',
-    borderBottomLeftRadius: 16,
-    borderBottomRightRadius: 4, // Sharp corner for my messages (right side)
+    backgroundColor: '#D9D9D9',
+    borderTopLeftRadius: 20, // Rounded corner on the left
+    borderBottomRightRadius: 6,  // Sharp corner at bottom right (pointing down)
   },
 
   /* message text */
   msgUser: {
-    color: '#54F895',
+    color: '#8E8E93',
     marginBottom: 4,
-    fontFamily: 'Pretendard-SemiBold',
+    marginLeft: 4,
+    fontFamily: 'Pretendard-Medium',
     fontSize: 12,
+    fontWeight: '500',
   },
   msgText: {
-    color: '#fff',
+    color: '#15151C',
     fontSize: 16,
-    lineHeight: 22,
+    lineHeight: 21,
     fontFamily: 'Pretendard-Regular',
   },
   myMsgText: {
-    color: '#000', // Black text on green bubble
+    color: '#000',
   },
 
   /* input */
   inputRow: {
     flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    backgroundColor: '#1C1C23',
+    alignItems: 'flex-end',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    paddingBottom: 20,
   },
   input: {
     flex: 1,
-    backgroundColor: '#2C2C2E',
+    backgroundColor: '#D9D9D9',
     borderRadius: 20,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    color: '#fff',
+    paddingHorizontal: 18,
+    paddingVertical: 12,
+    color: '#303034',
     fontSize: 16,
     fontFamily: 'Pretendard-Regular',
+    maxHeight: 50,
+    marginRight: 8,
   },
   sendBtn: {
-    marginLeft: 10,
     backgroundColor: '#54F895',
     borderRadius: 20,
-    padding: 10,
+    padding: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    minWidth: 66,
+    minHeight: 50,
+  },
+  sendBtnDisabled: {
+    backgroundColor: '#D9D9D9',
   },
 });

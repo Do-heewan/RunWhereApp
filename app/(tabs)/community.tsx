@@ -7,7 +7,6 @@ import React, { useEffect, useState } from 'react';
 import {
   Alert,
   Image,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
@@ -16,6 +15,8 @@ import {
 } from 'react-native';
 import { db } from '../../backend/db/firebase';
 import { LikeIcon, LikeIconActive, StarIcon, StarIconActive } from '../../components/IconSVG';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import Eclipse from '../../components/EclipseSVG';
 
 
 /* ---------- DATA ---------- */
@@ -437,8 +438,8 @@ export default function CommunityPage() {
 
   /* --------------- UI --------------- */
   return (
-    <SafeAreaView style={styles.container}>
-      {/* Dynamic Add Button */}
+      <SafeAreaView style={styles.container}>
+      <Eclipse /> {/* Background effect */}
       <TouchableOpacity
         style={styles.addbutton}
         onPress={handleAddButtonPress}

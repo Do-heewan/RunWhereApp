@@ -168,12 +168,12 @@ export default function TabLayout() {
           borderColor: '#d9d9d9af',
           borderWidth: 0.5,
           paddingTop: 12,
-          paddingBottom: 12,
           elevation: 10,
           shadowColor: '#443f3fff',
           shadowOffset: { width: 2, height: 2 },
           shadowOpacity: 0.45,
           shadowRadius: 15,
+
         },
       }}
       >
