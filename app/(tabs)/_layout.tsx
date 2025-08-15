@@ -1,8 +1,7 @@
-import { Ionicons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
 import React from 'react';
 import { View } from 'react-native';
-import Svg, { Path, Mask, G, Rect, Defs, LinearGradient, Stop } from 'react-native-svg';
+import Svg, { Defs, G, LinearGradient, Mask, Path, Rect, Stop } from 'react-native-svg';
 
 // Custom SVG Components
 
@@ -173,7 +172,6 @@ export default function TabLayout() {
           shadowOffset: { width: 2, height: 2 },
           shadowOpacity: 0.45,
           shadowRadius: 15,
-
         },
       }}
       >
@@ -182,6 +180,7 @@ export default function TabLayout() {
         name="home"
         options={{
           title: '',
+          tabBarStyle: { display: 'none' }, // 홈 화면에서만 네비게이션 바 숨김
           tabBarIcon: ({ focused }) => (
             <TabBarIcon focused={focused}>
               <ShoeIcon active={focused} size={focused ? 35 : 37} />
