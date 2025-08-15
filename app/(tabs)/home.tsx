@@ -1,4 +1,5 @@
 import Eclipse from '@/components/EclipseSVG';
+import GradientButton from '@/components/GradientButton';
 import { ThemedText } from '@/components/ThemedText';
 import { Colors } from '@/constants/Colors';
 import { Ionicons } from '@expo/vector-icons';
@@ -82,11 +83,20 @@ export default function HomeScreen() {
           />
         ))}
       </View>
-      <View style={styles.globalOverlay}>
-        <ThemedText type="button1" style={styles.overlayText}>
-          마음에 드는 코스를 선택해보세요
-        </ThemedText>
-      </View>
+             {selectedMapIndex === null ? (
+         <View style={styles.globalOverlay}>
+           <ThemedText type="button1" style={styles.overlayText}>
+             마음에 드는 코스를 선택해보세요
+           </ThemedText>
+         </View>
+       ) : (
+         <GradientButton
+           onPress={() => console.log('선택된 맵:', selectedMapIndex)}
+           title="이 동선으로 뛸게요"
+           style={styles.gradientButton}
+           textStyle={styles.gradientButtonText}
+         />
+       )}
     </SafeAreaView>
   );
 }
@@ -168,8 +178,48 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
     zIndex: 9999,
   },
+  globalOverlaySelected: {
+    alignSelf: 'center',
+    width: 364,
+    height: 68,
+    position: 'absolute',
+    bottom: 30,
+    backgroundColor: Colors.primary,
+    borderRadius: 50,
+    borderColor: '#d9d9d9af',
+    borderWidth: 0.5,
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 15,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+    zIndex: 9999,
+  },
   overlayText: {
     color: Colors.gray2,
     textAlign: 'center',
+  },
+  overlayTextSelected: {
+    color: Colors.gray1,
+    textAlign: 'center',
+  },
+  gradientButton: {
+    alignSelf: 'center',
+    width: 364,
+    height: 68,
+    position: 'absolute',
+    bottom: 30,
+    elevation: 15,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+    zIndex: 9999,
+  },
+  gradientButtonText: {
+    color: '#1C1C1E',
+    fontWeight: '600',
   },
 });
