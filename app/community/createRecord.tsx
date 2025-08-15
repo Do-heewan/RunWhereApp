@@ -3,8 +3,10 @@ import * as ImagePicker from 'expo-image-picker';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { addDoc, collection } from 'firebase/firestore';
+import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
 import React, { useState } from 'react';
 import {
+  ActivityIndicator,
   Image,
   ScrollView,
   StyleSheet,
@@ -13,8 +15,8 @@ import {
   TouchableOpacity,
   View
 } from 'react-native';
-import { db } from '../../backend/db/firebase';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { db, storage } from '../../backend/db/firebase';
 import Eclipse from '../../components/EclipseSVG';
 
 
@@ -38,7 +40,7 @@ const CreateRecord = () => {
   };
 
   const handleSubmit = async () => {
-        if (!reviewText) {
+        if (!reviewText || !imageUri) {
           alert('모든 필드를 채워주세요.');
           return;
         }
@@ -46,9 +48,17 @@ const CreateRecord = () => {
         setLoading(true);
     
         try {
+          // 1. 이미지 firebase storage에 업로드
+          const response = await fetch(imageUri);
+          const blob = await response.blob();
+          const filename = `sharedRecord/${Date.now()}_${Math.floor(Math.random()*10000)}.jpg`;
+          const storageRef = ref(storage, filename);
+          await uploadBytes(storageRef, blob);
+          const downloadURL = await getDownloadURL(storageRef);
+
           const docRef = await addDoc(collection(db, 'sharedRecord'), {
             id: Date.now(), // 간단한 고유값
-            image: { uri: imageUri },
+            image: { uri: downloadURL },
             review: reviewText,
             createdAt: new Date(),
           });
@@ -57,6 +67,8 @@ const CreateRecord = () => {
           // Reset form
           setReviewText('');
           setImageUri(null);
+          // 이전 페이지로 이동
+          router.back();
         } catch (error) {
           console.error('리뷰 저장 중 오류 발생:', error);
           alert('리뷰 저장에 실패했습니다. 다시 시도해주세요.');
@@ -68,6 +80,12 @@ const CreateRecord = () => {
   return (
     <SafeAreaView style={styles.container}>
     <Eclipse />
+    {loading && (
+      <View style={styles.loadingOverlay}>
+        <ActivityIndicator size="large" color="#54f895" />
+        <Text style={styles.loadingText}>업로드 중...</Text>
+      </View>
+    )}
 
       {/* Header */}
       <View style={styles.header}>
@@ -151,6 +169,22 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#1C1C1E',
+  },
+  loadingOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1000,
+  },
+  loadingText: {
+    color: '#fff',
+    marginTop: 12,
+    fontSize: 16,
   },
   
   // Header styles
