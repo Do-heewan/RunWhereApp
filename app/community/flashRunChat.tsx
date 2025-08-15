@@ -2,7 +2,7 @@ import Eclipse from '@/components/EclipseSVG';
 import { SendButtonIcon } from '@/components/IconSVG';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
-import { addDoc, collection, onSnapshot, orderBy, query } from 'firebase/firestore';
+import { addDoc, collection, onSnapshot, orderBy, query, serverTimestamp } from 'firebase/firestore';
 import React, { useEffect, useRef, useState } from 'react';
 import {
   FlatList,
@@ -15,79 +15,69 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { db } from '../../backend/db/firebase';
+import { db } from '../../backend/db/firebase'; // db 인스턴스 import 필요
 
 type ChatMessage = {
-  id: string;
+  uid: string;
   user: string;
   text: string;
   createdAt: number;
-  isMe: boolean;
 };
 
 export default function FlashRunChatPage() {
-  /* ---------- params ---------- */
-  const { chatRoomId, current = '0', max = '0' } = useLocalSearchParams<{
-    chatRoomId: string;
-    current: string;
-    max: string;
-  }>();
-
-  // +1 because the user who just joined is now inside
-  const initCount = Math.min(parseInt(current, 10) + 1, parseInt(max, 10));
-  const [participants, setParticipants] = useState(initCount);
-  const [input, setInput] = useState('');
-  const flatListRef = useRef<FlatList>(null);
-  const [currentChatRoom, setCurrentChatRoom] = useState("general");
+  const { chatRoomId, current, max } = useLocalSearchParams();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [input, setInput] = useState('');
 
-  // Firebase에서 메시지 실시간 구독 (루틴별 채팅방 지원)
+  const flatListRef = useRef<FlatList>(null);
+
+  // 메시지 실시간 구독
   useEffect(() => {
     if (!chatRoomId) return;
-    const q = query(
-      collection(db, `flashRunChats/${chatRoomId}/messages`),
-      orderBy('createdAt', 'desc')
-    );
+    const messagesRef = collection(db, 'flashRunChatsRooms', String(chatRoomId), 'messages');
+    const q = query(messagesRef, orderBy('createdAt', 'desc'));
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      const messageList: ChatMessage[] = snapshot.docs.map(doc => ({
-        id: doc.id,
-        user: doc.data().user,
-        text: doc.data().text,
-        createdAt: doc.data().createdAt,
-        isMe: doc.data().user === 'Me', // 실제 로그인 유저와 비교 필요
-      }));
-      setMessages(messageList);
+      const msgs = snapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          uid: doc.id,
+          user: data.user ?? '익명',
+          text: data.text,
+          createdAt: data.createdAt?.toMillis?.() ?? 0,
+        };
+      });
+      setMessages(msgs);
     });
-    return () => unsubscribe();
+    return unsubscribe;
   }, [chatRoomId]);
 
   // 메시지 전송
   const sendMessage = async () => {
     if (!input.trim() || !chatRoomId) return;
-    await addDoc(collection(db, `flashRunChats/${chatRoomId}/messages`), {
-      user: 'Me', // 실제 로그인 유저로 변경 필요
+    const messagesRef = collection(db, 'flashRunChatsRooms', String(chatRoomId), 'messages');
+    await addDoc(messagesRef, {
+      user: 'me', // 실제 로그인 유저 정보로 대체 필요
+      uid: 'user-uid', // 실제 로그인 유저 ID로 대체 필요
       text: input.trim(),
-      createdAt: Date.now(),
-      isMe: true, // 현재 유저가 보낸 메시지
+      createdAt: serverTimestamp(),
     });
     setInput('');
-    setTimeout(() => flatListRef.current?.scrollToOffset({ offset: 0, animated: true }), 50);
   };
 
   /* ---------- render ---------- */
   const renderItem = ({ item }: { item: ChatMessage }) => (
-    <View style={[styles.msgContainer, item.isMe && styles.myMsgContainer]}>
-      {!item.isMe && (
+    <View style={[styles.msgContainer, item.uid === 'user-uid' && styles.myMsgContainer]}>
+      {!item.uid === 'user-uid' && (
         <View style={styles.avatar}>
         </View>
       )}
       
       <View style={styles.messageContent}>
-        {!item.isMe && (
+        {!item.uid === 'user-uid' && (
           <Text style={styles.msgUser}>{item.user}</Text>
         )}
-        <View style={[styles.msgBubble, item.isMe && styles.myMsgBubble]}>
-          <Text style={[styles.msgText, item.isMe && styles.myMsgText]}>
+        <View style={[styles.msgBubble, item.uid === 'user-uid' && styles.myMsgBubble]}>
+          <Text style={[styles.msgText, item.uid === 'user-uid' && styles.myMsgText]}>
             {item.text}
           </Text>
         </View>
@@ -106,8 +96,8 @@ export default function FlashRunChatPage() {
         </TouchableOpacity>
 
         <View style={styles.headerCenter}>
-          <Text style={styles.title}>유니스트 앞에서 9시</Text>
-          <Text style={styles.participants}>({participants} / {max})</Text>
+          <Text style={styles.title}>채팅방</Text>
+          <Text style={styles.participants}>({current} / {max})</Text>
         </View>
 
         <View style={{ width: 24 }} />

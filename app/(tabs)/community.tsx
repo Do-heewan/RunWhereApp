@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Location from 'expo-location';
 import { router } from 'expo-router';
-import { addDoc,doc, getDoc, collection, getDocs, onSnapshot, orderBy, query, serverTimestamp, updateDoc } from 'firebase/firestore';
+import { collection, doc, getDoc, getDocs, onSnapshot, orderBy, query, updateDoc, where } from 'firebase/firestore';
 import React, { useEffect, useState } from 'react';
 import {
   Alert,
@@ -14,10 +14,10 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { db } from '../../backend/db/firebase';
-import { LikeIcon, LikeIconActive, StarIcon, StarIconActive, FlashIcon } from '../../components/IconSVG';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { db } from '../../backend/db/firebase';
 import Eclipse from '../../components/EclipseSVG';
+import { FlashIcon, LikeIcon, LikeIconActive, StarIcon, StarIconActive } from '../../components/IconSVG';
 
 
 /* ---------- DATA ---------- */
@@ -47,9 +47,12 @@ type FlashRunEvent = {
     name: string;
     avatar: string;
   };
-  paceMin: number;
-  paceSec: number;
+  startHour: number;
+  startMinute: number;
+  targetMinute: number;
+  targetSecond: number;
   status: 'upcoming' | 'full' | 'past';
+  messages: string[];
 };
 
 // Add filter type
@@ -197,18 +200,18 @@ export default function CommunityPage() {
 };
 
 function getPaceInfo(min: number, sec: number): PaceInfo {
-  const pace = min + sec / 60;
+  const pace = Number(min) + Number(sec) / 60;
 
-  if (pace >= 3 && pace <= 4) {
+  if (pace >= 3 && pace < 5) {
     return { label: '3-4', color: '#A7F5C6' }; // Light green
-  } else if (pace >= 5 && pace <= 6) {
+  } else if (pace >= 5 && pace < 7) {
     return { label: '5-6', color: '#41B5C4' }; // Teal
-  } else if (pace >= 7 && pace <= 8) {
+  } else if (pace >= 7 && pace < 9) {
     return { label: '7-8', color: '#9384B8' }; // Purple
   } else if (pace >= 9) {
     return { label: '9이상', color: '#00A762' }; // Dark green
   } else {
-    return { label: 'null', color: '#d9d9d9' }; // Default gray
+    return { label: '우사인볼트', color: '#d9d9d9' }; // Default gray
   }
 }
 
@@ -231,7 +234,7 @@ const getSortedFlashRunData = () => {
       const userPace = getPaceInfo(userPaceMin, userPaceSec).label;
 
       return data.filter(item => {
-        const itemPace = getPaceInfo(item.paceMin, item.paceSec).label;
+        const itemPace = getPaceInfo(item.targetMinute, item.targetSecond).label;
         return itemPace === userPace;
       });
     }
@@ -258,7 +261,7 @@ const getSortedFlashRunData = () => {
         router.push('/community/createRecord');
         break;
       case '번개런':
-        router.push('/community/createRun');
+        router.push('/community/createFlashRun');
         break;
       default:
         router.push('/community/createRunwear');
@@ -337,25 +340,6 @@ const getSortedFlashRunData = () => {
     );
   };
 
-  // 채팅창 생성 함수
-  async function createFlashRunChatRoom(item: FlashRunEvent) {
-    try {
-      const docRef = await addDoc(collection(db, `flashRunChats/${item.title}/messages`), {
-        flashRunId: item.id,
-        title: item.title,
-        createdAt: serverTimestamp(),
-        participants: [
-          // 필요하다면 현재 유저 정보 추가
-        ],
-        messages: [],
-      });
-      return docRef.id;
-    } catch (error) {
-      Alert.alert('오류', '채팅방 생성에 실패했습니다.');
-      return null;
-    }
-  }
-
   
 /* ---------------- Location / Filter section ---------------- */
 const LocationAndFilterSection = () => (
@@ -416,7 +400,7 @@ const LocationAndFilterSection = () => (
   // Flash run event card renderer
   const renderFlashRunCard = (item: FlashRunEvent) => {
     const disabled = item.status === 'full'; 
-    const { label, color } = getPaceInfo(item.paceMin, item.paceSec);
+    const { label, color } = getPaceInfo(item.targetMinute, item.targetSecond);
 
     return (   
       <View key={item.id} style={styles.flashRunCard}>
@@ -447,7 +431,8 @@ const LocationAndFilterSection = () => (
         </View>
 
         {/* organizer */}
-        <View style={styles.organizerSection}>
+        {/* 사용자 정보 추가 이후    */}
+        {/* <View style={styles.organizerSection}>
           <Image source={{ uri: item.organizer.avatar }} style={styles.organizerAvatar} />
           <View>
             <Text style={styles.organizerName}>{item.organizer.name}</Text>
@@ -456,7 +441,7 @@ const LocationAndFilterSection = () => (
               <Text style={styles.locationText}>{item.location}</Text>
             </View>
           </View>
-        </View>
+        </View> */}
 
         {/* join-button */}
         <View>
@@ -466,7 +451,16 @@ const LocationAndFilterSection = () => (
             onPress={async () => {
               if (disabled) return;
               
-              const chatRoomId = await createFlashRunChatRoom(item);
+              // 1. 채팅방 존재 여부 확인 (flashRunId로)
+              const chatRoomsRef = collection(db, 'flashRunChatsRooms');
+              const q = query(chatRoomsRef,
+                where('id', '==', item.id)
+              );
+              const snapshot = await getDocs(q);
+
+              let chatRoomId: string | null = null;
+              chatRoomId = snapshot.docs[0].id;
+
               if (chatRoomId) {
                 router.push({
                   pathname: '/community/flashRunChat',

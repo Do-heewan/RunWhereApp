@@ -1,31 +1,53 @@
+import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
+import { router } from 'expo-router';
+import { addDoc, collection, doc, serverTimestamp, setDoc } from 'firebase/firestore';
 import React, { useState } from 'react';
 import {
-  View,
+  Alert,
+  ScrollView,
+  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  ScrollView,
-  StyleSheet,
+  View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
-import { addDoc, collection } from 'firebase/firestore';
 import { db } from '../../backend/db/firebase';
-import { router } from 'expo-router';
 import Eclipse from '../../components/EclipseSVG';
 
 const CreateRun = () => {
+
+  type FlashRunEvent = {
+    id: number;
+    title: string;
+    time: string;
+    location: string;
+    description: string;      
+    hashtags: string[];       
+    participants: number;
+    maxParticipants: number;
+    organizer: {
+      name: string;
+      avatar: string;
+    };
+    startHour: number;
+    startMinute: number;
+    targetMinute: number;
+    targetSecond: number;
+    status: 'upcoming' | 'full' | 'past';
+  };
+
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [hashtags, setHashtags] = useState('');
   const [loading, setLoading] = useState(false);
+  const [participants, setParticipants] = useState(1);
   const [maxParticipants, setMaxParticipants] = useState('');
   const [startHour, setStartHour] = useState('');
   const [startMinute, setStartMinute] = useState('');
   const [targetMinute, setTargetMinute] = useState('');
   const [targetSecond, setTargetSecond] = useState('');
-
 
   const isFormComplete =
   title.trim() &&
@@ -37,41 +59,27 @@ const CreateRun = () => {
   targetMinute.trim() &&
   targetSecond.trim();
 
-
-  const handleSubmit = async () => {
-    if (!isFormComplete) {
-      alert('모든 필드를 채워주세요.');
-      return;
-    }
-
-    setLoading(true);
+  // 채팅창 생성 함수
+  async function createFlashRunChatRoom(item: FlashRunEvent) {
     try {
-      const docRef = await addDoc(collection(db, 'runs'), {
-        id: Date.now(),
-        title,
-        description,
-        hashtags,
-        maxParticipants,
-        startHour,
-        startMinute,
-        targetMinute,
-        targetSecond,
-        time: `${startHour}:${startMinute}`, // For sorting by 임박순
-        paceMin: parseInt(targetMinute) || 0,
-        paceSec: parseInt(targetSecond) || 0,
-        createdAt: new Date(),
+      await setDoc(doc(collection(db, 'flashRunChatsRooms'), String(item.id)), {
+        id: item.id,
+        title: item.title,
+        createdAt: serverTimestamp(),
+        creator: {
+          // 생성자 정보 추가
+        },
+        participants: [
+          // 참여자 정보 추가
+        ],
+        messages: [], // 초기 메시지 배열
       });
-      console.log('런 이벤트 저장 완료. ID:', docRef.id);
-      alert('등록 완료!');
-      router.back();
+      return String(item.id); // 채팅방 ID 반환
     } catch (error) {
-      console.error('런 이벤트 저장 오류:', error);
-      alert('저장에 실패했습니다. 다시 시도해주세요.');
-    } finally {
-      setLoading(false);
+      Alert.alert('오류', '채팅방 생성에 실패했습니다.');
+      return null;
     }
-  };
-
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -216,7 +224,48 @@ const CreateRun = () => {
       {/* Submit Button */}
       <TouchableOpacity
         style={styles.floatingButton}
-        onPress={handleSubmit}
+        onPress={async () => {
+          if (!isFormComplete || loading) return;
+          setLoading(true);
+          try {
+            const hashtagsArray = hashtags.split(' ').map(tag => tag.trim()).filter(tag => tag);
+
+            const event: FlashRunEvent = {
+              id: Date.now(),
+              title,
+              description,
+              hashtags: hashtagsArray,
+              maxParticipants: Number(maxParticipants),
+              participants: 1,
+              time: `${startHour}:${startMinute}`,
+              location: '', // You may want to add a location field
+              organizer: {
+                name: '', // Fill with actual organizer info if available
+                avatar: '',
+              },
+              startHour: Number(startHour),
+              startMinute: Number(startMinute),
+              targetMinute: Number(targetMinute),
+              targetSecond: Number(targetSecond),
+              status: 'upcoming',
+            };
+
+            const docRef = await addDoc(collection(db, 'flashRun'), {
+              ...event,
+              createdAt: new Date(),
+            });
+
+            await createFlashRunChatRoom(event);
+
+            alert('등록 완료!');
+            router.back();
+          } catch (error) {
+            console.error('런 이벤트 저장 오류:', error);
+            alert('저장에 실패했습니다. 다시 시도해주세요.');
+          } finally {
+            setLoading(false);
+          }
+        }}
         disabled={!isFormComplete || loading}
       >
         {isFormComplete ? (
