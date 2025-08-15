@@ -3,24 +3,52 @@
  * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://reactnativeunistyles.vercel.app), etc.
  */
 
-const tintColorLight = '#0a7ea4';
-const tintColorDark = '#fff';
+const tintColorDark = '#54F895';
 
 export const Colors = {
-  light: {
-    text: '#11181C',
-    background: '#fff',
-    tint: tintColorLight,
-    icon: '#687076',
-    tabIconDefault: '#687076',
-    tabIconSelected: tintColorLight,
-  },
   dark: {
-    text: '#ECEDEE',
-    background: '#151718',
+    // Text colors
+    text: '#FAFAF8',
+    textSecondary: '#D9D9D9',
+    textMuted: '#7C7C7C',
+    
+    // Background colors
+    background: '#15151C',
+    surface: '#303034',
+    
+    // Primary colors
+    primary: '#54F895',
+    primaryGradient: '#2AFBEA',
+    
+    // UI element colors
     tint: tintColorDark,
-    icon: '#9BA1A6',
-    tabIconDefault: '#9BA1A6',
+    icon: '#FAFAF8',
+    tabIconDefault: '#7C7C7C',
     tabIconSelected: tintColorDark,
+    
+    // Status colors
+    success: '#54F895',
+    error: '#E77C7C',
+    warning: '#ADADB2',
+    
+    // Border and divider
+    border: '#303034',
+    divider: '#7C7C7C',
   },
+};
+
+// RunWhere color palettes for easier access
+export const ColorPalette = {
+  primary: '#54F895',
+  gradient: '#2AFBEA',
+  black: '#090909',
+  blackgray: '#15151C',
+  white: '#FAFAF8',
+  red: '#E77C7C',
+  
+  // Grayscale
+  gray1: '#303034',
+  gray2: '#7C7C7C',
+  gray3: '#ADADB2',
+  gray4: '#D9D9D9',
 };
