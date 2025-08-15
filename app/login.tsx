@@ -1,27 +1,23 @@
-import { useState } from 'react';
-import { Button, StyleSheet, TextInput, View, Alert, Text } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useState } from 'react';
+import { Alert, Button, StyleSheet, TextInput, View } from 'react-native';
 
-export const fixedUser = {
-  id: 'runwhere',
-  password: '1234',
-  name: 'RunWhere User',
-  email: 'run@example.com',
-};
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { auth } from "../backend/db/firebase";
 
 export default function Login() {
   const [enteredId, setEnteredId] = useState('');
   const [enteredPassword, setEnteredPassword] = useState('');
   const router = useRouter();
 
-  const handleLogin = () => {
-    if (
-      enteredId === fixedUser.id &&
-      enteredPassword === fixedUser.password
-    ) {
+  const handleLogin = async () => {
+    // 로그인 로직 구현
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, enteredId, enteredPassword);
+      Alert.alert('로그인 성공!', `런웨어로 돌아오셨군요!, ${userCredential.user.email}`);
       router.push('/home');
-    } else {
-      Alert.alert('Login Failed', 'Invalid ID or password');
+    } catch (error) {
+      Alert.alert('로그인 실패', 'ID 또는 비밀번호가 잘못되었습니다.', error.message);
     }
   };
 
@@ -44,7 +40,7 @@ export default function Login() {
       />
       <View style={styles.buttonContainer}>
         <Button title="Login" onPress={handleLogin} color="#4CAF50" />
-        <Button title="Signup" onPress={() => {}} color="#2196F3" />
+        <Button title="Signup" onPress={() => router.push('/signUp')} color="#2196F3" />
       </View>
     </View>
   );
