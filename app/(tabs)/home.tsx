@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Dimensions, SafeAreaView, StyleSheet, Text, View } from 'react-native';
 import MapView from 'react-native-maps';
+import Carousel from 'react-native-reanimated-carousel';
+
 
 export default function HomeScreen() {
   const urlList = [
@@ -30,37 +32,46 @@ export default function HomeScreen() {
 
   // 템플릿 리터럴을 사용해서 동적으로 URL 생성
   return (
-    <ScrollView style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <Text style={styles.header}>Welcome Back 👋</Text>
       <Text style={styles.subtext}>Ready for your next walk?</Text>
 
-      <View style={styles.card}>
+      {/* <View style={styles.card}>
         <Text style={styles.cardTitle}>Today's Distance</Text>
         <Text style={styles.cardValue}>3.2 km</Text>
-      </View>
+      </View> */}
 
       {/* <View style={styles.card}>
         <Text style={styles.cardTitle}>Steps Taken</Text>
         <Text style={styles.cardValue}>4,876</Text>
       </View> */}
-      <MapView
-        style={styles.map}
-        mapType="none"
-        initialRegion={{
-          latitude: 37.5665,
-          longitude: 126.9780,
-          latitudeDelta: 0.01,
-          longitudeDelta: 0.01,
-        }}
-      >
-        {/* <UrlTile
-          urlTemplate={url}
-          zIndex={-1}
-        /> */}
-      </MapView>
+                      <Carousel
+          width={Dimensions.get('window').width}
+          height={Dimensions.get('window').height - 40}
+          data={urlList}
+          mode="parallax"
+          modeConfig={{
+            parallaxScrollingScale: 0.9,
+            parallaxScrollingOffset: 70,
+          }}
+        renderItem={({ item }) => (
+          <View style={styles.carouselItem}>
+            <MapView
+              style={styles.map}
+              mapType="none"
+              initialRegion={{
+                latitude: 37.5665,
+                longitude: 126.9780,
+                latitudeDelta: 0.01,
+                longitudeDelta: 0.01,
+              }}
+            />
+          </View>
+        )}
+      />
       {/* <Button title="Change Style" onPress={handleStyleChange} /> */}
       {/* Add more cards or components here */}
-    </ScrollView>
+    </SafeAreaView>
   );
 }
 
@@ -75,6 +86,7 @@ const styles = StyleSheet.create({
   map: {
     width: "100%",
     height: 400,
+    borderRadius: 12,
   },
   header: {
     fontSize: 28,
@@ -90,7 +102,7 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: '#2C2C2E',
     borderRadius: 12,
-    padding: 20,
+    padding: 0,
     marginBottom: 16,
     shadowColor: '#54f895',
     shadowOffset: { width: 0, height: 0 },
@@ -106,5 +118,8 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     color: '#54f895',
+  },
+  carouselItem: {
+    paddingHorizontal: 20,
   },
 });
