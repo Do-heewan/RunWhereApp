@@ -1,32 +1,110 @@
+import DistanceChips from '@/components/DistanceChips';
+import Dust from '@/components/Dust';
+import Eclipse from '@/components/EclipseSVG';
+import Rain from '@/components/Rain';
+
 import { ThemedText } from '@/components/ThemedText';
 import { Colors } from '@/constants/Colors';
+import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import React from 'react';
-import { SafeAreaView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import React, { useState } from 'react';
+import { Image, SafeAreaView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import Svg, { Circle } from 'react-native-svg';
 
 export default function CourseDetailScreen() {
   const router = useRouter();
+  const [selectedDistance, setSelectedDistance] = useState<{ id: string; label: string; value: [number, number] } | null>(null);
 
   const handleHomePress = () => {
     router.push('/course-detail');
   };
 
+  const handleDistanceChange = (item: { id: string; label: string; value: [number, number] }) => {
+    setSelectedDistance(item);
+  };
+
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.headerContainer}>
-        <ThemedText type="h2" style={styles.title}>코스 상세</ThemedText>
+      <Eclipse />
+      <View style={{
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginHorizontal: 30,
+        marginTop: 11,
+      }}>
+        <View>
+          <ThemedText type="h1" style={styles.title}>26°</ThemedText>
+        </View>
+        <View>
+          <Rain precipitation={2} />
+        </View>
+        <View>
+          <Dust concentration={50} />
+        </View>
       </View>
 
-      <View style={styles.content}>
-        <ThemedText type="body1" style={styles.description}>
-          선택한 코스의 상세 정보가 여기에 표시됩니다.
-        </ThemedText>
-        
-        <TouchableOpacity style={styles.selectCourseButton} onPress={handleHomePress}>
-          <ThemedText type="button1" style={styles.selectCourseButtonText}>
-            코스 선택하기
-          </ThemedText>
+      <View style={{
+        justifyContent: 'center',
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginHorizontal: 30,
+        marginTop: 38,
+      }}>
+        <TouchableOpacity>
+          <Ionicons name="chevron-back" size={35} color={Colors.primary} />
         </TouchableOpacity>
+        <ThemedText type="h2" style={{color: Colors.primary}}>울산시 울주군 러닝동</ThemedText>
+      </View>
+      <View style={{alignItems: 'center', position: 'relative'}}>
+        {/* SVG 배경 */}
+        <Svg 
+          width={247} 
+          height={247} 
+          viewBox="0 0 217 217" 
+          fill="none"
+          style={{position: 'absolute', zIndex: 1}}
+        >
+          <Circle cx="106.978" cy="107.625" r="74.0423" transform="rotate(14.9362 106.978 107.625)" fill="#54F895" fillOpacity="0.1"/>
+          <Circle cx="107.568" cy="107.823" r="63.583" transform="rotate(14.9362 107.568 107.823)" fill="#54F895" fillOpacity="0.1"/>
+          <Circle cx="108.084" cy="108.083" r="88.3066" transform="rotate(14.9362 108.084 108.083)" fill="#54F895" fillOpacity="0.1"/>
+        </Svg>
+        
+        {/* 신발 이미지 (앞쪽) */}
+        <Image 
+          source={require('@/assets/images/shoe.png')}
+          style={{width: 247, height: 247, zIndex: 2}}
+          resizeMode="contain"
+        />
+      </View>
+      <ThemedText type="h2" style={{color: Colors.white, alignSelf: 'center'}}>오늘 몇km 목표이신가요?</ThemedText>
+      <ThemedText type="body2" style={{color: Colors.gray4,marginTop:5,alignSelf:'center'}}>당신에게 딱 맞는 러닝 코스를 추천해드릴게요</ThemedText>
+      <DistanceChips onChange={handleDistanceChange} initialId="" />
+      
+      
+      
+      <View style={{marginTop: 60}}>
+        {selectedDistance ? (
+          <TouchableOpacity style={styles.CourseButton} onPress={handleHomePress}>
+            <LinearGradient
+              colors={['#54F895', '#2AFBEA']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.gradientButton}
+            >
+              <ThemedText type="button1" style={{color:Colors.blackGray}}>
+                러닝 코스 추천 받기
+              </ThemedText>
+            </LinearGradient>
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity style={styles.selectCourseButton} onPress={handleHomePress}>
+            <ThemedText type="button1" style={{color:Colors.gray4}}>
+              러닝 코스 추천 받기
+            </ThemedText>
+          </TouchableOpacity>
+        )}
       </View>
     </SafeAreaView>
   );
@@ -36,6 +114,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.blackGray,
+    paddingBottom: 50,
   },
   headerContainer: {
     flexDirection: 'row',
@@ -61,13 +140,35 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 40,
   },
+  CourseButton: {
+    width: 250,
+    height: 68,
+    borderRadius: 30,
+    alignSelf: 'center',
+  },
   selectCourseButton: {
-    backgroundColor: Colors.primary,
-    paddingHorizontal: 30,
-    paddingVertical: 15,
-    borderRadius: 25,
+    width: 250,
+    height: 68,
+    backgroundColor: Colors.gray2,
+    borderRadius: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+    alignSelf: 'center',
   },
   selectCourseButtonText: {
+    color: Colors.gray4,
+    alignSelf: 'center',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  gradientButton: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  gradientButtonText: {
     color: Colors.black,
     fontWeight: '600',
   },
