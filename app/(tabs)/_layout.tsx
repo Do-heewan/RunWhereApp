@@ -180,7 +180,6 @@ export default function TabLayout() {
         name="home"
         options={{
           title: '',
-          tabBarStyle: { display: 'none' }, // 홈 화면에서만 네비게이션 바 숨김
           tabBarIcon: ({ focused }) => (
             <TabBarIcon focused={focused}>
               <ShoeIcon active={focused} size={focused ? 35 : 37} />
