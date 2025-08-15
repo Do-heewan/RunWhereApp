@@ -2,11 +2,12 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Location from 'expo-location';
 import { router } from 'expo-router';
-import { addDoc, collection, getDocs, onSnapshot, orderBy, query, serverTimestamp, updateDoc } from 'firebase/firestore';
+import { addDoc,doc, getDoc, collection, getDocs, onSnapshot, orderBy, query, serverTimestamp, updateDoc } from 'firebase/firestore';
 import React, { useEffect, useState } from 'react';
 import {
   Alert,
   Image,
+  Modal,
   ScrollView,
   StyleSheet,
   Text,
@@ -14,7 +15,7 @@ import {
   View,
 } from 'react-native';
 import { db } from '../../backend/db/firebase';
-import { LikeIcon, LikeIconActive, StarIcon, StarIconActive } from '../../components/IconSVG';
+import { LikeIcon, LikeIconActive, StarIcon, StarIconActive, FlashIcon } from '../../components/IconSVG';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Eclipse from '../../components/EclipseSVG';
 
@@ -46,11 +47,13 @@ type FlashRunEvent = {
     name: string;
     avatar: string;
   };
+  paceMin: number;
+  paceSec: number;
   status: 'upcoming' | 'full' | 'past';
 };
 
 // Add filter type
-type FilterType = '최신순' | '임박순' | '목표페이스';
+type FilterType = '최신순' | '임박순' | '페이스순';
 
 const TAB_BAR_HEIGHT = 75;
 const TAB_BAR_BOTTOM = 10;
@@ -72,6 +75,23 @@ const isPast24h = (iso: string) => {
     }
   }
 
+
+async function fetchUserPace(userId: string) {
+  const userRef = doc(db, 'users', userId);
+  const userSnap = await getDoc(userRef);
+
+  if (userSnap.exists()) {
+    const data = userSnap.data();
+    return {
+      paceMin: data.paceMin,
+      paceSec: data.paceSec,
+    };
+  } else {
+    throw new Error('User not found');
+  }
+}
+
+
 /* ---------- TABS ---------- */
 const TABS = ['러닝템', '기록공유', '번개런'] as const;
 type TabKey = (typeof TABS)[number];
@@ -83,6 +103,9 @@ export default function CommunityPage() {
   const [likedItems, setLikedItems] = useState<Set<number>>(new Set());
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
   const [selectedFilter, setSelectedFilter] = useState<FilterType>('최신순');
+  const [userPaceMin, setUserPaceMin] = useState<number | null>(null);
+  const [userPaceSec, setUserPaceSec] = useState<number | null>(null);
+
 
   // Location detection - only get 동 (district/subregion)
   const getCurrentLocation = async () => {
@@ -168,86 +191,55 @@ export default function CommunityPage() {
     getCurrentLocation();
   }, []);
 
-  /* Location and Filter Section for Flash Run */
-  const LocationAndFilterSection = () => (
-    <View style={styles.locationFilterContainer}>
-      <View style={styles.locationSection}>
-        <TouchableOpacity 
-          style={styles.locationButton}
-          onPress={getCurrentLocation}
-        >
-          <Ionicons name="location" size={16} color="#54f895" />
-          <Text style={styles.locationButtonText}>{selectedLocation}</Text>
-          <Ionicons name="refresh" size={16} color="#54f895" />
-        </TouchableOpacity>
-        
-        {/* Filter Dropdown Button */}
-        <View style={styles.filterDropdownContainer}>
-          <TouchableOpacity 
-            style={styles.filterDropdownButton}
-            onPress={() => setShowFilterDropdown(!showFilterDropdown)}
-          >
-            <Ionicons
-              name={showFilterDropdown ? 'chevron-up' : 'chevron-down'}
-              size={18}
-              color="#8E8E93"
-              style={{ marginRight: 8 }}
-            />
-            <Text style={styles.filterDropdownText}>{selectedFilter}</Text>
-          </TouchableOpacity>
-          
-          {/* Dropdown Menu */}
-          {showFilterDropdown && (
-            <View style={styles.dropdownMenu}>
-              {(['최신순', '임박순', '목표페이스'] as FilterType[]).map((filter) => (
-                <TouchableOpacity
-                  key={filter}
-                  style={[
-                    styles.dropdownItem,
-                    selectedFilter === filter && styles.dropdownItemActive
-                  ]}
-                  onPress={() => {
-                    setSelectedFilter(filter);
-                    setShowFilterDropdown(false);
-                  }}
-                >
-                  <Text style={[
-                    styles.dropdownItemText,
-                    selectedFilter === filter && styles.dropdownItemTextActive
-                  ]}>
-                    {filter}
-                  </Text>
-                  {selectedFilter === filter && (
-                    <Ionicons name="checkmark" size={16} color="#fff" />
-                  )}
-                </TouchableOpacity>
-              ))}
-            </View>
-          )}
-        </View>
-      </View>
-    </View>
-  );
+  type PaceInfo = {
+  label: string;
+  color: string;
+};
 
-  // Sort flashRunData based on selected filter
-  const getSortedFlashRunData = () => {
-    const data = [...flashRunList];
-    
-    switch (selectedFilter) {
-      case '최신순':
-        return data.sort((a, b) => b.id - a.id); // Newest first
-        
-      case '임박순':
-        // Sort by time - you'd need to parse the time string
-        return data.sort((a, b) => {
-          // Simple sort by time string for demo
-          return a.time.localeCompare(b.time);
-        });
-        
-      default:
-        return data;
+function getPaceInfo(min: number, sec: number): PaceInfo {
+  const pace = min + sec / 60;
+
+  if (pace >= 3 && pace <= 4) {
+    return { label: '3-4', color: '#A7F5C6' }; // Light green
+  } else if (pace >= 5 && pace <= 6) {
+    return { label: '5-6', color: '#41B5C4' }; // Teal
+  } else if (pace >= 7 && pace <= 8) {
+    return { label: '7-8', color: '#9384B8' }; // Purple
+  } else if (pace >= 9) {
+    return { label: '9이상', color: '#00A762' }; // Dark green
+  } else {
+    return { label: 'null', color: '#d9d9d9' }; // Default gray
+  }
+}
+
+const getSortedFlashRunData = () => {
+  const data = [...flashRunList];
+
+  switch (selectedFilter) {
+    case '최신순':
+      return data.sort((a, b) => b.id - a.id); // Newest first
+
+    case '임박순':
+      return data.sort((a, b) => a.time.localeCompare(b.time)); // Sort by time string
+
+    case '페이스순': {
+      // Guard against null values
+      if (userPaceMin === null || userPaceSec === null) {
+        return data; // Return unfiltered data if pace isn't loaded yet
+      }
+
+      const userPace = getPaceInfo(userPaceMin, userPaceSec).label;
+
+      return data.filter(item => {
+        const itemPace = getPaceInfo(item.paceMin, item.paceSec).label;
+        return itemPace === userPace;
+      });
     }
-  };
+
+    default:
+      return data;
+  }
+};
 
   // Update dataByTab to use sorted data for 번개런
   const dataByTab: Record<TabKey, any[]> = {
@@ -289,24 +281,27 @@ export default function CommunityPage() {
   );
 
   const toggleLike = (itemId: number) => {
+    setRunwearList(prev =>
+      prev.map(item =>
+        item.id === itemId
+          ? { ...item, likes: item.likes + (likedItems.has(itemId) ? -1 : 1) }
+          : item
+      ),
+    );
+
     setLikedItems(prev => {
-      const newSet = new Set(prev);
-      const item = runwearList.find(item => item.id === itemId);
-
-      if (!item) return prev;
-
-      let newLikes = item.likes;
-      if (newSet.has(itemId)) {
-        newSet.delete(itemId);
-        newLikes--;
-      } else {
-        newSet.add(itemId);
-        newLikes++;
-      }
-      updateSneakerLikes(itemId, newLikes);
-      return newSet;
+      const set = new Set(prev);
+      set.has(itemId) ? set.delete(itemId) : set.add(itemId);
+      return set;
     });
+
+    const newLikes =
+      runwearList.find(it => it.id === itemId)!.likes +
+      (likedItems.has(itemId) ? -1 : 1);
+
+    updateSneakerLikes(itemId, newLikes);      // keeps server in sync
   };
+
 
   /* shoe-card for Runwear with staggered layout */
   const renderSneakerCard = (item: SneakerItem, index: number) => {
@@ -326,7 +321,7 @@ export default function CommunityPage() {
             <TouchableOpacity onPress={() => toggleLike(item.id)}>
               <View style={styles.likeContent}>
                 <Text style={[styles.likeTxt, { color: isLiked ? '#54F895' : '#D9D9D9' }]}>
-                  {isLiked ? item.likes + 1 : item.likes}
+                  {isLiked ? item.likes : item.likes}
                 </Text>
                 {isLiked ? (
                   <LikeIconActive width={18} height={17} />
@@ -361,16 +356,79 @@ export default function CommunityPage() {
     }
   }
 
+  
+/* ---------------- Location / Filter section ---------------- */
+const LocationAndFilterSection = () => (
+    <View style={styles.locationSection}>
+      {/* Flash Icon and Location Text */}
+      <View style={styles.locationInfo}>
+        <FlashIcon width={34} height={34}/>
+        <Text style={styles.locationInfoText}>울산시 울주군</Text>
+      </View>
+
+      {/* Filter Dropdown Button */}
+      <TouchableOpacity
+        style={styles.filterDropdownButton}
+        onPress={() => setShowFilterDropdown(true)}
+      >
+        <Ionicons
+          name={showFilterDropdown ? 'chevron-up' : 'chevron-down'}
+          size={18}
+          color="#8E8E93"
+          style={{ marginRight: 8 }}
+        />
+        <Text style={styles.filterDropdownText}>{selectedFilter}</Text>
+      </TouchableOpacity>
+
+    {/* ─── REAL overlay, rendered in a Modal ─── */}
+    <Modal
+      visible={showFilterDropdown}
+      transparent
+      animationType="fade"
+      onRequestClose={() => setShowFilterDropdown(false)}
+    >
+      <TouchableOpacity
+        style={styles.modalBackDrop}
+        activeOpacity={1}
+        onPress={() => setShowFilterDropdown(false)}
+      >
+        <View style={styles.dropdownMenu}>
+          {(['최신순', '임박순', '페이스순'] as FilterType[]).map(filter => (
+            <TouchableOpacity
+              key={filter}
+              style={styles.dropdownItem}
+              onPress={() => {
+                setSelectedFilter(filter);
+                setShowFilterDropdown(false);
+              }}
+            >
+              <Text style={styles.dropdownItemText}>
+                {filter}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </TouchableOpacity>
+    </Modal>
+  </View>
+);
+
   // Flash run event card renderer
   const renderFlashRunCard = (item: FlashRunEvent) => {
-    const disabled = item.status === 'full';
-    
-    return (
+    const disabled = item.status === 'full'; 
+    const { label, color } = getPaceInfo(item.paceMin, item.paceSec);
+
+    return (   
       <View key={item.id} style={styles.flashRunCard}>
         {/* header */}
         <View style={styles.flashRunHeader}>
           <View style={styles.flashRunTitleSection}>
-            <Ionicons name="flash" size={20} color="#54f895" />
+      
+            <View style={[styles.flashRunPaceContainer, { backgroundColor: color }]}>
+              <Text style={styles.flashRunPaceText}>페이스 {label} 분</Text>
+            </View>
+
+
             <Text style={styles.flashRunTitle}>{item.title}</Text>
           </View>
           <Text style={styles.flashRunTime}>{item.time}</Text>
@@ -450,7 +508,7 @@ export default function CommunityPage() {
 
   /* pure-image tile for 기록공유 */
   const renderGalleryTile = (item: ShareRecord) => (
-    <TouchableOpacity onPress={() => router.push('/community/share')}
+    <TouchableOpacity onPress={() => router.push('/community/record')}
       key={item.id} style={styles.galleryTile}>
       <Image source={item.image} style={styles.galleryImg} />
     </TouchableOpacity>
@@ -524,7 +582,7 @@ export default function CommunityPage() {
 /* ---------- STYLES ---------- */
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#15151C' },
-  header: { paddingHorizontal: 20, paddingTop: 20, paddingBottom: 15 },
+  header: { paddingHorizontal: 20, paddingTop: 20, paddingBottom: 5 },
   title: { fontSize: 18, fontWeight: 'bold', color: '#fff', textAlign: 'center', marginBottom: 20 },
   bottomPadding: {
     height: 80,
@@ -551,8 +609,8 @@ const styles = StyleSheet.create({
   },
 
   /* tabs */
-  tabBar: { flexDirection: 'row', borderRadius: 25, padding: 4 },
-  tabBtn: { flex: 1, paddingVertical: 10, alignItems: 'center', borderRadius: 25 },
+  tabBar: { flexDirection: 'row', borderRadius: 25},
+  tabBtn: { flex: 1, paddingVertical: 5, alignItems: 'center', borderRadius: 25 },
   tabActive: {
     backgroundColor: '#303034',
   },
@@ -640,7 +698,7 @@ const styles = StyleSheet.create({
   },
 
   /* gallery (기록공유) */
-  galleryGrid: { flexDirection: 'row', flexWrap: 'wrap', padding: 4 },
+  galleryGrid: { flexDirection: 'row', flexWrap: 'wrap', padding: 5, marginTop:15 },
   galleryTile: { width: '32%', aspectRatio: 1, overflow: 'hidden', margin: 2 },
   galleryImg: { 
     width: '100%', 
@@ -656,8 +714,8 @@ const styles = StyleSheet.create({
     zIndex: 1, // Add this - lower z-index
   },
   flashRunCard: {
-    backgroundColor: '#2C2C2E',
-    borderRadius: 16,
+    backgroundColor: '#303034',
+    borderRadius: 25,
     padding: 16,
     marginBottom: 16,
     zIndex: 1, // Add this - keep cards behind dropdown
@@ -676,18 +734,36 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   flashRunTitle: {
-    color: '#fff',
+    color: '#FAFAF8',
+    fontFamily: 'Pretendard Variable',
     fontSize: 18,
-    fontWeight: 'bold',
-    marginLeft: 8,
+    fontWeight: 600,
+    marginLeft: 10,
   },
   flashRunTime: {
     color: '#8E8E93',
     fontSize: 12,
   },
+flashRunPaceContainer: {
+  borderRadius: 12,
+  paddingVertical: 6,
+  paddingHorizontal: 10,
+  justifyContent: 'center',
+  alignSelf: 'flex-start',
+  marginVertical: 4,
+  flexShrink: 1, // allow shrinking to fit content
+},
+
+flashRunPaceText: {
+  color: '#15151C',
+  fontSize: 12,
+  fontWeight: '600',
+  textAlign: 'center',
+},
   flashRunDescription: {
-    color: '#fff',
-    fontSize: 14,
+    color: '#FAFAF8',
+    fontSize: 15,
+    fontFamily: 'Pretendard Variable',
     marginBottom: 16,
     lineHeight: 20,
   },
@@ -742,40 +818,44 @@ const styles = StyleSheet.create({
   hashRow: { flexDirection: 'row', flexWrap: 'wrap', marginBottom: 12 },
   hashTag: {
     color: '#54f895',
-    fontSize: 12,
+    fontSize: 14,
     marginRight: 6,
-    marginTop: 2,
   },
 
   /* Location and Filter Section */
-  locationFilterContainer: {
-    marginBottom: 20,
-  },
   locationSection: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     marginBottom: 8,
   },
-  locationButton: {
+  locationInfo: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#2C2C2E',
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 8,
     flex: 1,
     marginRight: 12,
   },
-  locationButtonText: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '500',
-    marginHorizontal: 6,
-    flex: 1,
+  locationInfoText: {
+    color: '#54F895', // React Native doesn't support CSS variables
+    fontFamily: 'Pretendard Variable',
+    fontSize: 24,
+    fontStyle: 'normal',
+    lineHeight: 33.6, // 140% of 24px
+    letterSpacing: -0.48,
   },
 
   /* Filter Dropdown */
+  modalBackDrop: {
+  flex: 1,
+  justifyContent: 'flex-start',
+  alignItems: 'flex-end',           // right-align menu
+  paddingTop: 180,                  // distance from top of screen to button
+  paddingRight: 25,                 // align with button’s right edge
+},
+
   filterDropdownContainer: {
     position: 'relative',
     zIndex: 999, // Same high z-index
@@ -783,28 +863,26 @@ const styles = StyleSheet.create({
   filterDropdownButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 8,
-    minWidth: 80,
+    paddingVertical: 6,
+    borderRadius: 10,
+    minWidth: 26,
     zIndex: 999, // Same high z-index
 
   },
   filterDropdownText: {
+    alignItems: 'center',
     color: '#D9D9D9',
     fontSize: 14,
     fontWeight: '500',
     marginRight: 6,
   },
   dropdownMenu: {
-    position: 'absolute',
-    top: '100%',
-    right: 0,
-    backgroundColor: '#7C7C7C',
-    borderRadius: 8,
-    borderWidth: 1,
+    alignItems: 'center', // Center horizontally
+    backgroundColor: '#adadb2',
+    borderRadius: 10,
+    borderTopRightRadius: 0, // Only top-right corner rounded
     borderColor: '#3C3C3E',
-    minWidth: 100,
+    minWidth: 80,
     zIndex: 10000,
     elevation: 20,
     shadowColor: '#000',
@@ -812,6 +890,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 8,
   },
+
   dropdownItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -821,16 +900,12 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#3C3C3E',
   },
-  dropdownItemActive: {
-    backgroundColor: 'rgba(84, 248, 149, 0.1)',
-  },
   dropdownItemText: {
     color: '#000',
     fontSize: 14,
   },
   dropdownItemTextActive: {
     color: '#fff',
-    fontWeight: '600',
   },
   
   /* empty */
