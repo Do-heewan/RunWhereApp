@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Button, ScrollView, StyleSheet, Text, View } from 'react-native';
-import MapView, { UrlTile } from 'react-native-maps';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import MapView from 'react-native-maps';
 
 export default function HomeScreen() {
   const urlList = [
@@ -53,12 +53,12 @@ export default function HomeScreen() {
           longitudeDelta: 0.01,
         }}
       >
-        <UrlTile
+        {/* <UrlTile
           urlTemplate={url}
           zIndex={-1}
-        />
+        /> */}
       </MapView>
-      <Button title="Change Style" onPress={handleStyleChange} />
+      {/* <Button title="Change Style" onPress={handleStyleChange} /> */}
       {/* Add more cards or components here */}
     </ScrollView>
   );
