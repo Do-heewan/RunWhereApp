@@ -2,7 +2,7 @@ import { ThemedText } from '@/components/ThemedText';
 import { Colors } from '@/constants/Colors';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
-import { collection, getDocs, onSnapshot, orderBy, query, updateDoc } from 'firebase/firestore';
+import { collection, doc, onSnapshot, orderBy, query, updateDoc } from 'firebase/firestore';
 import React, { useEffect, useState } from 'react';
 import {
   Image,
@@ -18,6 +18,7 @@ import { LikeIcon, LikeIconActive } from '../../components/IconSVG';
 
 type ShareRecordPost = {
   id: number;
+  docId: string; 
   user?: {
     name: string;
     avatar: string;
@@ -30,13 +31,9 @@ type ShareRecordPost = {
 };
 
 // Function to update likes in Firestore
-async function updateRecordLikes(itemId: number, newLikes: number) {
-  const q = query(collection(db, 'sharedRecord'), orderBy('id', 'desc'));
-  const snapshot = await getDocs(q);
-  const docRef = snapshot.docs.find(doc => doc.data().id === itemId)?.ref;
-  if (docRef) {
-    await updateDoc(docRef, { likes: newLikes });
-  }
+async function updateRecordLikes(docId: string, newLikes: number) {
+  const docRef = doc(db, 'sharedRecord', docId);
+  await updateDoc(docRef, { likes: newLikes });
 }
 
 export default function ShareRecordPage() {
@@ -44,38 +41,54 @@ export default function ShareRecordPage() {
   const [shareRecordPosts, setShareRecordPosts] = useState<ShareRecordPost[]>([]);
   const [likedPosts, setLikedPosts] = useState<Set<number>>(new Set());
 
-  useEffect(() => {
-    const unsubscribe = onSnapshot(
-      query(collection(db, 'sharedRecord'), orderBy('id', 'desc')),
-      snapshot => setShareRecordPosts(snapshot.docs.map(doc => doc.data() as ShareRecordPost))
-    );
-    return unsubscribe;
-  }, []);
+useEffect(() => {
+  const unsubscribe = onSnapshot(
+    query(collection(db, 'sharedRecord'), orderBy('id', 'desc')),
+    snapshot => setShareRecordPosts(
+      snapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          ...data,
+          docId: doc.id, // ← Store Firestore doc ID
+          likes: typeof data.likes === 'number' ? data.likes : 0,
+        } as ShareRecordPost;
+      })
+    )
+  );
+  return unsubscribe;
+}, []);
 
   const toggleLike = async (postId: number) => {
-    setLikedPosts(prev => {
-      const next = new Set(prev);
-      next.has(postId) ? next.delete(postId) : next.add(postId);
-      return next;
-    });
+    const isCurrentlyLiked = likedPosts.has(postId);
+    const newLikedPosts = new Set(likedPosts);
 
-    // Update local state
+    if (isCurrentlyLiked) {
+      newLikedPosts.delete(postId);
+    } else {
+      newLikedPosts.add(postId);
+    }
+
+    setLikedPosts(newLikedPosts);
+
+    const likeDelta = isCurrentlyLiked ? -1 : 1;
+    let newLikes = 0;
+
     setShareRecordPosts(prev =>
-      prev.map(item =>
-        item.id === postId
-          ? { ...item, likes: item.likes + (likedPosts.has(postId) ? -1 : 1) }
-          : item
-      )
+      prev.map(item => {
+        if (item.id === postId) {
+          newLikes = item.likes + likeDelta;
+          return { ...item, likes: newLikes };
+        }
+        return item;
+      })
     );
 
-    // Update Firestore
-    const item = shareRecordPosts.find(it => it.id === postId);
-    if (item) {
-      const newLikes = item.likes + (likedPosts.has(postId) ? -1 : 1);
-      await updateRecordLikes(postId, newLikes);
+    // ✅ Find the post by ID to get docId
+    const post = shareRecordPosts.find(item => item.id === postId);
+    if (post) {
+      await updateRecordLikes(post.docId, newLikes);
     }
   };
-
   const renderPost = (post: ShareRecordPost) => {
   const isLiked = likedPosts.has(post.id);
   return (
@@ -83,12 +96,18 @@ export default function ShareRecordPage() {
       {/* User header */}
       <View style={styles.userHeader}>
         <View style={styles.userInfo}>
-          <Image 
-            source={{ 
-              uri: post.user?.avatar || 'https://images.unsplash.com/photo-1502767089025-6572583495b4?w=100&h=100&fit=crop&crop=face' 
-            }} 
-            style={styles.userAvatar} 
-          />
+          {post.user?.avatar ? (
+            <Image
+              source={{ uri: post.user.avatar }}
+              style={styles.userAvatar}
+            />
+          ) : (
+            <View style={styles.noUser}>
+              <ThemedText type="body2" style={styles.avatarInitial}>
+                {post.user?.name?.charAt(0).toUpperCase() || '철'}
+              </ThemedText>
+            </View>
+          )}
           <View style={styles.userDetails}>
             <ThemedText type="sub1" style={styles.userName}>
               {post.user?.name || '기록왕철수'}
@@ -105,7 +124,6 @@ export default function ShareRecordPage() {
           {post.timeAgo || '방금 전'}
         </ThemedText>
       </View>
-
       {/* Main image */}
       <View style={styles.imageContainer}>
         <Image source={post.image} style={styles.postImage} />
@@ -221,14 +239,28 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     marginRight: 12,
   },
-  userDetails: {
+  noUser: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    marginRight: 12,
+    backgroundColor: Colors.gray2,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  avatarInitial: {
+    color: Colors.white,
+    fontSize: 18,
+    fontWeight: '600',
+  },
+    userDetails: {
     flex: 1,
   },
   userName: {
     color: Colors.white,
     fontSize: 16,
     fontWeight: '600',
-    marginBottom: 2,
+    marginLeft:4,
   },
   locationRow: {
     flexDirection: 'row',
