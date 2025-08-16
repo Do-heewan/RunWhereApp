@@ -1,3 +1,4 @@
+import GradientButton from "@/components/GradientButton";
 import SignUpAppbar from "@/components/SignUpAppbar";
 import { ThemedText } from "@/components/ThemedText";
 import ThemedTextInput from "@/components/ThemedTextInput";
@@ -23,7 +24,7 @@ export default function SignUpLocation(){
     }
     
     router.push({
-      pathname: '/signUpRunning',
+      pathname: '/signUp',
       params: {
         ...params,
         location,
@@ -72,6 +73,15 @@ export default function SignUpLocation(){
           </TouchableOpacity>
         ))}
       </View>
+
+      {/* 하단 버튼 */}
+      <View style={styles.buttonContainer}>
+        <GradientButton 
+          style={{height:68}}
+          title="다음" 
+          onPress={handleNext}
+        />
+      </View>
     </SafeAreaView>
   );
 }
@@ -104,5 +114,13 @@ const styles = StyleSheet.create({
   },
   locationItem: {
     paddingVertical: 12,
+  },
+  buttonContainer: {
+    height: 68,
+    position: 'absolute',
+    bottom: 0,
+    left: 20,
+    right: 20,
+    zIndex: 1000,
   },
 });

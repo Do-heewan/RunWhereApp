@@ -41,7 +41,7 @@ export default function Login() {
       />
       <View style={styles.buttonContainer}>
         <Button title="Login" onPress={handleLogin} color="#4CAF50" />
-        <Button title="Signup" onPress={() => router.push('/signUp')} color="#2196F3" />
+        <Button title="Signup" onPress={() => router.push('/signUpLocation')} color="#2196F3" />
       </View>
     </View>
   );
