@@ -14,14 +14,14 @@ export default function SignUpAppbar() {
             flexDirection: 'row',
             paddingTop:10,
             paddingBottom:15,
-            
+            position: 'relative',
         }}>
             <TouchableOpacity
                 style={{
+                    position: 'absolute',
+                    left: 15,
                     top: 10,
                     bottom: 15,
-                    left: 20,
-                    position: 'absolute',
                 }} onPress={handleBackPress}>
                 <Ionicons name="chevron-back" size={35} color={Colors.white} />
             </TouchableOpacity>
