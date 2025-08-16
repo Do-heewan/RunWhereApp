@@ -1,78 +1,83 @@
-import { Ionicons } from '@expo/vector-icons'
-import { router } from 'expo-router'
+import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { collection, doc, getDoc, getDocs, onSnapshot, orderBy, query, updateDoc, where } from 'firebase/firestore'
-import React, { useEffect, useState } from 'react'
+import * as Location from 'expo-location';
+import { router } from 'expo-router';
+import { arrayUnion, collection, doc, getDoc, getDocs, onSnapshot, orderBy, query, updateDoc, where } from 'firebase/firestore';
+import React, { useEffect, useState } from 'react';
 import {
+  Alert,
   Image,
-  Text,
   Modal,
   ScrollView,
   StyleSheet,
+  Text,
   TouchableOpacity,
-  View
-} from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
-import { db } from '../../backend/db/firebase'
-import Eclipse from '../../components/EclipseSVG'
-import { FlashIcon, LikeIcon, LikeIconActive, StarIcon, StarIconActive } from '../../components/IconSVG'
-import GradientButton from '@/components/GradientButton'
-import { ThemedText } from '@/components/ThemedText'
-import { Colors } from '@/constants/Colors'
+  View,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { auth, db } from '../../backend/db/firebase';
+import Eclipse from '../../components/EclipseSVG';
+import { FlashIcon, LikeIcon, LikeIconActive, StarIcon, StarIconActive } from '../../components/IconSVG';
 
+/* ---------- DATA ---------- */
 type SneakerItem = {
-  id: number
-  image: { uri: string }
-  likes: number
-  rating: number
-}
+  id: number;
+  image: { uri: string };
+  likes: number;
+  rating: number;
+  backgroundColor: string;
+};
+
 type ShareRecord = {
   id: number;
   image: { uri: string };
-  user?: {
-    name: string;
-    avatar: string;
-    location: string;
-  };
-  likes?: number;
-  description?: string;
-  timeLabel?: string;
-}
+};
 
 type FlashRunEvent = {
-  id: number
-  title: string
-  time: string
-  location: string
-  description: string
-  hashtags: string[]
-  participants: number
-  maxParticipants: number
-  organizer: { name: string; avatar: string }
-  startHour: number
-  startMinute: number
-  targetMinute: number
-  targetSecond: number
-  status: 'upcoming' | 'full' | 'past'
-  messages: string[]
-}
-type FilterType = '최신순' | '임박순' | '페이스순'
+  id: number;
+  title: string;
+  time: string;
+  location: string;
+  description: string;      
+  hashtags: string[];       
+  participants: number;
+  maxParticipants: number;
+  organizer: {
+    name: string;
+    id: string;
+  }[];
+  startHour: number;
+  startMinute: number;
+  targetMinute: number;
+  targetSecond: number;
+  status: 'upcoming' | 'full' | 'past';
+  messages: string[];
+};
 
-const TAB_BAR_HEIGHT = 75
-const TAB_BAR_BOTTOM = 10
-const ADD_BUTTON_SPACING = 30
-const TABS = ['러닝템', '기록공유', '번개런'] as const
-type TabKey = (typeof TABS)[number]
+// Add filter type
+type FilterType = '최신순' | '임박순' | '페이스순';
+
+const TAB_BAR_HEIGHT = 75;
+const TAB_BAR_BOTTOM = 10;
+const ADD_BUTTON_SPACING = 30;
+
+const isPast24h = (iso: string) => {
+  const ONE_DAY = 24 * 60 * 60 * 1000;
+  return Date.now() - new Date(iso).getTime() > ONE_DAY;
+};
 
 // 좋아요 수 업데이트 함수
-async function updateSneakerLikes(itemId: number, newLikes: number) {
-  const q = query(collection(db, 'runwearItem'), orderBy('id', 'desc'))
-  const snapshot = await getDocs(q)
-  const docRef = snapshot.docs.find(doc => doc.data().id === itemId)?.ref
-  if (docRef) {
-    await updateDoc(docRef, { likes: newLikes })
+  async function updateSneakerLikes(itemId: number, newLikes: number) {
+    // Firestore에서 해당 문서 찾기 (id 필드로)
+    const q = query(collection(db, 'runwearItem'), orderBy('id', 'desc'));
+    const snapshot = await getDocs(q);
+    const docRef = snapshot.docs.find(doc => doc.data().id === itemId)?.ref;
+    if (docRef) {
+      await updateDoc(docRef, { likes: newLikes });
+    }
   }
-}
+
+
 async function fetchUserPace(userId: string) {
   const userRef = doc(db, 'users', userId);
   const userSnap = await getDoc(userRef);
@@ -87,91 +92,194 @@ async function fetchUserPace(userId: string) {
     throw new Error('User not found');
   }
 }
+
+/* ---------- TABS ---------- */
+const TABS = ['러닝템', '기록공유', '번개런'] as const;
+type TabKey = (typeof TABS)[number];
+
 /* ---------- COMPONENT ---------- */
 export default function CommunityPage() {
-  const [activeTab, setActiveTab] = useState<TabKey>('러닝템')
-  const [likedItems, setLikedItems] = useState<Set<number>>(new Set())
-  const [showFilterDropdown, setShowFilterDropdown] = useState(false)
-  const [selectedFilter, setSelectedFilter] = useState<FilterType>('최신순')
-  const [userPaceMin, setUserPaceMin] = useState<number | null>(null)
-  const [userPaceSec, setUserPaceSec] = useState<number | null>(null)
-  const [runwearList, setRunwearList] = useState<SneakerItem[]>([])
-  const [sharedRecordList, setSharedRecordList] = useState<ShareRecord[]>([])
-  const [flashRunList, setFlashRunList] = useState<FlashRunEvent[]>([])
+  const [activeTab, setActiveTab] = useState<TabKey>('러닝템');
+  const [selectedLocation, setSelectedLocation] = useState('위치 감지 중...');
+  const [likedItems, setLikedItems] = useState<Set<number>>(new Set());
+  const [showFilterDropdown, setShowFilterDropdown] = useState(false);
+  const [selectedFilter, setSelectedFilter] = useState<FilterType>('최신순');
+  const [userPaceMin, setUserPaceMin] = useState<number | null>(null);
+  const [userPaceSec, setUserPaceSec] = useState<number | null>(null);
 
-  useEffect(() => {
-    const unsubscribe = onSnapshot(
-      query(collection(db, 'runwearItem'), orderBy('id', 'desc')),
-      snapshot => setRunwearList(snapshot.docs.map(doc => doc.data() as SneakerItem))
-    )
-    return unsubscribe
-  }, [])
 
-  useEffect(() => {
-    const unsubscribe = onSnapshot(
-      query(collection(db, 'sharedRecord'), orderBy('id', 'desc')),
-      snapshot => setSharedRecordList(snapshot.docs.map(doc => doc.data() as ShareRecord))
-    )
-    return unsubscribe
-  }, [])
-
-  useEffect(() => {
-    const unsubscribe = onSnapshot(
-      query(collection(db, 'flashRun'), orderBy('id', 'desc')),
-      snapshot => setFlashRunList(snapshot.docs.map(doc => doc.data() as FlashRunEvent))
-    )
-    return unsubscribe
-  }, [])
-
-  type PaceInfo = { label: string, color: string }
-  function getPaceInfo(min: number, sec: number): PaceInfo {
-    const pace = Number(min) + Number(sec) / 60
-    if (pace >= 3 && pace < 5) return { label: '3-4', color: Colors.primary }
-    if (pace >= 5 && pace < 7) return { label: '5-6', color: Colors.gray2 }
-    if (pace >= 7 && pace < 9) return { label: '7-8', color: Colors.gray3 }
-    if (pace >= 9) return { label: '9이상', color: Colors.gray4 }
-    return { label: '우사인볼트', color: Colors.red }
-  }
-
-  const getSortedFlashRunData = () => {
-    const data = [...flashRunList]
-    switch (selectedFilter) {
-      case '최신순': return data.sort((a, b) => b.id - a.id)
-      case '임박순': return data.sort((a, b) => a.time.localeCompare(b.time))
-      case '페이스순': {
-        if (userPaceMin === null || userPaceSec === null) return data
-        const userPace = getPaceInfo(userPaceMin, userPaceSec).label
-        return data.filter(item => getPaceInfo(item.targetMinute, item.targetSecond).label === userPace)
+  // Location detection - only get 동 (district/subregion)
+  const getCurrentLocation = async () => {
+    try {
+      setSelectedLocation('위치 감지 중...');
+      
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('권한 필요', '위치 권한이 필요합니다.');
+        setSelectedLocation('위치 권한 없음');
+        return;
       }
-      default: return data
+
+      let location = await Location.getCurrentPositionAsync({});
+      let addresses = await Location.reverseGeocodeAsync({
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+      });
+
+      if (addresses.length > 0) {
+        const address = addresses[0];
+        // Extract only 동 information
+        const dong = address.subregion || address.district || address.name || '';
+        setSelectedLocation(dong || '위치 불명');
+      } else {
+        setSelectedLocation('위치 불명');
+      }
+    } catch (error) {
+      console.error('Location error:', error);
+      setSelectedLocation('위치 감지 실패');
+      Alert.alert('오류', '위치를 가져올 수 없습니다.');
     }
   }
+
+  const [runwearList, setRunwearList] = useState<SneakerItem[]>([]);
+  const [sharedRecordList, setSharedRecordList] = useState<ShareRecord[]>([]);
+  const [flashRunList, setFlashRunList] = useState<FlashRunEvent[]>([]);
+
+  useEffect(() => {
+    async function fetchRunwear() {
+      const q = query(collection(db, 'runwearItem'), orderBy('id', 'desc'));
+      const unsubscribe = onSnapshot(q, (snapshot) => {
+        const items = snapshot.docs.map(doc => doc.data() as SneakerItem);
+        setRunwearList(items);
+      });
+
+      return unsubscribe;
+    }
+
+    fetchRunwear();
+  }, []);
+
+  useEffect(() => {
+    async function fetchSharedRecords() {
+      const q = query(collection(db, 'sharedRecord'), orderBy('id', 'desc'));
+      const unsubscribe = onSnapshot(q, (snapshot) => {
+        const items = snapshot.docs.map(doc => doc.data() as ShareRecord);
+        setSharedRecordList(items);
+      });
+
+      return unsubscribe;
+    }
+
+    fetchSharedRecords();
+  }, []);
+
+  useEffect(() => {
+    async function fetchFlashRuns() {
+      const q = query(collection(db, 'flashRun'), orderBy('id', 'desc'));
+      const unsubscribe = onSnapshot(q, (snapshot) => {
+        const items = snapshot.docs.map(doc => doc.data() as FlashRunEvent);
+        setFlashRunList(items);
+      });
+
+      return unsubscribe;
+    }
+
+    fetchFlashRuns();
+  }, []);
+
+  // Get current location on component mount
+  useEffect(() => {
+    getCurrentLocation();
+  }, []);
+
+  type PaceInfo = {
+  label: string;
+  color: string;
+};
+
+function getPaceInfo(min: number, sec: number): PaceInfo {
+  const pace = Number(min) + Number(sec) / 60;
+
+  if (pace >= 3 && pace < 5) {
+    return { label: '3-4', color: '#A7F5C6' }; // Light green
+  } else if (pace >= 5 && pace < 7) {
+    return { label: '5-6', color: '#41B5C4' }; // Teal
+  } else if (pace >= 7 && pace < 9) {
+    return { label: '7-8', color: '#9384B8' }; // Purple
+  } else if (pace >= 9) {
+    return { label: '9이상', color: '#00A762' }; // Dark green
+  } else {
+    return { label: '우사인볼트', color: '#d9d9d9' }; // Default gray
+  }
+}
+
+const getSortedFlashRunData = () => {
+  const data = [...flashRunList];
+
+  switch (selectedFilter) {
+    case '최신순':
+      return data.sort((a, b) => b.id - a.id); // Newest first
+
+    case '임박순':
+      return data.sort((a, b) => a.time.localeCompare(b.time)); // Sort by time string
+
+    case '페이스순': {
+      // Guard against null values
+      if (userPaceMin === null || userPaceSec === null) {
+        return data; // Return unfiltered data if pace isn't loaded yet
+      }
+
+      const userPace = getPaceInfo(userPaceMin, userPaceSec).label;
+
+      return data.filter(item => {
+        const itemPace = getPaceInfo(item.targetMinute, item.targetSecond).label;
+        return itemPace === userPace;
+      });
+    }
+
+    default:
+      return data;
+  }
+};
+
+  // Update dataByTab to use sorted data for 번개런
   const dataByTab: Record<TabKey, any[]> = {
     러닝템: runwearList,
     기록공유: sharedRecordList,
     번개런: getSortedFlashRunData(),
-  }
+  };
 
+  /* ---------- ADD BUTTON NAVIGATION ---------- */
   const handleAddButtonPress = () => {
     switch (activeTab) {
-      case '러닝템': router.push('/community/createRunwear'); break
-      case '기록공유': router.push('/community/createRecord'); break
-      case '번개런': router.push('/community/createFlashRun'); break
-      default: router.push('/community/createRunwear')
+      case '러닝템':
+        router.push('/community/createRunwear');
+        break;
+      case '기록공유':
+        router.push('/community/createRecord');
+        break;
+      case '번개런':
+        router.push('/community/createFlashRun');
+        break;
+      default:
+        router.push('/community/createRunwear');
     }
-  }
+  };
 
+  /* --------------- RENDER HELPERS --------------- */
   const renderStars = (rating: number) => (
     <View style={{ flexDirection: 'row' }}>
-      {Array.from({ length: 5 }).map((_, i) => (
-        <View key={i} style={{ marginRight: i < 4 ? 10 : 0 }}>
-          {i < rating
-            ? <StarIconActive width={20} height={20} />
-            : <StarIcon width={20} height={20} color={Colors.gray3} />}
+      {Array.from({ length: 5 }).map((_, index) => (
+        <View key={index} style={{ marginRight: index < 4 ? 10 : 0 }}>
+          {index < rating ? (
+            <StarIconActive width={20} height={20} />
+          ) : (
+            <StarIcon width={20} height={20} color="#ADADB2" />
+          )}
         </View>
       ))}
     </View>
-  )
+  );
 
   const toggleLike = (itemId: number) => {
     setRunwearList(prev =>
@@ -181,120 +289,219 @@ export default function CommunityPage() {
           : item
       ),
     );
+
     setLikedItems(prev => {
-      const set = new Set(prev)
-      set.has(itemId) ? set.delete(itemId) : set.add(itemId)
-      return set
-    })
+      const set = new Set(prev);
+      set.has(itemId) ? set.delete(itemId) : set.add(itemId);
+      return set;
+    });
+
     const newLikes =
       runwearList.find(it => it.id === itemId)!.likes +
-      (likedItems.has(itemId) ? -1 : 1)
-    updateSneakerLikes(itemId, newLikes)
-  }
+      (likedItems.has(itemId) ? -1 : 1);
 
+    updateSneakerLikes(itemId, newLikes);      // keeps server in sync
+  };
+
+
+  /* shoe-card for Runwear with staggered layout */
   const renderSneakerCard = (item: SneakerItem, index: number) => {
-    const isLiked = likedItems.has(item.id)
+    const isLiked = likedItems.has(item.id);
+    
     return (
       <TouchableOpacity onPress={() => router.push('/community/runwear')}
-        key={item.id}
+        key={item.id} 
         style={[
-          styles.card,
+          styles.card, 
           { marginTop: index % 2 === 1 ? 20 : 0 }
         ]}
       >
-        <View style={[styles.cardInner]}>
-          <Image source={item.image} style={styles.shoeImg} resizeMode="cover" />
+        <View style={[styles.cardInner, { backgroundColor: item.backgroundColor }]}>
+          <Image source={item.image} style={styles.shoeImg} resizeMode="contain" />
           <View style={styles.likeBox}>
             <TouchableOpacity onPress={() => toggleLike(item.id)}>
               <View style={styles.likeContent}>
-                <ThemedText type="body2" style={[styles.likeTxt, { color: isLiked ? Colors.primary : Colors.gray4 }]}>
-                  {item.likes.toString()}
-                </ThemedText>
-                {isLiked
-                  ? <LikeIconActive width={18} height={17} />
-                  : <LikeIcon width={18} height={17} color={Colors.gray4} />}
+                <Text style={[styles.likeTxt, { color: isLiked ? '#54F895' : '#D9D9D9' }]}>
+                  {isLiked ? item.likes : item.likes}
+                </Text>
+                {isLiked ? (
+                  <LikeIconActive width={18} height={17} />
+                ) : (
+                  <LikeIcon width={18} height={17} color="#D9D9D9" />
+                )}
               </View>
             </TouchableOpacity>
           </View>
         </View>
         <View style={styles.starRow}>{renderStars(item.rating)}</View>
       </TouchableOpacity>
-    )
-  }
+    );
+  };
 
-  const renderGalleryTile = (item: ShareRecord) => (
-  <TouchableOpacity 
-    onPress={() => router.push({
-      pathname: '/community/record',
-      params: { 
-        recordId: item.id.toString() // Pass the record ID
-      }
-    })}
-    key={item.id} 
-    style={styles.galleryTile}
-  >
-    <Image source={item.image} style={styles.galleryImg} />
-  </TouchableOpacity>
-)
+  
+/* ---------------- Location / Filter section ---------------- */
+const LocationAndFilterSection = () => (
+    <View style={styles.locationSection}>
+      {/* Flash Icon and Location Text */}
+      <View style={styles.locationInfo}>
+        <FlashIcon width={34} height={34}/>
+        <Text style={styles.locationInfoText}>울산시 울주군</Text>
+      </View>
 
+      {/* Filter Dropdown Button */}
+      <TouchableOpacity
+        style={styles.filterDropdownButton}
+        onPress={() => setShowFilterDropdown(true)}
+      >
+        <Ionicons
+          name={showFilterDropdown ? 'chevron-up' : 'chevron-down'}
+          size={18}
+          color="#8E8E93"
+          style={{ marginRight: 8 }}
+        />
+        <Text style={styles.filterDropdownText}>{selectedFilter}</Text>
+      </TouchableOpacity>
 
-  const renderFlashRunCard = (item: FlashRunEvent) => {
-    const disabled = item.status === 'full';
-    const { label, color } = getPaceInfo(item.targetMinute, item.targetSecond)
-    return (
-      <View key={item.id} style={styles.flashRunCard}>
-        <View style={styles.flashRunHeader}>
-          <View style={styles.flashRunTitleSection}>
-            <View style={[styles.flashRunPaceContainer, { backgroundColor: color }]}>
-              <ThemedText type="body3" style={styles.flashRunPaceText}>
-                페이스 {label} 
-              </ThemedText>
-            </View>
-            <ThemedText type="sub1" style={styles.flashRunTitle}>
-              {item.title}
-            </ThemedText>
-          </View>
-          <ThemedText type="body3" style={styles.flashRunTime}>
-            {item.time}
-          </ThemedText>
-        </View>
-        <ThemedText type="body2" style={styles.flashRunDescription}>
-          {item.description}
-        </ThemedText>
-        <View style={styles.hashRow}>
-          {item.hashtags.map(tag => (
-            <ThemedText type="body3" key={tag} style={styles.hashTag}>
-              {tag}
-            </ThemedText>
+    {/* ─── REAL overlay, rendered in a Modal ─── */}
+    <Modal
+      visible={showFilterDropdown}
+      transparent
+      animationType="fade"
+      onRequestClose={() => setShowFilterDropdown(false)}
+    >
+      <TouchableOpacity
+        style={styles.modalBackDrop}
+        activeOpacity={1}
+        onPress={() => setShowFilterDropdown(false)}
+      >
+        <View style={styles.dropdownMenu}>
+          {(['최신순', '임박순', '페이스순'] as FilterType[]).map(filter => (
+            <TouchableOpacity
+              key={filter}
+              style={styles.dropdownItem}
+              onPress={() => {
+                setSelectedFilter(filter);
+                setShowFilterDropdown(false);
+              }}
+            >
+              <Text style={styles.dropdownItemText}>
+                {filter}
+              </Text>
+            </TouchableOpacity>
           ))}
         </View>
+      </TouchableOpacity>
+    </Modal>
+  </View>
+);
+
+  // Flash run event card renderer
+  const renderFlashRunCard = (item: FlashRunEvent) => {
+    const disabled = item.status === 'full'; 
+    const { label, color } = getPaceInfo(item.targetMinute, item.targetSecond);
+    
+    return (   
+      <View key={item.id} style={styles.flashRunCard}>
+        {/* header */}
+        <View style={styles.flashRunHeader}>
+          <View style={styles.flashRunTitleSection}>
+      
+            <View style={[styles.flashRunPaceContainer, { backgroundColor: color }]}>
+              <Text style={styles.flashRunPaceText}>페이스 {label} 분</Text>
+            </View>
+
+
+            <Text style={styles.flashRunTitle}>{item.title}</Text>
+          </View>
+          <Text style={styles.flashRunTime}>{item.time}</Text>
+        </View>
+
+        {/* description */}
+        <Text style={styles.flashRunDescription}>{item.description}</Text>
+
+        {/* hashtags */}
+        <View style={styles.hashRow}>
+          {item.hashtags.map(tag => (
+            <Text key={tag} style={styles.hashTag}>
+              {tag}
+            </Text>
+          ))}
+        </View>
+
+        {/* organizer */}
+        {/* 사용자 정보 추가 이후    */}
+        {/* <View style={styles.organizerSection}>
+          <Image source={{ uri: item.organizer.avatar }} style={styles.organizerAvatar} />
           <View>
+            <Text style={styles.organizerName}>{item.organizer.name}</Text>
+            <View style={styles.locationRow}>
+              <Ionicons name="location-outline" size={14} color="#8E8E93" />
+              <Text style={styles.locationText}>{item.location}</Text>
+            </View>
+          </View>
+        </View> */}
+
+        {/* join-button */}
+        <View>
           <TouchableOpacity
             disabled={disabled}
             activeOpacity={disabled ? 1 : 0.8}
             onPress={async () => {
               if (disabled) return;
               
-              // 1. 채팅방 존재 여부 확인 (flashRunId로)
+              // 1. 채팅방 존재 여부 확인
               const chatRoomsRef = collection(db, 'flashRunChatsRooms');
-              const q = query(chatRoomsRef,
-                where('id', '==', item.id)
-              );
+              const q = query(chatRoomsRef, where('id', '==', item.id));
               const snapshot = await getDocs(q);
 
               let chatRoomId: string | null = null;
-              chatRoomId = snapshot.docs[0].id;
+              chatRoomId = snapshot.docs[0]?.id;
+              if (!chatRoomId) return;
 
-              if (chatRoomId) {
-                router.push({
-                  pathname: '/community/flashRunChat',
-                  params: {
-                    chatRoomId,
-                    current: item.participants.toString(),
-                    max: item.maxParticipants.toString(),
-                  },
-                });
+              // 2. 현재 로그인한 사용자 정보 가져오기
+              const user = auth.currentUser;
+              if (!user) {
+                Alert.alert('로그인이 필요합니다.');
+                return;
               }
+
+              // 3. 채팅방 organizer 정보 가져오기
+              const chatRoomRef = doc(db, 'flashRunChatsRooms', String(chatRoomId));
+              const chatRoomSnap = await getDoc(chatRoomRef);
+              let organizers = chatRoomSnap.data()?.organizer || [];
+
+              // 4. 내 정보가 organizer에 있는지 확인
+              const isParticipant = organizers.some((org: any) => org.id === user.uid);
+
+              // 5. 참가자가 아니라면 organizer에 내 정보 추가
+              if (!isParticipant) {
+                // Firestore users 컬렉션에서 닉네임 가져오기
+                const userDoc = await getDoc(doc(db, 'users', user.uid));
+                const nickname = userDoc.exists() ? userDoc.data().name : '';
+
+                await updateDoc(chatRoomRef, {
+                  organizer: arrayUnion({
+                    id: user.uid,
+                    name: nickname,
+                  }),
+                });
+
+                organizers = [...organizers, { id: user.uid, name: nickname }];
+              }
+
+              // 6. FlashRun 참가자 수 업데이트
+              const flashRunRef = doc(db, 'flashRun', String(item.id));
+              await updateDoc(flashRunRef, {
+                participants: organizers.length,
+              });
+
+              // 7. 채팅방으로 이동
+              router.push({
+                pathname: '/community/flashRunChat',
+                params: {
+                  chatRoomId,
+                },
+              });
             }}
           >
             <LinearGradient
@@ -315,76 +522,35 @@ export default function CommunityPage() {
               >
                 {item.status === 'full'
                   ? '정원마감'
-                  : `참가하기 (${item.participants}/${item.maxParticipants})`}
+                  : `참가하기 (${item.participants}/${item.maxParticipants})`
+                }
               </Text>
             </LinearGradient>
           </TouchableOpacity>
         </View>
       </View>
-    )
-  }
+    );
+  };
 
+  /* pure-image tile for 기록공유 */
+  const renderGalleryTile = (item: ShareRecord) => (
+    <TouchableOpacity onPress={() => router.push('/community/record')}
+      key={item.id} style={styles.galleryTile}>
+      <Image source={item.image} style={styles.galleryImg} />
+    </TouchableOpacity>
+  );
+
+  /* pick correct renderer */
   const renderItem = (item: any, index: number) => {
-    if (activeTab === '기록공유') return renderGalleryTile(item)
-    if (activeTab === '번개런') return renderFlashRunCard(item)
-    return renderSneakerCard(item, index)
-  }
+    if (activeTab === '기록공유') return renderGalleryTile(item);
+    if (activeTab === '번개런') return renderFlashRunCard(item);
+    return renderSneakerCard(item, index);
+  };
 
-  const LocationAndFilterSection = () => (
-    <View style={styles.locationSection}>
-      <View style={styles.locationInfo}>
-        <FlashIcon width={34} height={34} />
-        <ThemedText type="h2" style={styles.locationInfoText}>울산시 울주군</ThemedText>
-      </View>
-      <TouchableOpacity
-        style={styles.filterDropdownButton}
-        onPress={() => setShowFilterDropdown(true)}
-      >
-        <Ionicons
-          name={showFilterDropdown ? 'chevron-up' : 'chevron-down'}
-          size={18}
-          color={Colors.gray2}
-          style={{ marginRight: 8 }}
-        />
-        <ThemedText type="body3" style={styles.filterDropdownText}>
-          {selectedFilter}
-        </ThemedText>
-      </TouchableOpacity>
-      <Modal
-        visible={showFilterDropdown}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setShowFilterDropdown(false)}
-      >
-        <TouchableOpacity
-          style={styles.modalBackDrop}
-          activeOpacity={1}
-          onPress={() => setShowFilterDropdown(false)}
-        >
-          <View style={styles.dropdownMenu}>
-            {(['최신순', '임박순', '페이스순'] as FilterType[]).map(filter => (
-              <TouchableOpacity
-                key={filter}
-                style={styles.dropdownItem}
-                onPress={() => {
-                  setSelectedFilter(filter)
-                  setShowFilterDropdown(false)
-                }}
-              >
-                <ThemedText type="body3" style={styles.dropdownItemText}>
-                  {filter}
-                </ThemedText>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </TouchableOpacity>
-      </Modal>
-    </View>
-  )
-
+  /* --------------- UI --------------- */
   return (
-    <SafeAreaView style={styles.container}>
-      <Eclipse />
+      <SafeAreaView style={styles.container}>
+      <Eclipse /> {/* Background effect */}
       <TouchableOpacity
         style={styles.addbutton}
         onPress={handleAddButtonPress}
@@ -392,8 +558,10 @@ export default function CommunityPage() {
       >
         <Ionicons name="add" size={40} color="#fff" />
       </TouchableOpacity>
+
+      {/* Header */}
       <View style={styles.header}>
-        <ThemedText type="h1" style={styles.title}>커뮤니티</ThemedText>
+        <Text style={styles.title}>커뮤니티</Text>
         <View style={styles.tabBar}>
           {TABS.map(tab => {
             const focused = tab === activeTab;
@@ -403,43 +571,50 @@ export default function CommunityPage() {
                 style={[styles.tabBtn, focused && styles.tabActive]}
                 onPress={() => setActiveTab(tab)}
               >
-                <ThemedText type="body2" style={focused ? styles.tabTxtActive : styles.tabTxt}>
+                <Text style={focused ? styles.tabTxtActive : styles.tabTxt}>
                   {tab}
-                </ThemedText>
+                </Text>
               </TouchableOpacity>
-            )
+            );
           })}
         </View>
       </View>
+
+      {/* Content */}
       {dataByTab[activeTab].length ? (
         <ScrollView
           style={styles.scrollArea}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={
-            activeTab === '기록공유' ? styles.galleryGrid :
-              activeTab === '번개런' ? styles.flashRunGrid : styles.cardGrid
+            activeTab === '기록공유' ? styles.galleryGrid : 
+            activeTab === '번개런' ? styles.flashRunGrid : styles.cardGrid
           }
         >
+          {/* Show location filter only for 번개런 tab */}
           {activeTab === '번개런' && <LocationAndFilterSection />}
           {dataByTab[activeTab].map((item, index) => renderItem(item, index))}
+          {/* Bottom padding to ensure content doesn't get hidden behind floating button */}
           <View style={styles.bottomPadding} />
         </ScrollView>
       ) : (
         <View style={styles.emptyWrap}>
-          <ThemedText type="body1" style={styles.emptyTxt}>
-            아직 콘텐츠가 없습니다.
-          </ThemedText>
+          <Text style={styles.emptyTxt}>아직 콘텐츠가 없습니다.</Text>
         </View>
       )}
     </SafeAreaView>
-  )
-}
+  );
+};
 
+/* ---------- STYLES ---------- */
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.blackGray },
-  header: { paddingHorizontal: 20, paddingBottom: 5 },
-  title: { fontSize: 18, fontWeight: 'bold', color: Colors.white, textAlign: 'center', marginBottom: 20 },
+  container: { flex: 1, backgroundColor: '#15151C' },
+  header: { paddingHorizontal: 20, paddingTop: 20, paddingBottom: 5 },
+  title: { fontSize: 18, fontWeight: 'bold', color: '#fff', textAlign: 'center', marginBottom: 20 },
+  bottomPadding: {
+    height: 80,
+  },
 
+  /* add button colour */
   addbutton: {
     position: 'absolute',
     bottom: TAB_BAR_BOTTOM + TAB_BAR_HEIGHT + ADD_BUTTON_SPACING,
@@ -449,133 +624,317 @@ const styles = StyleSheet.create({
     height: 60,
     aspectRatio: 1,
     borderRadius: 35,
-    backgroundColor: Colors.primary,
+    backgroundColor: 'rgba(84, 248, 149, 0.85)',
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: Colors.primary,
+    shadowColor: 'rgba(0, 0, 0, 0.20)',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 7,
     elevation: 6,
   },
-  tabBar: { flexDirection: 'row', borderRadius: 25 },
-  tabBtn: { flex: 1, paddingVertical: 10, alignItems: 'center', borderRadius: 25 },
-  tabActive: { 
-    backgroundColor: Colors.gray1 },
-  tabTxt: { color: Colors.gray2, fontSize: 22, fontWeight: '600', textAlign: 'center' },
-  tabTxtActive: { color: Colors.primary, fontSize: 22, fontWeight: '600', textAlign: 'center' },
-  scrollArea: { flex: 1, paddingHorizontal: 10, paddingBottom: 20 },
 
-  cardGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
+  /* tabs */
+  tabBar: { flexDirection: 'row', borderRadius: 25},
+  tabBtn: { flex: 1, paddingVertical: 5, alignItems: 'center', borderRadius: 25 },
+  tabActive: {
+    backgroundColor: '#303034',
+  },
+  tabTxt: { 
+    color: '#7C7C7C',
+    textAlign: 'center',
+    fontFamily: 'Pretendard Variable',
+    fontSize: 22,
+    fontStyle: 'normal',
+    fontWeight: '600',
+    lineHeight: 30,
+    letterSpacing: -0.44,
+  },
+  tabTxtActive: {
+    color: '#54F895',
+    textAlign: 'center',
+    fontFamily: 'Pretendard Variable',
+    fontSize: 22,
+    fontStyle: 'normal',
+    fontWeight: '600',
+    lineHeight: 30,
+    letterSpacing: -0.44,
+  },
+
+  /* card list (Runwear) - Updated for staggered layout */
+  scrollArea: { flex: 1 },
+  cardGrid: { 
+    flexDirection: 'row', 
+    flexWrap: 'wrap', 
+    justifyContent: 'space-between', 
     paddingHorizontal: 20,
     paddingTop: 20,
   },
-  card: { width: '48%', marginBottom: 20 },
-  cardInner: {
-    borderRadius: 25,
-    height: 130,
-    position: 'relative',
-    overflow: 'hidden', // Important: this ensures the image doesn't overflow the rounded corners
+  card: { 
+    width: '48%', 
+    marginBottom: 20,
   },
-  shoeImg: {
-    position: 'absolute', // Ensures it fills the parent
-    top: 0,
-    left: 0,
-    width: '100%',
-    height: '100%',
-    resizeMode: 'cover', // Keeps aspect ratio and fills space
-  },
-  likeContent: { flexDirection: 'row', alignItems: 'center', gap: 3 },
-  likeBox: {
-    position: 'absolute', 
-    bottom: 8, 
-    right: 8, 
-    flexDirection: 'row', 
-    alignItems: 'center', 
-    justifyContent: 'center',
-    paddingHorizontal: 10, 
-    paddingVertical: 6, 
+  cardInner: { 
     borderRadius: 20, 
-    backgroundColor: 'rgba(21, 21, 28, 0.50)', 
-    minWidth: 50
+    padding: 15, 
+    height: 130, 
+    justifyContent: 'center', 
+    alignItems: 'center',
+    position: 'relative',
   },
-  
-  likeTxt: { color: Colors.primary, fontSize: 16, fontWeight: '600', marginRight: 2 },
-  starRow: { flexDirection: 'row', justifyContent: 'center', marginTop: 10 },
+  shoeImg: { 
+    width: 100, 
+    height: 100,
+    resizeMode: 'contain',
+  },
+  likeContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+  },
+  likeBox: {
+    position: 'absolute',
+    bottom: 8,
+    right: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 50,
+    backgroundColor: 'rgba(21, 21, 28, 0.5)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 4,
+    minWidth: 50,
+  },
 
-  galleryGrid: { flexDirection: 'row', flexWrap: 'wrap', padding: 5, marginTop: 15 },
+  likeTxt: {
+    color: '#54F895',
+    fontSize: 16,
+    fontWeight: '600',
+    marginRight: 2,
+  },
+  starRow: { 
+    flexDirection: 'row', 
+    justifyContent: 'center', 
+    marginTop: 10,
+  },
+
+  /* gallery (기록공유) */
+  galleryGrid: { flexDirection: 'row', flexWrap: 'wrap', padding: 5, marginTop:15 },
   galleryTile: { width: '32%', aspectRatio: 1, overflow: 'hidden', margin: 2 },
-  galleryImg: { width: '100%', height: '100%', borderWidth: 1, borderColor: Colors.gray4, backgroundColor: Colors.gray2 },
+  galleryImg: { 
+    width: '100%', 
+    height: '100%',
+    borderWidth: 1,
+    borderColor: '#D9D9D9', 
+    backgroundColor: 'lightgray',
+  },
 
-  // FlashRun tab/grid
-  flashRunGrid: { padding: 20, zIndex: 1 },
-
+  /* Flash Run Styles */
+  flashRunGrid: { 
+    padding: 20,
+    zIndex: 1, // Add this - lower z-index
+  },
   flashRunCard: {
-    backgroundColor: Colors.gray1,
+    backgroundColor: '#303034',
     borderRadius: 25,
     padding: 16,
     marginBottom: 16,
-    zIndex: 1,
-    elevation: 2,
+    zIndex: 1, // Add this - keep cards behind dropdown
+    elevation: 2, // Lower elevation for Android
   },
+
   flashRunHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
     marginBottom: 8,
   },
-  flashRunTitleSection: { flexDirection: 'row', alignItems: 'center', flex: 1 },
-  flashRunTitle: { color: Colors.white, fontSize: 18, fontWeight: '600', marginLeft: 10 },
-  flashRunTime: { color: Colors.gray2, fontSize: 12 },
-  flashRunPaceContainer: { borderRadius: 12, paddingVertical: 6, paddingHorizontal: 10, justifyContent: 'center', alignSelf: 'flex-start', marginVertical: 4, flexShrink: 1 },
-  flashRunPaceText: { color: Colors.blackGray, fontSize: 12, fontWeight: '600', textAlign: 'center' },
-  flashRunDescription: { color: Colors.white, fontSize: 15, marginBottom: 16, lineHeight: 20 },
-  hashRow: { flexDirection: 'row', flexWrap: 'wrap', marginBottom: 12 },
-  hashTag: { color: Colors.primary, fontSize: 14, marginRight: 6 },
+  flashRunTitleSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  flashRunTitle: {
+    color: '#FAFAF8',
+    fontFamily: 'Pretendard Variable',
+    fontSize: 18,
+    fontWeight: 600,
+    marginLeft: 10,
+  },
+  flashRunTime: {
+    color: '#8E8E93',
+    fontSize: 12,
+  },
+flashRunPaceContainer: {
+  borderRadius: 12,
+  paddingVertical: 6,
+  paddingHorizontal: 10,
+  justifyContent: 'center',
+  alignSelf: 'flex-start',
+  marginVertical: 4,
+  flexShrink: 1, // allow shrinking to fit content
+},
 
+flashRunPaceText: {
+  color: '#15151C',
+  fontSize: 12,
+  fontWeight: '600',
+  textAlign: 'center',
+},
+  flashRunDescription: {
+    color: '#FAFAF8',
+    fontSize: 15,
+    fontFamily: 'Pretendard Variable',
+    marginBottom: 16,
+    lineHeight: 20,
+  },
+  organizerSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  organizerAvatar: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    marginRight: 8,
+  },
+  organizerName: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  locationRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 2,
+  },
+  locationText: {
+    color: '#8E8E93',
+    fontSize: 12,
+    marginLeft: 4,
+  },
   joinButton: {
     borderRadius: 25,
     paddingVertical: 12,
     paddingHorizontal: 20,
-    marginTop: 12,
     alignItems: 'center',
-    justifyContent: 'center',
   },
   joinButtonActive: {
-    color: Colors.primary,
+    backgroundColor: '#54f895',
   },
   joinButtonFull: {
-   color: Colors.disableButton,
+    backgroundColor: '#3C3C43',
   },
   joinButtonText: {
     fontSize: 14,
     fontWeight: '600',
   },
-  joinButtonTextActive: { 
-    color: Colors.blackGray 
+  joinButtonTextActive: {
+    color: '#000',
   },
-  joinButtonTextFull: { 
-    color: Colors.gray3 
+  joinButtonTextFull: {
+    color: '#000',
+  },
+  hashRow: { flexDirection: 'row', flexWrap: 'wrap', marginBottom: 12 },
+  hashTag: {
+    color: '#54f895',
+    fontSize: 14,
+    marginRight: 6,
+  },
+
+  /* Location and Filter Section */
+  locationSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  locationInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    flex: 1,
+    marginRight: 12,
+  },
+  locationInfoText: {
+    color: '#54F895', // React Native doesn't support CSS variables
+    fontFamily: 'Pretendard Variable',
+    fontSize: 24,
+    fontStyle: 'normal',
+    lineHeight: 33.6, // 140% of 24px
+    letterSpacing: -0.48,
+  },
+
+  /* Filter Dropdown */
+  modalBackDrop: {
+  flex: 1,
+  justifyContent: 'flex-start',
+  alignItems: 'flex-end',           // right-align menu
+  paddingTop: 180,                  // distance from top of screen to button
+  paddingRight: 25,                 // align with button’s right edge
+},
+
+  filterDropdownContainer: {
+    position: 'relative',
+    zIndex: 999, // Same high z-index
+  },
+  filterDropdownButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 6,
+    borderRadius: 10,
+    minWidth: 26,
+    zIndex: 999, // Same high z-index
+
+  },
+  filterDropdownText: {
+    alignItems: 'center',
+    color: '#D9D9D9',
+    fontSize: 14,
+    fontWeight: '500',
+    marginRight: 6,
+  },
+  dropdownMenu: {
+    alignItems: 'center', // Center horizontally
+    backgroundColor: '#adadb2',
+    borderRadius: 10,
+    borderTopRightRadius: 0, // Only top-right corner rounded
+    borderColor: '#3C3C3E',
+    minWidth: 80,
+    zIndex: 10000,
+    elevation: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+  },
+
+  dropdownItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#3C3C3E',
+  },
+  dropdownItemText: {
+    color: '#000',
+    fontSize: 14,
+  },
+  dropdownItemTextActive: {
+    color: '#fff',
   },
   
-  // Location/Filter section styles
-  locationSection: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 },
-  locationInfo: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8, flex: 1, marginRight: 12 },
-  locationInfoText: { color: Colors.primary, fontSize: 24, fontWeight: '600' },
-  filterDropdownButton: { flexDirection: 'row', alignItems: 'center', paddingVertical: 6, borderRadius: 10, minWidth: 26 },
-  filterDropdownText: { alignItems: 'center', color: Colors.gray4, fontSize: 14, fontWeight: '500', marginRight: 6 },
-
-  // Modal / dropdown menu styles
-  modalBackDrop: { flex: 1, justifyContent: 'flex-start', alignItems: 'flex-end', paddingTop: 180, paddingRight: 25 },
-  dropdownMenu: { alignItems: 'center', backgroundColor: Colors.gray3, borderRadius: 10, borderTopRightRadius: 0, borderColor: Colors.gray1, minWidth: 80, zIndex: 10000, elevation: 20 },
-  dropdownItem: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: Colors.gray1 },
-  dropdownItemText: { color: Colors.black, fontSize: 14 },
-
+  /* empty */
   emptyWrap: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  emptyTxt: { color: Colors.gray2, fontSize: 16 },
-
-  bottomPadding: { height: 80 },
+  emptyTxt: { color: '#8E8E93', fontSize: 16 },
 });

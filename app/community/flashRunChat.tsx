@@ -4,7 +4,7 @@ import { ThemedText } from '@/components/ThemedText';
 import { Colors } from '@/constants/Colors';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
-import { addDoc, collection, onSnapshot, orderBy, query, serverTimestamp } from 'firebase/firestore';
+import { addDoc, collection, doc, getDoc, onSnapshot, orderBy, query, serverTimestamp, updateDoc } from 'firebase/firestore';
 import React, { useEffect, useRef, useState } from 'react';
 import {
   Alert,
@@ -14,27 +14,63 @@ import {
   Platform,
   SafeAreaView,
   StyleSheet,
+  Text,
   TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { db } from '../../backend/db/firebase';
+import { auth, db } from '../../backend/db/firebase'; // db 인스턴스 import 필요
 
 type ChatMessage = {
+  id: string;
   uid: string;
   user: string;
   text: string;
-  createdAt: number;
+  createdAt: string;
 };
 
 export default function FlashRunChatPage() {
-  const { chatRoomId, current, max } = useLocalSearchParams();
+
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
+  const [myUid, setMyUid] = useState('');
+  const [myName, setMyName] = useState('');
+  const [participants, setParticipants] = useState(0);
+  const [maxParticipants, setMaxParticipants] = useState(0);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
+
+  const chatRoomId = useLocalSearchParams().chatRoomId;
+  
+
+
   const flatListRef = useRef<FlatList>(null);
-  const insets = useSafeAreaInsets();
+
+  // 로그인 유저 정보 가져오기
+  useEffect(() => {
+    const user = auth.currentUser;
+    if (user) {
+      setMyUid(user.uid);
+      // Firestore에서 닉네임 가져오기
+      getDoc(doc(db, 'users', user.uid)).then((snap) => {
+        if (snap.exists()) setMyName(snap.data().name || '');
+      });
+    }
+  }, []);
+
+  // 참가자 수 가져오기
+  useEffect(() => {
+    if (!chatRoomId) return;
+    const fetchParticipants = async () => {
+      const chatRoomRef = doc(db, 'flashRun', String(chatRoomId));
+      const chatRoomSnap = await getDoc(chatRoomRef);
+      if (chatRoomSnap.exists()) {
+        const data = chatRoomSnap.data();
+        setParticipants(data.participants || 0);
+        setMaxParticipants(data.maxParticipants || 0); // maxParticipants 필드가 있다면
+      }
+    };
+    fetchParticipants();
+  }, [chatRoomId]);
 
   // Keyboard event listeners
   useEffect(() => {
@@ -53,24 +89,25 @@ export default function FlashRunChatPage() {
     };
   }, []);
 
-  // 메시지 실시간 구독
+  // Firebase에서 메시지 실시간 구독
   useEffect(() => {
-    if (!chatRoomId) return;
-    const messagesRef = collection(db, 'flashRunChatsRooms', String(chatRoomId), 'messages');
-    const q = query(messagesRef, orderBy('createdAt', 'desc'));
+    let messagesCollection = "messages";
+
+    if (chatRoomId !== "general") {
+      messagesCollection = `flashRunChatsRooms/${chatRoomId}/messages`;
+    }
+
+    const q = query(collection(db, messagesCollection), orderBy("createdAt", "desc"));
+
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      const msgs = snapshot.docs.map(doc => {
-        const data = doc.data();
-        return {
-          uid: doc.id,
-          user: data.user ?? '익명',
-          text: data.text,
-          createdAt: data.createdAt?.toMillis?.() ?? 0,
-        };
+      const messageList = [];
+      snapshot.forEach((doc) => {
+        messageList.push({ id: doc.id, ...doc.data() });
       });
-      setMessages(msgs);
+      setMessages(messageList);
     });
-    return unsubscribe;
+
+    return () => unsubscribe();
   }, [chatRoomId]);
 
   // 메시지 전송
@@ -78,8 +115,8 @@ export default function FlashRunChatPage() {
     if (!input.trim() || !chatRoomId) return;
     const messagesRef = collection(db, 'flashRunChatsRooms', String(chatRoomId), 'messages');
     await addDoc(messagesRef, {
-      user: 'me',
-      uid: 'user-uid',
+      uid: myUid,
+      user: myName,
       text: input.trim(),
       createdAt: serverTimestamp(),
     });
@@ -96,7 +133,27 @@ export default function FlashRunChatPage() {
         { 
           text: '나가기', 
           style: 'destructive',
-          onPress: () => router.back()
+          onPress: async () => {
+          if (!chatRoomId || !myUid) {
+            router.back();
+            return;
+          }
+          // 1. organizer 배열에서 내 정보 제거
+          const chatRoomRef = doc(db, 'flashRunChatsRooms', String(chatRoomId));
+          const chatRoomSnap = await getDoc(chatRoomRef);
+          if (chatRoomSnap.exists()) {
+            const data = chatRoomSnap.data();
+            const organizers = Array.isArray(data.organizer) ? data.organizer : [];
+            const newOrganizers = organizers.filter((org: any) => org.id !== myUid);
+            await updateDoc(chatRoomRef, { organizer: newOrganizers });
+
+            // 2. flashRun participants 필드 업데이트
+            const flashRunRef = doc(db, 'flashRun', String(chatRoomId));
+            await updateDoc(flashRunRef, { participants: newOrganizers.length });
+          }
+          // 3. 화면 이동
+          router.back();
+        }
         }
       ]
     );
@@ -109,35 +166,25 @@ export default function FlashRunChatPage() {
     return colors[index];
   };
 
-  const renderItem = ({ item }: { item: ChatMessage }) => {
-    const isMyMessage = item.uid === 'user-uid';
-    const avatarColor = getAvatarColor(item.user);
-
-    return (
-      <View style={[styles.msgContainer, isMyMessage && styles.myMsgContainer]}>
-        {!isMyMessage && (
-          <View style={[styles.avatar, { backgroundColor: avatarColor }]}>
-            <ThemedText type="body3" style={styles.avatarText}>
-              {item.user.charAt(0)}
-            </ThemedText>
-          </View>
+  // ...renderItem 수정
+  const renderItem = ({ item }: { item: ChatMessage }) => (
+    <View style={[styles.msgContainer, item.uid === myUid && styles.myMsgContainer]}>
+      {item.uid !== myUid && (
+        <View style={styles.avatar}>
+        </View>
+      )}
+      <View style={styles.messageContent}>
+        {item.uid !== myUid && (
+          <Text style={styles.msgUser}>{item.user}</Text>
         )}
-
-        <View style={styles.messageContent}>
-          {!isMyMessage && (
-            <ThemedText type="body3" style={styles.msgUser}>
-              {item.user}
-            </ThemedText>
-          )}
-          <View style={[styles.msgBubble, isMyMessage && styles.myMsgBubble]}>
-            <ThemedText type="body2" style={[styles.msgText, isMyMessage && styles.myMsgText]}>
-              {item.text}
-            </ThemedText>
-          </View>
+        <View style={[styles.msgBubble, item.uid === myUid && styles.myMsgBubble]}>
+          <Text style={[styles.msgText, item.uid === myUid && styles.myMsgText]}>
+            {item.text}
+          </Text>
         </View>
       </View>
-    );
-  };
+    </View>
+  );
 
   return (
     <SafeAreaView style={styles.root}>
@@ -154,7 +201,7 @@ export default function FlashRunChatPage() {
             유니스트 앞에서 9시
           </ThemedText>
           <ThemedText type="body3" style={styles.participants}>
-            ({current} / {max})
+            ({participants} / {maxParticipants})
           </ThemedText>
         </View>
 
@@ -214,6 +261,7 @@ export default function FlashRunChatPage() {
   );
 }
 
+/* ---------- styles ---------- */
 const styles = StyleSheet.create({
   root: { 
     flex: 1, 

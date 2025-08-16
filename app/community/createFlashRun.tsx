@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
-import { addDoc, collection, doc, serverTimestamp, setDoc } from 'firebase/firestore';
+import { collection, doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore';
 import React, { useState } from 'react';
 import {
   Alert,
@@ -13,7 +13,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { db } from '../../backend/db/firebase';
+import { auth, db } from '../../backend/db/firebase';
 import Eclipse from '../../components/EclipseSVG';
 
 const CreateRun = () => {
@@ -23,14 +23,18 @@ const CreateRun = () => {
     title: string;
     time: string;
     location: string;
-    description: string;      
-    hashtags: string[];       
+    description: string;
+    hashtags: string[];
     participants: number;
     maxParticipants: number;
-    organizer: {
+    creator: {
+      id: string;
       name: string;
-      avatar: string;
     };
+    organizer: {
+      id: string;
+      name: string;
+    }[];
     startHour: number;
     startMinute: number;
     targetMinute: number;
@@ -42,7 +46,6 @@ const CreateRun = () => {
   const [description, setDescription] = useState('');
   const [hashtags, setHashtags] = useState('');
   const [loading, setLoading] = useState(false);
-  const [participants, setParticipants] = useState(1);
   const [maxParticipants, setMaxParticipants] = useState('');
   const [startHour, setStartHour] = useState('');
   const [startMinute, setStartMinute] = useState('');
@@ -59,18 +62,32 @@ const CreateRun = () => {
   targetMinute.trim() &&
   targetSecond.trim();
 
-  // 채팅창 생성 함수
+  // 채팅방 생성 함수
   async function createFlashRunChatRoom(item: FlashRunEvent) {
     try {
+      const user = auth.currentUser;
+      if (!user) {
+        Alert.alert('오류', '사용자 정보가 없습니다.');
+        return null;
+      }
+
+      const userDoc = await getDoc(doc(db, 'users', user.uid));
+      const userData = userDoc.exists() ? userDoc.data() : null;
+      const nickname = userData?.name || '';  
+
       await setDoc(doc(collection(db, 'flashRunChatsRooms'), String(item.id)), {
         id: item.id,
         title: item.title,
         createdAt: serverTimestamp(),
         creator: {
-          // 생성자 정보 추가
+          id: user.uid,
+          name: nickname,
         },
-        participants: [
-          // 참여자 정보 추가
+        organizer: [
+          {
+            id: user.uid,
+            name: nickname,
+          },
         ],
         messages: [], // 초기 메시지 배열
       });
@@ -230,19 +247,32 @@ const CreateRun = () => {
           try {
             const hashtagsArray = hashtags.split(' ').map(tag => tag.trim()).filter(tag => tag);
 
+            const user = auth.currentUser;
+            if (!user) {
+              console.error('No user is currently logged in');
+              return;
+            }
+            const userDoc = await getDoc(doc(db, 'users', user.uid));
+            const userData = userDoc.exists() ? userDoc.data() : null;
+            const nickname = userData?.name || '';
+
             const event: FlashRunEvent = {
               id: Date.now(),
               title,
               description,
               hashtags: hashtagsArray,
-              maxParticipants: Number(maxParticipants),
               participants: 1,
+              maxParticipants: Number(maxParticipants),
               time: `${startHour}:${startMinute}`,
               location: '', // You may want to add a location field
-              organizer: {
-                name: '', // Fill with actual organizer info if available
-                avatar: '',
+              creator: {
+                name: nickname,
+                id: user.uid,
               },
+              organizer: [{
+                name: nickname,
+                id: user.uid,
+              },],
               startHour: Number(startHour),
               startMinute: Number(startMinute),
               targetMinute: Number(targetMinute),
@@ -250,7 +280,7 @@ const CreateRun = () => {
               status: 'upcoming',
             };
 
-            const docRef = await addDoc(collection(db, 'flashRun'), {
+            await setDoc(doc(collection(db, 'flashRun'), String(event.id)), {
               ...event,
               createdAt: new Date(),
             });
