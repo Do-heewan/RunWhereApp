@@ -4,12 +4,14 @@ import { ThemedText } from '@/components/ThemedText';
 import ThemedTextInput from '@/components/ThemedTextInput';
 import { Colors } from '@/constants/Colors';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
 import { SafeAreaView, ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
 
 
 export default function SignUp() {
+    const router = useRouter();
+    const params = useLocalSearchParams();
 
     const [name, setName] = useState("");
     const [emailUsername, setEmailUsername] = useState("runwhere");
@@ -22,7 +24,6 @@ export default function SignUp() {
     const [birthday, setBirthday] = useState("");
     const [phone, setPhone] = useState("");
     const [phoneCode, setPhoneCode] = useState("");
-    const router = useRouter();
 
     // 전화번호 형식 검증 함수
     const validatePhoneNumber = (phoneNumber: string) => {
@@ -221,13 +222,16 @@ export default function SignUp() {
                         title="이제 한 단계 남았어요!" 
                         onPress={() => {
                             router.push({
-                                pathname: '/signUpLocation',
+                                pathname: '/signUpRunning',
                                 params: {
+                                    ...params,
                                     name,
                                     email: `${emailUsername}@${emailDomain}`,
                                     password,
                                     gender,
                                     birthday,
+                                    phone,
+                                    phoneCode,
                                 },
                             });
                         }} 
