@@ -15,6 +15,7 @@ export const Colors = {
   gray2: '#7C7C7C',
   gray3: '#ADADB2',
   gray4: '#D9D9D9',
+  disableButton: '#3C3C43',
   red: '#E77C7C',
   
   light: {

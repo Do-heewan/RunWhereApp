@@ -120,12 +120,13 @@ const TabBarIcon = ({
           borderRadius: 50,
           borderWidth: 0.5,
           borderColor: '#D9D9D9',
+          marginTop: 10,
           backgroundColor: 'rgba(236, 236, 236, 0.2)',
           shadowColor: '#fff',
-          shadowOffset: { width: 0, height: 0 },
+          shadowOffset: { width: 65, height: 55 },
           shadowOpacity: 0.75,
-          shadowRadius: 10,
-          marginTop: 10,
+          shadowRadius: 4,
+          elevation:5, //for android
         }}
       >
         {children}
@@ -170,7 +171,7 @@ export default function TabLayout() {
           elevation: 10,
           shadowColor: '#443f3fff',
           shadowOffset: { width: 2, height: 2 },
-          shadowOpacity: 0.45,
+          shadowOpacity: 0.55,
           shadowRadius: 15,
         },
       }}

@@ -82,3 +82,11 @@ export const SendButtonIcon = ({ width = 24, height = 21, color = '#303034' }) =
   );
 };
 
+export const FlashIcon = ({ width = 34, height = 34 }: { width?: number; height?: number }) => (
+  <Svg width={width} height={height} viewBox="0 0 34 34" fill="none">
+    <Path
+      d="M10.3333 16.0345L17 5.77586L27 5L18.8018 12.5862L25.5586 15.3448L7 30L17 17.5L10.3333 16.0345Z"
+      fill="#54F895"
+    />
+  </Svg>
+);

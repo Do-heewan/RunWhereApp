@@ -2,49 +2,10 @@ import { useColorScheme } from '@/hooks/useColorScheme';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, View } from 'react-native';
 import 'react-native-reanimated';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Eclipse from '../components/EclipseSVG';
-
-function LayoutContent() {
-  const insets = useSafeAreaInsets();
-  const colorScheme = useColorScheme();
-
-  return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <View
-        style={[
-          styles.container,
-          {
-            paddingTop: insets.top,
-            paddingBottom: insets.bottom,
-          },
-        ]}
-      >
-        <Eclipse />
-
-        <Stack
-          screenOptions={{
-            headerShown: false,
-            contentStyle: {
-              backgroundColor: '#15151C',
-            },
-          }}
-        >
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen name="+not-found" />
-        </Stack>
-
-        <StatusBar
-          style={colorScheme === 'dark' ? 'light' : 'dark'}
-          backgroundColor="#15151C"
-        />
-      </View>
-    </ThemeProvider>
-  );
-}
 
 export default function RootLayout() {
   const [loaded] = useFonts({
@@ -60,6 +21,40 @@ export default function RootLayout() {
     <SafeAreaProvider>
       <LayoutContent />
     </SafeAreaProvider>
+  );
+}
+
+function LayoutContent() {
+  const insets = useSafeAreaInsets();
+  const colorScheme = useColorScheme();
+
+  return (
+    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+      <View
+        style={[
+          styles.container,
+          {
+            paddingBottom: insets.bottom,
+          },
+        ]}
+      >
+        <Eclipse />
+
+        <Stack
+          screenOptions={{
+            headerShown: false,
+            contentStyle: {
+              backgroundColor: '#15151C',
+            },
+          }}
+        >
+          <Stack.Screen name="index" options={{ headerShown: false }} />
+          <Stack.Screen name="login" options={{ headerShown: false }} />
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen name="+not-found" />
+        </Stack>
+      </View>
+    </ThemeProvider>
   );
 }
 
