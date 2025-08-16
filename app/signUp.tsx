@@ -1,10 +1,7 @@
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import { Alert, Button, StyleSheet, TextInput, View } from "react-native";
+import { Button, StyleSheet, TextInput, View } from "react-native";
 
-import { createUserWithEmailAndPassword } from "firebase/auth";
-import { doc, setDoc } from "firebase/firestore";
-import { auth, db } from "../backend/db/firebase";
 
 export default function SignUp() {
 
@@ -17,35 +14,6 @@ export default function SignUp() {
 
   const router = useRouter();
 
-  const handleSignUp = async () => {
-    // 회원가입 로직 구현
-    try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      console.log("회원가입 성공", userCredential);
-      const user = userCredential.user;
-
-      await setDoc(doc(db, "users", user.uid), {
-        uid: user.uid,
-        name,
-        email,
-        gender,
-        birthday,
-      });
-      router.push("/home");
-      Alert.alert("회원가입 완료", "런웨어에 오신 것을 환영합니다.");
-    } catch (error) {
-      console.log("회원가입 실패", error);
-      Alert.alert("회원가입 실패", "회원가입에 실패했습니다. 다시 시도해주세요.");
-    } finally {
-      setName("");
-      setEmail("");
-      setPassword("");
-      setPasswordConfirm("");
-      setGender("");
-      setBirthday("");
-    }
-  };
-
   return (
     <View>
       <TextInput style={styles.input} placeholder="Name" value={name} onChangeText={setName} />
@@ -54,7 +22,19 @@ export default function SignUp() {
       <TextInput style={styles.input} placeholder="Password Confirm" value={passwordConfirm} onChangeText={setPasswordConfirm} secureTextEntry />
       <TextInput style={styles.input} placeholder="Gender" value={gender} onChangeText={setGender} />
       <TextInput style={styles.input} placeholder="Birthday" value={birthday} onChangeText={setBirthday} />
-      <Button onPress={handleSignUp} title="다음" />
+      <Button onPress={() =>
+        router.push({
+          pathname: '/signUpLocation',
+          params: {
+            name,
+            email,
+            password,
+            gender,
+            birthday,
+          },
+        })
+      } title="다음" 
+      />
     </View>
   );
 }           

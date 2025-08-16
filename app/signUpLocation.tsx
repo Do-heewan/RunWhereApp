@@ -1,13 +1,16 @@
 // TapToDropPin.tsx
+import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useRef, useState } from "react";
 import { Button, StyleSheet, TextInput, View } from "react-native";
 import MapView, { Camera, LatLng, MapPressEvent, Marker, UrlTile } from "react-native-maps";
 
 export default function TapToDropPin(){
+  const router = useRouter();
+  const params = useLocalSearchParams();
   const mapRef = useRef<MapView | null>(null);
   const [pin, setPin] = useState<LatLng | null>(null); // { latitude, longitude }
 
-  const handlePress = (e: MapPressEvent) => {
+  const handlePress = async (e: MapPressEvent) => {
     const { latitude, longitude } = e.nativeEvent.coordinate;
     console.log("Tapped at:", latitude, longitude);
 
@@ -20,6 +23,23 @@ export default function TapToDropPin(){
       zoom: 17, // Google provider에서 동작. iOS는 altitude 사용 가능
     };
     mapRef.current?.animateCamera(camera, { duration: 250 });
+  };
+
+  const handleNext = () => {
+    if (!pin) {
+      alert("지도를 눌러 위치를 선택하세요.");
+      return;
+    }
+    // 회원가입 페이지로 정보 전달 (예: 서버로 전송 또는 Firestore 저장)
+    // params에 기존 값 + pin의 위경도 추가
+    router.push({
+      pathname: '/signUpRunning',
+      params: {
+        ...params,
+        latitude: pin.latitude,
+        longitude: pin.longitude,
+      },
+    });
   };
 
   return (
@@ -47,7 +67,7 @@ export default function TapToDropPin(){
       <View style={styles.fab}>
         <Button title="마커 지우기" onPress={() => setPin(null)} />
       </View>
-      <Button title="다음" />
+      <Button title="다음" onPress={handleNext} />
     </View>
   );
 }
