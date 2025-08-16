@@ -1,14 +1,12 @@
 import DistanceChips from '@/components/DistanceChips';
-import Dust from '@/components/Dust';
 import Eclipse from '@/components/EclipseSVG';
-import Rain from '@/components/Rain';
-
 import { ThemedText } from '@/components/ThemedText';
+import WeatherBar from '@/components/WeatherBar/WeatherBar';
 import { Colors } from '@/constants/Colors';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Image, SafeAreaView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
 
@@ -23,28 +21,14 @@ export default function CourseDetailScreen() {
   const handleDistanceChange = (item: { id: string; label: string; value: [number, number] }) => {
     setSelectedDistance(item);
   };
-
+  useEffect(() => {
+    
+  }, []); 
   return (
     <SafeAreaView style={styles.container}>
       <Eclipse />
-      <View style={{
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginHorizontal: 30,
-        marginTop: 11,
-      }}>
-        <View>
-          <ThemedText type="h1" style={styles.title}>26°</ThemedText>
-        </View>
-        <View>
-          <Rain precipitation={2} />
-        </View>
-        <View>
-          <Dust concentration={50} />
-        </View>
-      </View>
-
+      {/* 현재 위도, 경도값이 고정되어있는데, 처음에 회원가입할때 위치 정보를 저장해놓았다가 쓰는 것이 좋을 듯함. 매번 api 호출 해야하는건 좋지 않음. */}
+      <WeatherBar latitude={36.911111} longitude={127.111111} />
       <View style={{
         justifyContent: 'center',
         flexDirection: 'row',
@@ -124,10 +108,6 @@ const styles = StyleSheet.create({
   },
   homeButton: {
     padding: 12,
-  },
-  title: {
-    color: Colors.white,
-    marginLeft: 10,
   },
   content: {
     flex: 1,

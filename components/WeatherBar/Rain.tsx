@@ -8,13 +8,9 @@ interface RainProps {
 }
 
 export default function Rain({ precipitation }: RainProps) {
-  // 강수량에 따른 아이콘 결정
   const getRainIcon = (precipitation: number) => {
-    if (precipitation >= 4) {
-      return require('@/assets/images/rain_big.png');
-    } else {
-      return require('@/assets/images/rain.png');
-    }
+    if (precipitation >= 4) { return require('@/assets/images/rain_big.png'); }
+    else { return require('@/assets/images/rain.png'); }
   };
 
   const rainIcon = getRainIcon(precipitation);
@@ -25,27 +21,27 @@ export default function Rain({ precipitation }: RainProps) {
         <Image source={rainIcon} style={styles.icon} />
       </View>
       <ThemedText type="h2" style={{color: Colors.white, marginLeft: 5}}>
-        {precipitation===0 ? '--' : precipitation}mm
+        {precipitation === 0 ? '--' : Math.round(precipitation)}mm
       </ThemedText>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  container: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
   },
   iconContainer: {
-    width: 45,
-    height: 40,
+    width: 45, 
+    height: 40, 
     padding: 3,
-    justifyContent: 'center',
+    justifyContent: 'center', 
     alignItems: 'center',
   },
-  icon: {
-    width: '100%',
-    height: '100%',
-    resizeMode: 'contain',
+  icon: { 
+    width: '100%', 
+    height: '100%', 
+    resizeMode: 'contain', 
   },
 });
