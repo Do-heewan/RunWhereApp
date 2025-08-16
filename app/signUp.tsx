@@ -32,8 +32,10 @@ export default function SignUp() {
         birthday,
       });
       router.push("/home");
+      Alert.alert("회원가입 완료", "런웨어에 오신 것을 환영합니다.");
     } catch (error) {
-      Alert.alert("회원가입 실패", "회원가입에 실패했습니다. 다시 시도해주세요.", error.message);
+      console.log("회원가입 실패", error);
+      Alert.alert("회원가입 실패", "회원가입에 실패했습니다. 다시 시도해주세요.");
     } finally {
       setName("");
       setEmail("");
@@ -41,7 +43,6 @@ export default function SignUp() {
       setPasswordConfirm("");
       setGender("");
       setBirthday("");
-      Alert.alert("회원가입 완료", "런웨어에 오신 것을 환영합니다.");
     }
   };
 
