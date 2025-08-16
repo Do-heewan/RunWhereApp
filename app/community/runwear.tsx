@@ -45,38 +45,53 @@ export default function RunwearPage() {
   useEffect(() => {
     const unsubscribe = onSnapshot(
       query(collection(db, 'runwearItem'), orderBy('id', 'desc')),
-      snapshot => setSneakerPosts(snapshot.docs.map(doc => doc.data() as SneakerItem))
+      snapshot =>
+        setSneakerPosts(snapshot.docs.map(doc => {
+          const data = doc.data();
+          return {
+            ...data,
+            likes: typeof data.likes === 'number' ? data.likes : 0,
+          } as SneakerItem;
+        }))
     );
     return unsubscribe;
   }, []);
 
+
   const toggleLike = async (postId: number) => {
+    // Calculate like action BEFORE updating likedPosts
+    const isCurrentlyLiked = likedPosts.has(postId);
+    const likeDelta = isCurrentlyLiked ? -1 : 1;
+
+    // Update the local like state
     setLikedPosts(prev => {
       const newSet = new Set(prev);
-      if (newSet.has(postId)) {
+      if (isCurrentlyLiked) {
         newSet.delete(postId);
       } else {
         newSet.add(postId);
       }
       return newSet;
     });
-    
-    // Update the likes count in local state immediately
-    setSneakerPosts(prev => 
-      prev.map(item => 
-        item.id === postId 
-          ? { ...item, likes: item.likes + (likedPosts.has(postId) ? -1 : 1) }
+
+    // Update local SneakerPosts state with new like count
+    setSneakerPosts(prev =>
+      prev.map(item =>
+        item.id === postId
+          ? { ...item, likes: (typeof item.likes === 'number' ? item.likes : 0) + likeDelta }
           : item
       )
     );
 
-    // Update Firestore
+    // Find the item in current state
     const item = sneakerPosts.find(it => it.id === postId);
+    // If found, update Firestore with the new value
     if (item) {
-      const newLikes = item.likes + (likedPosts.has(postId) ? -1 : 1);
+      const newLikes = (typeof item.likes === 'number' ? item.likes : 0) + likeDelta;
       await updateSneakerLikes(postId, newLikes);
     }
   };
+
 
   const renderStars = (rating: number) => (
     <View style={styles.starsContainer}>
@@ -100,20 +115,26 @@ export default function RunwearPage() {
         {/* User Header - Use default values if no user data */}
         <View style={styles.userHeader}>
           <View style={styles.userInfo}>
-            <Image 
-              source={{ 
-                uri: post.user?.avatar || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face' 
-              }} 
-              style={styles.userAvatar} 
-            />
+            {post.user?.avatar ? (
+              <Image
+                source={{ uri: post.user.avatar }}
+                style={styles.userAvatar}
+              />
+            ) : (
+              <View style={styles.noUser}>
+                <ThemedText type="body2" style={styles.avatarInitial}>
+                  {post.user?.name?.charAt(0).toUpperCase() || '철'}
+                </ThemedText>
+              </View>
+            )}
             <View style={styles.userDetails}>
               <ThemedText type="sub1" style={styles.userName}>
-                {post.user?.name || '러닝하는실버'}
+                {post.user?.name || '기록왕철수'}
               </ThemedText>
               <View style={styles.locationRow}>
                 <Ionicons name="location" size={12} color={Colors.gray2} />
                 <ThemedText type="body3" style={styles.userLocation}>
-                  {post.user?.location || '울산시 울주군'}
+                  {post.user?.location || '서울특별시 성동구'}
                 </ThemedText>
               </View>
             </View>
@@ -137,7 +158,7 @@ export default function RunwearPage() {
                 styles.likeCount, 
                 { color: isLiked ? Colors.primary : Colors.gray4 }
               ]}>
-                {post.likes}
+                {typeof post.likes === 'number' ? post.likes.toString() : '0'}
               </ThemedText>
               {isLiked ? (
                 <LikeIconActive width={18} height={17} />
@@ -240,6 +261,20 @@ const styles = StyleSheet.create({
     height: 40,
     borderRadius: 20,
     marginRight: 12,
+  },
+    noUser: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    marginRight: 12,
+    backgroundColor: Colors.gray2,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  avatarInitial: {
+    color: Colors.white,
+    fontSize: 18,
+    fontWeight: '600',
   },
   userDetails: {
     flex: 1,
