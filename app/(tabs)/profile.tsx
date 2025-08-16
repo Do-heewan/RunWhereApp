@@ -1,339 +1,121 @@
-import { Ionicons } from '@expo/vector-icons';
-import React, { useState } from 'react';
-import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React from 'react';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 
-const profile: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'stats' | 'achievements' | 'history'>('stats');
+const menuItems = [
+  { label: '프로필', key: 'profile' },
+  { label: '러닝템', key: 'runwear' },
+  { label: '기록공유', key: 'record' },
+  { label: '번개런', key: 'flashrun' },
+  { label: '로그아웃', key: 'logout' },
+];
 
-  const StatCard = ({ value, label, color = '#F97316' }: any) => (
-    <View style={styles.statCard}>
-      <Text style={[styles.statValue, { color }]}>{value}</Text>
-      <Text style={styles.statLabel}>{label}</Text>
-    </View>
-  );
-
-  const TabButton = ({ title, isActive, onPress }: any) => (
-    <TouchableOpacity
-      style={[styles.tabButton, isActive && styles.activeTab]}
-      onPress={onPress}
-    >
-      <Text style={[styles.tabText, isActive && styles.activeTabText]}>
-        {title}
-      </Text>
-    </TouchableOpacity>
-  );
-
-  const WeeklyStatItem = ({ icon, value, label, iconColor }: any) => (
-    <View style={styles.weeklyStatItem}>
-      <View style={styles.weeklyStatIcon}>
-        <Ionicons name={icon} size={24} color={iconColor} />
-      </View>
-      <View style={styles.weeklyStatContent}>
-        <Text style={styles.weeklyStatValue}>{value}</Text>
-        <Text style={styles.weeklyStatLabel}>{label}</Text>
-      </View>
-    </View>
-  );
-
+export default function ProfileMenu() {
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      {/* Header with Profile */}
-      <View style={styles.profileHeader}>
-        <View style={styles.profileInfo}>
-          <Image
-            source={{ uri: 'https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg' }}
-            style={styles.profileImage}
-          />
-          <View style={styles.profileText}>
-            <Text style={styles.profileName}>Sarah Kim</Text>
-            <Text style={styles.profileSubtitle}>Running Enthusiast</Text>
-            <View style={styles.locationContainer}>
-              <Ionicons name="location-outline" size={14} color="#6B7280" />
-              <Text style={styles.locationText}>Seoul, Korea</Text>
-            </View>
-          </View>
+    <View style={styles.root}>
+      {/* Top Right "현재채팅중인" */}
+      <View style={styles.topRow}>
+        <View style={styles.spacer} />
+        <View style={styles.chatActiveBox}>
+          <Text style={styles.chatActiveText}>현재채팅중인</Text>
         </View>
-        <TouchableOpacity style={styles.settingsButton}>
-          <Ionicons name="settings-outline" size={24} color="#6B7280" />
+      </View>
+
+      {/* Profile Block */}
+      <View style={styles.profileBlock}>
+        <TouchableOpacity style={styles.menuButton}>
+          <Text style={styles.menuButtonText}>프로필</Text>
         </TouchableOpacity>
       </View>
 
-      {/* Stats Cards */}
-      <View style={styles.statsContainer}>
-        <StatCard value="156" label="Total Runs" />
-        <StatCard value="842km" label="Distance" />
-        <StatCard value="5:42" label="Avg Pace" />
+      {/* Section Header */}
+      <View style={styles.sectionHeader}>
+        <Text style={styles.sectionHeaderText}>내가 올린 게시물</Text>
       </View>
 
-      {/* Tab Navigation */}
-      <View style={styles.tabContainer}>
-        <TabButton
-          title="Stats"
-          isActive={activeTab === 'stats'}
-          onPress={() => setActiveTab('stats')}
-        />
-        <TabButton
-          title="Achievements"
-          isActive={activeTab === 'achievements'}
-          onPress={() => setActiveTab('achievements')}
-        />
-        <TabButton
-          title="History"
-          isActive={activeTab === 'history'}
-          onPress={() => setActiveTab('history')}
-        />
+      {/* Post Menu Items */}
+      <View style={styles.menuRow}>
+        <TouchableOpacity style={styles.menuButton}>
+          <Text style={styles.menuButtonText}>러닝템</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.menuButton}>
+          <Text style={styles.menuButtonText}>기록공유</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.menuButton}>
+          <Text style={styles.menuButtonText}>번개런</Text>
+        </TouchableOpacity>
       </View>
 
-      {/* Content based on active tab */}
-      {activeTab === 'stats' && (
-        <View style={styles.contentContainer}>
-          {/* This Week */}
-          <View style={styles.weeklyCard}>
-            <Text style={styles.weeklyTitle}>This Week</Text>
-            <View style={styles.weeklyStats}>
-              <WeeklyStatItem
-                icon="radio-button-on"
-                value="3"
-                label="Runs"
-                iconColor="#F97316"
-              />
-              <WeeklyStatItem
-                icon="calendar-outline"
-                value="16.1km"
-                label="Distance"
-                iconColor="#3B82F6"
-              />
-            </View>
-          </View>
-
-          {/* Monthly Goal */}
-          <View style={styles.goalCard}>
-            <Text style={styles.goalTitle}>Monthly Goal</Text>
-            <View style={styles.progressContainer}>
-              <View style={styles.progressBar}>
-                <View style={[styles.progressFill, { width: '68%' }]} />
-              </View>
-              <Text style={styles.progressText}>68km of 100km</Text>
-            </View>
-          </View>
-        </View>
-      )}
-
-      {activeTab === 'achievements' && (
-        <View style={styles.contentContainer}>
-          <View style={styles.emptyState}>
-            <Ionicons name="trophy-outline" size={48} color="#D1D5DB" />
-            <Text style={styles.emptyStateText}>No achievements yet</Text>
-            <Text style={styles.emptyStateSubtext}>Keep running to unlock achievements!</Text>
-          </View>
-        </View>
-      )}
-
-      {activeTab === 'history' && (
-        <View style={styles.contentContainer}>
-          <View style={styles.emptyState}>
-            <Ionicons name="time-outline" size={48} color="#D1D5DB" />
-            <Text style={styles.emptyStateText}>No history yet</Text>
-            <Text style={styles.emptyStateSubtext}>Start tracking your runs to see history</Text>
-          </View>
-        </View>
-      )}
-    </ScrollView>
+      {/* Logout */}
+      <View style={styles.logoutBlock}>
+        <TouchableOpacity style={styles.menuButton}>
+          <Text style={styles.menuButtonText}>로그아웃</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
-  container: {
+  root: {
     flex: 1,
     backgroundColor: '#15151c',
-  },
-  profileHeader: {
-    backgroundColor: 'white',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    paddingVertical: 40,
     paddingHorizontal: 16,
-    paddingTop: 60,
-    paddingBottom: 20,
   },
-  profileInfo: {
+  topRow: {
     flexDirection: 'row',
-    alignItems: 'center',
+    justifyContent: 'flex-end',
+    marginBottom: 24,
   },
-  profileImage: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    marginRight: 16,
-  },
-  profileText: {
+  spacer: {
     flex: 1,
   },
-  profileName: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#111827',
-    marginBottom: 4,
+  chatActiveBox: {
+    backgroundColor: '#36363C',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 6,
   },
-  profileSubtitle: {
-    fontSize: 14,
-    color: '#6B7280',
-    marginBottom: 4,
-  },
-  locationContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  locationText: {
-    fontSize: 12,
-    color: '#6B7280',
-    marginLeft: 4,
-  },
-  settingsButton: {
-    padding: 8,
-  },
-  statsContainer: {
-    flexDirection: 'row',
-    paddingHorizontal: 16,
-    paddingVertical: 20,
-    backgroundColor: 'white',
-  },
-  statCard: {
-    flex: 1,
-    backgroundColor: '#F9FAFB',
-    borderRadius: 12,
-    padding: 16,
-    alignItems: 'center',
-    marginHorizontal: 4,
-  },
-  statValue: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 4,
-  },
-  statLabel: {
-    fontSize: 12,
-    color: '#6B7280',
-  },
-  tabContainer: {
-    flexDirection: 'row',
-    backgroundColor: 'white',
-    paddingHorizontal: 16,
-    paddingBottom: 16,
-  },
-  tabButton: {
-    flex: 1,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginHorizontal: 4,
-  },
-  activeTab: {
-    backgroundColor: '#F97316',
-  },
-  tabText: {
+  chatActiveText: {
+    color: 'white',
     fontSize: 14,
     fontWeight: '500',
-    color: '#6B7280',
   },
-  activeTabText: {
+  profileBlock: {
+    alignItems: 'center',
+    marginBottom: 48,
+  },
+  menuButton: {
+    backgroundColor: '#36363C',
+    paddingVertical: 18,
+    paddingHorizontal: 32,
+    borderRadius: 8,
+    marginBottom: 12,
+    minWidth: 120,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  menuButtonText: {
     color: 'white',
-  },
-  contentContainer: {
-    padding: 16,
-  },
-  weeklyCard: {
-    backgroundColor: 'white',
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  weeklyTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#111827',
-    marginBottom: 16,
   },
-  weeklyStats: {
+  sectionHeader: {
+    marginBottom: 24,
+    marginLeft: 8,
+  },
+  sectionHeaderText: {
+    color: '#E5E7EB',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  menuRow: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
+    justifyContent: 'center',
+    marginBottom: 48,
   },
-  weeklyStatItem: {
+  logoutBlock: {
     alignItems: 'center',
-  },
-  weeklyStatIcon: {
-    marginBottom: 8,
-  },
-  weeklyStatContent: {
-    alignItems: 'center',
-  },
-  weeklyStatValue: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#111827',
-    marginBottom: 4,
-  },
-  weeklyStatLabel: {
-    fontSize: 12,
-    color: '#6B7280',
-  },
-  goalCard: {
-    backgroundColor: 'white',
-    borderRadius: 16,
-    padding: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  goalTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#111827',
-    marginBottom: 16,
-  },
-  progressContainer: {
-    alignItems: 'center',
-  },
-  progressBar: {
-    width: '100%',
-    height: 8,
-    backgroundColor: '#E5E7EB',
-    borderRadius: 4,
-    marginBottom: 8,
-  },
-  progressFill: {
-    height: '100%',
-    backgroundColor: '#F97316',
-    borderRadius: 4,
-  },
-  progressText: {
-    fontSize: 14,
-    color: '#6B7280',
-  },
-  emptyState: {
-    alignItems: 'center',
-    paddingVertical: 40,
-  },
-  emptyStateText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#6B7280',
-    marginTop: 16,
-    marginBottom: 8,
-  },
-  emptyStateSubtext: {
-    fontSize: 14,
-    color: '#9CA3AF',
-    textAlign: 'center',
+    marginTop: 44,
   },
 });
-
-export default profile;
