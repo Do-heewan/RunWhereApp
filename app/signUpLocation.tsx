@@ -1,85 +1,108 @@
-// TapToDropPin.tsx
+import SignUpAppbar from "@/components/SignUpAppbar";
+import { ThemedText } from "@/components/ThemedText";
+import ThemedTextInput from "@/components/ThemedTextInput";
+import { Colors } from "@/constants/Colors";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import React, { useRef, useState } from "react";
-import { Button, StyleSheet, TextInput, View } from "react-native";
-import MapView, { Camera, LatLng, MapPressEvent, Marker, UrlTile } from "react-native-maps";
+import React, { useState } from "react";
+import { SafeAreaView, StyleSheet, TouchableOpacity, View } from "react-native";
 
-export default function TapToDropPin(){
+export default function SignUpLocation(){
   const router = useRouter();
   const params = useLocalSearchParams();
-  const mapRef = useRef<MapView | null>(null);
-  const [pin, setPin] = useState<LatLng | null>(null); // { latitude, longitude }
+  const [location, setLocation] = useState("서초동");
 
-  const handlePress = async (e: MapPressEvent) => {
-    const { latitude, longitude } = e.nativeEvent.coordinate;
-    console.log("Tapped at:", latitude, longitude);
-
-    const nextPin: LatLng = { latitude, longitude };
-    setPin(nextPin);
-
-    // 선택: 카메라를 해당 위치로 살짝 줌인하며 이동
-    const camera: Partial<Camera> = {
-      center: nextPin,
-      zoom: 17, // Google provider에서 동작. iOS는 altitude 사용 가능
-    };
-    mapRef.current?.animateCamera(camera, { duration: 250 });
+  const handleCurrentLocation = () => {
+    // 현재 위치로 찾기 기능 (나중에 구현)
+    console.log("현재 위치로 찾기");
   };
 
   const handleNext = () => {
-    if (!pin) {
-      alert("지도를 눌러 위치를 선택하세요.");
+    if (!location.trim()) {
+      alert("동네를 입력하세요.");
       return;
     }
-    // 회원가입 페이지로 정보 전달 (예: 서버로 전송 또는 Firestore 저장)
-    // params에 기존 값 + pin의 위경도 추가
+    
     router.push({
       pathname: '/signUpRunning',
       params: {
         ...params,
-        latitude: pin.latitude,
-        longitude: pin.longitude,
+        location,
       },
     });
   };
 
   return (
-    <View style={styles.container}>
-      <TextInput style={styles.input} placeholder="동네 이름" />
-      <MapView
-        ref={mapRef}
-        style={styles.map}
-        mapType="none"
-        initialRegion={{
-          latitude: 37.5665,
-          longitude: 126.9780,
-          latitudeDelta: 0.05,
-          longitudeDelta: 0.05,
-        }}
-        onPress={handlePress} // ← 지도 탭 이벤트
-      >
-        <UrlTile
-          urlTemplate="https://api.maptiler.com/maps/aquarelle/{z}/{x}/{y}.png?key=zj59kKsjCm6jcyYTg7qQ"
-          maximumZ={20}
+    <SafeAreaView style={styles.container}>
+      <SignUpAppbar />
+      
+      {/* 검색 입력 필드 */}
+      <View style={styles.searchContainer}>
+        <ThemedTextInput
+          type="body1"
+          placeholder="동네 이름"
+          value={location}
+          onChangeText={setLocation}
+          style={styles.searchInput}
         />
-        {pin && <Marker coordinate={pin} title="여기에 마커!" />}
-      </MapView>
-
-      <View style={styles.fab}>
-        <Button title="마커 지우기" onPress={() => setPin(null)} />
       </View>
-      <Button title="다음" onPress={handleNext} />
-    </View>
+
+      {/* 현재 위치로 찾기 버튼 */}
+      <TouchableOpacity style={styles.currentLocationButton} onPress={handleCurrentLocation}>
+        <ThemedText type="button1" style={{ color: Colors.white }}>
+          현재위치로 찾기
+        </ThemedText>
+      </TouchableOpacity>
+
+      {/* 근처 동네 섹션 */}
+      <View style={styles.nearbySection}>
+        <ThemedText type="sub1" style={{ color: Colors.white, marginBottom: 20 }}>
+          근처 동네
+        </ThemedText>
+        
+        {/* 동네 목록 */}
+        {Array.from({ length: 9 }, (_, index) => (
+          <TouchableOpacity 
+            key={index} 
+            style={styles.locationItem}
+            onPress={() => setLocation("인천 연수구 송도 1동")}
+          >
+            <ThemedText type="body1" style={{ color: Colors.white }}>
+              인천 연수구 송도 1동
+            </ThemedText>
+          </TouchableOpacity>
+        ))}
+      </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  map: { width: "100%", height: "60%" },
-  fab: { position: "absolute", bottom: 24, left: 24, right: 24 },
-  input: {
-    borderWidth: 1,
-    borderColor: "gray",
-    padding: 10,
-    margin: 10,
+  container: {
+    flex: 1,
+    backgroundColor: Colors.blackGray,
+  },
+  searchContainer: {
+    paddingHorizontal: 20,
+    marginTop: 20,
+  },
+  searchInput: {
+    backgroundColor: Colors.gray1,
+    borderRadius: 10,
+  },
+  currentLocationButton: {
+    backgroundColor: Colors.primary,
+    marginHorizontal: 20,
+    marginTop: 20,
+    paddingVertical: 16,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  nearbySection: {
+    paddingHorizontal: 20,
+    marginTop: 40,
+  },
+  locationItem: {
+    paddingVertical: 12,
   },
 });
