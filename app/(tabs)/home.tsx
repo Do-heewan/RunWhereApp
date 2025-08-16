@@ -85,7 +85,7 @@ export default function CourseDetailScreen() {
             </LinearGradient>
           </TouchableOpacity>
         ) : (
-          <TouchableOpacity style={styles.selectCourseButton} onPress={handleHomePress}>
+          <TouchableOpacity style={styles.selectCourseButton} onPress={handleHomePress} disabled={true}>
             <ThemedText type="button1" style={{color:Colors.gray4}}>
               러닝 코스 추천 받기
             </ThemedText>
