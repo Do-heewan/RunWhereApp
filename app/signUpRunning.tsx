@@ -5,7 +5,8 @@ import ThemedTextInput from '@/components/ThemedTextInput';
 import { Colors } from '@/constants/Colors';
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
-import { SafeAreaView, ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
+import { ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function SignUpRunning() {
   const router = useRouter();
