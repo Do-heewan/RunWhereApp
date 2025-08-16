@@ -25,12 +25,20 @@ type SneakerItem = {
   image: { uri: string }
   likes: number
   rating: number
-  backgroundColor: string
 }
 type ShareRecord = {
-  id: number
-  image: { uri: string }
+  id: number;
+  image: { uri: string };
+  user?: {
+    name: string;
+    avatar: string;
+    location: string;
+  };
+  likes?: number;
+  description?: string;
+  timeLabel?: string;
 }
+
 type FlashRunEvent = {
   id: number
   title: string
@@ -194,8 +202,8 @@ export default function CommunityPage() {
           { marginTop: index % 2 === 1 ? 20 : 0 }
         ]}
       >
-        <View style={[styles.cardInner, { backgroundColor: item.backgroundColor }]}>
-          <Image source={item.image} style={styles.shoeImg} resizeMode="contain" />
+        <View style={[styles.cardInner]}>
+          <Image source={item.image} style={styles.shoeImg} resizeMode="cover" />
           <View style={styles.likeBox}>
             <TouchableOpacity onPress={() => toggleLike(item.id)}>
               <View style={styles.likeContent}>
@@ -215,11 +223,20 @@ export default function CommunityPage() {
   }
 
   const renderGalleryTile = (item: ShareRecord) => (
-    <TouchableOpacity onPress={() => router.push('/community/record')}
-      key={item.id} style={styles.galleryTile}>
-      <Image source={item.image} style={styles.galleryImg} />
-    </TouchableOpacity>
-  )
+  <TouchableOpacity 
+    onPress={() => router.push({
+      pathname: '/community/record',
+      params: { 
+        recordId: item.id.toString() // Pass the record ID
+      }
+    })}
+    key={item.id} 
+    style={styles.galleryTile}
+  >
+    <Image source={item.image} style={styles.galleryImg} />
+  </TouchableOpacity>
+)
+
 
   const renderFlashRunCard = (item: FlashRunEvent) => {
     const disabled = item.status === 'full';
@@ -420,7 +437,7 @@ export default function CommunityPage() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.blackGray },
-  header: { paddingHorizontal: 20, paddingTop: 20, paddingBottom: 5 },
+  header: { paddingHorizontal: 20, paddingBottom: 5 },
   title: { fontSize: 18, fontWeight: 'bold', color: Colors.white, textAlign: 'center', marginBottom: 20 },
 
   addbutton: {
@@ -442,8 +459,9 @@ const styles = StyleSheet.create({
     elevation: 6,
   },
   tabBar: { flexDirection: 'row', borderRadius: 25 },
-  tabBtn: { flex: 1, paddingVertical: 5, alignItems: 'center', borderRadius: 25 },
-  tabActive: { backgroundColor: Colors.gray1 },
+  tabBtn: { flex: 1, paddingVertical: 10, alignItems: 'center', borderRadius: 25 },
+  tabActive: { 
+    backgroundColor: Colors.gray1 },
   tabTxt: { color: Colors.gray2, fontSize: 22, fontWeight: '600', textAlign: 'center' },
   tabTxtActive: { color: Colors.primary, fontSize: 22, fontWeight: '600', textAlign: 'center' },
   scrollArea: { flex: 1, paddingHorizontal: 10, paddingBottom: 20 },
@@ -457,19 +475,34 @@ const styles = StyleSheet.create({
   },
   card: { width: '48%', marginBottom: 20 },
   cardInner: {
-    borderRadius: 20,
-    padding: 15,
+    borderRadius: 25,
     height: 130,
-    justifyContent: 'center',
-    alignItems: 'center',
     position: 'relative',
+    overflow: 'hidden', // Important: this ensures the image doesn't overflow the rounded corners
   },
-  shoeImg: { width: 100, height: 100, resizeMode: 'contain' },
+  shoeImg: {
+    position: 'absolute', // Ensures it fills the parent
+    top: 0,
+    left: 0,
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover', // Keeps aspect ratio and fills space
+  },
   likeContent: { flexDirection: 'row', alignItems: 'center', gap: 3 },
   likeBox: {
-    position: 'absolute', bottom: 8, right: 8, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    paddingHorizontal: 10, paddingVertical: 6, borderRadius: 50, backgroundColor: Colors.gray1, minWidth: 50,
+    position: 'absolute', 
+    bottom: 8, 
+    right: 8, 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    justifyContent: 'center',
+    paddingHorizontal: 10, 
+    paddingVertical: 6, 
+    borderRadius: 20, 
+    backgroundColor: 'rgba(21, 21, 28, 0.50)', 
+    minWidth: 50
   },
+  
   likeTxt: { color: Colors.primary, fontSize: 16, fontWeight: '600', marginRight: 2 },
   starRow: { flexDirection: 'row', justifyContent: 'center', marginTop: 10 },
 
@@ -528,7 +561,6 @@ const styles = StyleSheet.create({
     color: Colors.gray3 
   },
   
-
   // Location/Filter section styles
   locationSection: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 },
   locationInfo: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8, flex: 1, marginRight: 12 },

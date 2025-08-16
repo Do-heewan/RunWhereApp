@@ -1,148 +1,160 @@
+import { ThemedText } from '@/components/ThemedText';
+import { Colors } from '@/constants/Colors';
 import { Ionicons } from '@expo/vector-icons';
-import { router } from 'expo-router';
-import React, { useState } from 'react';
+import { router, useLocalSearchParams } from 'expo-router';
+import { collection, getDocs, onSnapshot, orderBy, query, updateDoc } from 'firebase/firestore';
+import React, { useEffect, useState } from 'react';
 import {
   Image,
   ScrollView,
   StyleSheet,
-  Text,
   TouchableOpacity,
   View,
 } from 'react-native';
-import { LikeIcon, LikeIconActive } from '../../components/IconSVG';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { db } from '../../backend/db/firebase';
 import Eclipse from '../../components/EclipseSVG';
+import { LikeIcon, LikeIconActive } from '../../components/IconSVG';
 
-/* ---------- TYPE ---------- */
 type ShareRecordPost = {
   id: number;
-  user: {
+  user?: {
     name: string;
     avatar: string;
     location: string;
   };
-  images: { uri: string }[];
+  image: { uri: string };
   likes: number;
-  description: string;
-  timeAgo: string;
+  description?: string;
+  timeAgo?: string;
 };
 
-/* ---------- SAMPLE DATA ---------- */
-const shareRecordPosts: ShareRecordPost[] = [
-  {
-    id: 1,
-    user: {
-      name: '기록왕철수',
-      avatar:
-        'https://images.unsplash.com/photo-1502767089025-6572583495b4?w=100&h=100&fit=crop&crop=face',
-      location: '서울특별시 성동구',
-    },
-    images: [
-      {
-        uri: 'https://images.unsplash.com/photo-1594736797933-d0c4a154e47f?w=800&h=600&fit=crop',
-      },
-    ],
-    likes: 76,
-    description: '새벽 10 km 기록! 기분 최고🔥',
-    timeAgo: '3시간 전',
-  },
-  {
-    id: 2,
-    user: {
-      name: '기록왕철수',
-      avatar:
-        'https://images.unsplash.com/photo-1502767089025-6572583495b4?w=100&h=100&fit=crop&crop=face',
-      location: '서울특별시 성동구',
-    },
-    images: [
-      {
-        uri: 'https://images.unsplash.com/photo-1566737236500-c8ac43014a8e?w=800&h=600&fit=crop',
-      },
-    ],
-    likes: 54,
-    description: '저녁 러닝 5 km🏃‍♂️',
-    timeAgo: '1일 전',
-  },
-];
+// Function to update likes in Firestore
+async function updateRecordLikes(itemId: number, newLikes: number) {
+  const q = query(collection(db, 'sharedRecord'), orderBy('id', 'desc'));
+  const snapshot = await getDocs(q);
+  const docRef = snapshot.docs.find(doc => doc.data().id === itemId)?.ref;
+  if (docRef) {
+    await updateDoc(docRef, { likes: newLikes });
+  }
+}
 
-/* ---------- COMPONENT ---------- */
 export default function ShareRecordPage() {
+  const { recordId } = useLocalSearchParams();
+  const [shareRecordPosts, setShareRecordPosts] = useState<ShareRecordPost[]>([]);
   const [likedPosts, setLikedPosts] = useState<Set<number>>(new Set());
 
-  const toggleLike = (postId: number) => {
+  useEffect(() => {
+    const unsubscribe = onSnapshot(
+      query(collection(db, 'sharedRecord'), orderBy('id', 'desc')),
+      snapshot => setShareRecordPosts(snapshot.docs.map(doc => doc.data() as ShareRecordPost))
+    );
+    return unsubscribe;
+  }, []);
+
+  const toggleLike = async (postId: number) => {
     setLikedPosts(prev => {
       const next = new Set(prev);
       next.has(postId) ? next.delete(postId) : next.add(postId);
       return next;
     });
+
+    // Update local state
+    setShareRecordPosts(prev =>
+      prev.map(item =>
+        item.id === postId
+          ? { ...item, likes: item.likes + (likedPosts.has(postId) ? -1 : 1) }
+          : item
+      )
+    );
+
+    // Update Firestore
+    const item = shareRecordPosts.find(it => it.id === postId);
+    if (item) {
+      const newLikes = item.likes + (likedPosts.has(postId) ? -1 : 1);
+      await updateRecordLikes(postId, newLikes);
+    }
   };
 
   const renderPost = (post: ShareRecordPost) => {
-    const isLiked = likedPosts.has(post.id);
-    return (
-      <View key={post.id} style={styles.postContainer}>
-        {/* user header */}
-        <View style={styles.userHeader}>
-          <View style={styles.userInfo}>
-            <Image source={{ uri: post.user.avatar }} style={styles.userAvatar} />
-            <View style={styles.userDetails}>
-              <Text style={styles.userName}>{post.user.name}</Text>
-              <View style={styles.locationRow}>
-                <Ionicons name="location" size={12} color="#8E8E93" />
-                <Text style={styles.userLocation}>{post.user.location}</Text>
-              </View>
+  const isLiked = likedPosts.has(post.id);
+  return (
+    <View key={post.id} style={styles.postContainer}>
+      {/* User header */}
+      <View style={styles.userHeader}>
+        <View style={styles.userInfo}>
+          <Image 
+            source={{ 
+              uri: post.user?.avatar || 'https://images.unsplash.com/photo-1502767089025-6572583495b4?w=100&h=100&fit=crop&crop=face' 
+            }} 
+            style={styles.userAvatar} 
+          />
+          <View style={styles.userDetails}>
+            <ThemedText type="sub1" style={styles.userName}>
+              {post.user?.name || '기록왕철수'}
+            </ThemedText>
+            <View style={styles.locationRow}>
+              <Ionicons name="location" size={12} color={Colors.gray2} />
+              <ThemedText type="body3" style={styles.userLocation}>
+                {post.user?.location || '서울특별시 성동구'}
+              </ThemedText>
             </View>
           </View>
-          <Text style={styles.timeAgo}>{post.timeAgo}</Text>
         </View>
-
-        {/* main image */}
-        <View style={styles.imageContainer}>
-          <Image source={post.images[0]} style={styles.postImage} />
-
-          {/* like overlay */}
-          <View style={styles.likeOverlay}>
-            <TouchableOpacity
-              style={styles.likeButton}
-              onPress={() => toggleLike(post.id)}
-            >
-              <Text
-                style={[
-                  styles.likeCount,
-                  { color: isLiked ? '#54F895' : '#D9D9D9' },
-                ]}
-              >
-                {post.likes}
-              </Text>
-              {isLiked ? (
-                <LikeIconActive width={18} height={17} />
-              ) : (
-                <LikeIcon width={18} height={17} color="#D9D9D9" />
-              )}
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* description */}
-        <Text style={styles.description}>{post.description}</Text>
+        <ThemedText type="body3" style={styles.timeLabel}>
+          {post.timeAgo || '방금 전'}
+        </ThemedText>
       </View>
-    );
+
+      {/* Main image */}
+      <View style={styles.imageContainer}>
+        <Image source={post.image} style={styles.postImage} />
+
+        {/* Like overlay */}
+        <View style={styles.likeOverlay}>
+          <TouchableOpacity
+            style={styles.likeButton}
+            onPress={() => toggleLike(post.id)}
+          >
+            <ThemedText type="body3" style={[
+              styles.likeCount,
+              { color: isLiked ? Colors.primary : Colors.gray4 }
+            ]}>
+              {/* Fix for NaN - ensure it's always a valid number */}
+              {post.likes && typeof post.likes === 'number' ? post.likes : 0}
+            </ThemedText>
+            {isLiked ? (
+              <LikeIconActive width={18} height={17} />
+            ) : (
+              <LikeIcon width={18} height={17} color={Colors.gray4} />
+            )}
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      {/* Description */}
+      <ThemedText type="body2" style={styles.description}>
+        {post.description || '새벽 10 km 기록! 기분 최고🔥'}
+      </ThemedText>
+    </View>
+  );
   };
+
 
   return (
     <SafeAreaView style={styles.container}>
       <Eclipse />
 
-      {/* header */}
+      {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-          <Ionicons name="chevron-back" size={24} color="#fff" />
+          <Ionicons name="chevron-back" size={24} color={Colors.white} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>기록공유</Text>
+        <ThemedText type="h1" style={styles.headerTitle}>기록공유</ThemedText>
         <View style={styles.headerRight} />
       </View>
 
-      {/* post list */}
+      {/* Post list */}
       <ScrollView
         style={styles.scrollContainer}
         showsVerticalScrollIndicator={false}
@@ -153,11 +165,12 @@ export default function ShareRecordPage() {
   );
 }
 
-/* ---------- STYLES ---------- */
+// Updated styles using Colors
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#15151C' },
-
-  /* header */
+  container: {
+    flex: 1,
+    backgroundColor: Colors.blackGray,
+  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -165,55 +178,122 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 15,
     borderBottomWidth: 1,
-    borderBottomColor: '#2C2C2E',
+    borderBottomColor: Colors.gray1,
   },
-  backButton: { width: 40, height: 40, justifyContent: 'center', alignItems: 'center' },
-  headerTitle: { color: '#fff', fontSize: 18, fontWeight: '600' },
-  headerRight: { width: 40, height: 40 },
-
-  /* list */
-  scrollContainer: { flex: 1 },
+  backButton: {
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  headerTitle: {
+    color: Colors.white,
+    fontSize: 18,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  headerRight: {
+    width: 40,
+    height: 40,
+  },
+  scrollContainer: {
+    flex: 1,
+  },
   postContainer: {
     paddingHorizontal: 20,
     paddingVertical: 15,
     borderBottomWidth: 1,
-    borderBottomColor: '#2C2C2E',
+    borderBottomColor: Colors.gray1,
   },
-
-  /* user header */
   userHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 15,
   },
-  userInfo: { flexDirection: 'row', alignItems: 'center' },
-  userAvatar: { width: 40, height: 40, borderRadius: 20, marginRight: 12 },
-  userDetails: { flex: 1 },
-  userName: { color: '#fff', fontSize: 16, fontWeight: '600' },
-  locationRow: { flexDirection: 'row', alignItems: 'center', marginTop: 2 },
-  userLocation: { color: '#8E8E93', fontSize: 12, marginLeft: 4 },
-  timeAgo: { color: '#8E8E93', fontSize: 12 },
-
-  /* image + like */
+  userInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  userAvatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    marginRight: 12,
+  },
+  userDetails: {
+    flex: 1,
+  },
+  userName: {
+    color: Colors.white,
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 2,
+  },
+  locationRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  userLocation: {
+    color: Colors.gray2,
+    fontSize: 12,
+    marginLeft: 4,
+  },
+    timeLabel: {
+    position: 'absolute',
+    right: 10,          // Position near the right edge
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    color: Colors.gray2,
+    fontSize: 12,
+  },
   imageContainer: {
     position: 'relative',
     marginBottom: 15,
-    borderRadius: 12,
+    borderRadius: 10,
     overflow: 'hidden',
   },
-  postImage: { width: '100%', height: 300, backgroundColor: '#E5E5E5' },
-  likeOverlay: { position: 'absolute', bottom: 12, right: 12 },
+  postImage: {
+    width: '100%',
+    height: 300,
+    backgroundColor: Colors.gray4,
+  },
+  likeOverlay: {
+    position: 'absolute',
+    bottom: 12,
+    right: 12,
+  },
   likeButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(21, 21, 28, 0.7)',
+    backgroundColor: 'rgba(21, 21, 28, 0.50)', 
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 20,
+    shadowColor: Colors.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 4,
   },
-  likeCount: { fontSize: 14, fontWeight: '600', marginRight: 6 },
-
-  /* description */
-  description: { color: '#fff', fontSize: 16, lineHeight: 22 },
+  likeCount: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginRight: 6,
+  },
+  ratingSection: {
+    marginBottom: 10,
+  },
+  starsContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  starWrapper: {
+    marginRight: 8,
+  },
+  description: {
+    color: Colors.white,
+    fontSize: 16,
+    lineHeight: 22,
+  },
 });

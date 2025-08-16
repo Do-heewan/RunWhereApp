@@ -2,7 +2,6 @@ import { useColorScheme } from '@/hooks/useColorScheme';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, View } from 'react-native';
 import 'react-native-reanimated';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -35,7 +34,6 @@ function LayoutContent() {
         style={[
           styles.container,
           {
-            paddingTop: insets.top,
             paddingBottom: insets.bottom,
           },
         ]}
@@ -55,11 +53,6 @@ function LayoutContent() {
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen name="+not-found" />
         </Stack>
-
-        <StatusBar
-          style={colorScheme === 'dark' ? 'light' : 'dark'}
-          backgroundColor="#15151C"
-        />
       </View>
     </ThemeProvider>
   );

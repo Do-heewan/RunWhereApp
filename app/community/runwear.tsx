@@ -1,66 +1,56 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Image, ScrollView, StyleSheet,
-  Text, TouchableOpacity, View,
+  TouchableOpacity, View,
 } from 'react-native';
 import { LikeIcon, LikeIconActive, StarIcon, StarIconActive } from '../../components/IconSVG';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Eclipse from '../../components/EclipseSVG';
+import { Colors } from '@/constants/Colors';
+import { ThemedText } from '@/components/ThemedText';
+import { collection, onSnapshot, orderBy, query, getDocs, updateDoc } from 'firebase/firestore';
+import { db } from '../../backend/db/firebase';
 
-// Sample data for runwear posts
-type RunwearPost = {
+// Updated type to match database structure
+type SneakerItem = {
   id: number;
-  user: {
+  image: { uri: string };
+  likes: number;
+  rating: number;
+  backgroundColor: string;
+  user?: {
     name: string;
     avatar: string;
     location: string;
   };
-  images: { uri: string }[];
-  likes: number;
-  rating: number;
-  description: string;
-  timeAgo: string;
+  description?: string;
+  timeAgo?: string;
 };
 
-const runwearPosts: RunwearPost[] = [
-  {
-    id: 1,
-    user: {
-      name: '러닝하는실버',
-      avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face',
-      location: '울산시 울주군',
-    },
-    images: [
-      { uri: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=800&h=600&fit=crop' },
-    ],
-    likes: 48,
-    rating: 4,
-    description: '이 러닝화 정말 좋아요!',
-    timeAgo: '5시간 전',
-  },
-  {
-    id: 2,
-    user: {
-      name: '러닝하는실버',
-      avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face',
-      location: '울산시 울주군',
-    },
-    images: [
-      { uri: 'https://images.unsplash.com/photo-1549298916-b41d501d3772?w=800&h=600&fit=crop' },
-    ],
-    likes: 32,
-    rating: 5,
-    description: '새로 산 러닝화 후기입니다',
-    timeAgo: '1일 전',
-  },
-];
+async function updateSneakerLikes(itemId: number, newLikes: number) {
+  const q = query(collection(db, 'runwearItem'), orderBy('id', 'desc'));
+  const snapshot = await getDocs(q);
+  const docRef = snapshot.docs.find(doc => doc.data().id === itemId)?.ref;
+  if (docRef) {
+    await updateDoc(docRef, { likes: newLikes });
+  }
+}
 
 export default function RunwearPage() {
+  const [sneakerPosts, setSneakerPosts] = useState<SneakerItem[]>([]);
   const [likedPosts, setLikedPosts] = useState<Set<number>>(new Set());
 
-  const toggleLike = (postId: number) => {
+  useEffect(() => {
+    const unsubscribe = onSnapshot(
+      query(collection(db, 'runwearItem'), orderBy('id', 'desc')),
+      snapshot => setSneakerPosts(snapshot.docs.map(doc => doc.data() as SneakerItem))
+    );
+    return unsubscribe;
+  }, []);
+
+  const toggleLike = async (postId: number) => {
     setLikedPosts(prev => {
       const newSet = new Set(prev);
       if (newSet.has(postId)) {
@@ -70,6 +60,22 @@ export default function RunwearPage() {
       }
       return newSet;
     });
+    
+    // Update the likes count in local state immediately
+    setSneakerPosts(prev => 
+      prev.map(item => 
+        item.id === postId 
+          ? { ...item, likes: item.likes + (likedPosts.has(postId) ? -1 : 1) }
+          : item
+      )
+    );
+
+    // Update Firestore
+    const item = sneakerPosts.find(it => it.id === postId);
+    if (item) {
+      const newLikes = item.likes + (likedPosts.has(postId) ? -1 : 1);
+      await updateSneakerLikes(postId, newLikes);
+    }
   };
 
   const renderStars = (rating: number) => (
@@ -79,50 +85,64 @@ export default function RunwearPage() {
           {index < rating ? (
             <StarIconActive width={20} height={20} />
           ) : (
-            <StarIcon width={20} height={20} color="#ADADB2" />
+            <StarIcon width={20} height={20} color={Colors.gray3} />
           )}
         </View>
       ))}
     </View>
   );
 
-  const renderPost = (post: RunwearPost) => {
+  const renderPost = (post: SneakerItem) => {
     const isLiked = likedPosts.has(post.id);
 
     return (
       <View key={post.id} style={styles.postContainer}>
-        {/* User Header */}
+        {/* User Header - Use default values if no user data */}
         <View style={styles.userHeader}>
           <View style={styles.userInfo}>
-            <Image source={{ uri: post.user.avatar }} style={styles.userAvatar} />
+            <Image 
+              source={{ 
+                uri: post.user?.avatar || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face' 
+              }} 
+              style={styles.userAvatar} 
+            />
             <View style={styles.userDetails}>
-              <Text style={styles.userName}>{post.user.name}</Text>
+              <ThemedText type="sub1" style={styles.userName}>
+                {post.user?.name || '러닝하는실버'}
+              </ThemedText>
               <View style={styles.locationRow}>
-                <Ionicons name="location" size={12} color="#8E8E93" />
-                <Text style={styles.userLocation}>{post.user.location}</Text>
+                <Ionicons name="location" size={12} color={Colors.gray2} />
+                <ThemedText type="body3" style={styles.userLocation}>
+                  {post.user?.location || '울산시 울주군'}
+                </ThemedText>
               </View>
             </View>
           </View>
-          <Text style={styles.timeAgo}>{post.timeAgo}</Text>
+          <ThemedText type="body3" style={styles.timeLabel}>
+            {post.timeAgo || '방금 전'}
+          </ThemedText>
         </View>
 
         {/* Post Image */}
         <View style={styles.imageContainer}>
-          <Image source={post.images[0]} style={styles.postImage} />
-          
+          <Image source={post.image} style={styles.postImage} />
+
           {/* Like button overlay */}
           <View style={styles.likeOverlay}>
             <TouchableOpacity 
               style={styles.likeButton}
               onPress={() => toggleLike(post.id)}
             >
-              <Text style={[styles.likeCount, { color: isLiked ? '#54F895' : '#D9D9D9' }]}>
+              <ThemedText type="body3" style={[
+                styles.likeCount, 
+                { color: isLiked ? Colors.primary : Colors.gray4 }
+              ]}>
                 {post.likes}
-              </Text>
+              </ThemedText>
               {isLiked ? (
                 <LikeIconActive width={18} height={17} />
               ) : (
-                <LikeIcon width={18} height={17} color="#D9D9D9" />
+                <LikeIcon width={18} height={17} color={Colors.gray4} />
               )}
             </TouchableOpacity>
           </View>
@@ -134,7 +154,9 @@ export default function RunwearPage() {
         </View>
 
         {/* Description */}
-        <Text style={styles.description}>{post.description}</Text>
+        <ThemedText type="body2" style={styles.description}>
+          {post.description || '이 러닝화 정말 좋아요!'}
+        </ThemedText>
       </View>
     );
   };
@@ -148,18 +170,17 @@ export default function RunwearPage() {
           style={styles.backButton}
           onPress={() => router.back()}
         >
-          <Ionicons name="chevron-back" size={24} color="#fff" />
+          <Ionicons name="chevron-back" size={24} color={Colors.white} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>러닝템</Text>
+        <ThemedText type="h1" style={styles.headerTitle}>러닝템</ThemedText>
         <View style={styles.headerRight} />
       </View>
-
       {/* Posts List */}
       <ScrollView 
         style={styles.scrollContainer}
         showsVerticalScrollIndicator={false}
       >
-        {runwearPosts.map(post => renderPost(post))}
+        {sneakerPosts.map(post => renderPost(post))}
       </ScrollView>
     </SafeAreaView>
   );
@@ -168,7 +189,7 @@ export default function RunwearPage() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#15151C',
+    backgroundColor: Colors.blackGray,
   },
   header: {
     flexDirection: 'row',
@@ -177,7 +198,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 15,
     borderBottomWidth: 1,
-    borderBottomColor: '#2C2C2E',
+    borderBottomColor: Colors.gray1,
   },
   backButton: {
     width: 40,
@@ -186,7 +207,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   headerTitle: {
-    color: '#fff',
+    color: Colors.white,
     fontSize: 18,
     fontWeight: '600',
     textAlign: 'center',
@@ -202,7 +223,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 15,
     borderBottomWidth: 1,
-    borderBottomColor: '#2C2C2E',
+    borderBottomColor: Colors.gray1,
   },
   userHeader: {
     flexDirection: 'row',
@@ -224,7 +245,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   userName: {
-    color: '#fff',
+    color: Colors.white,
     fontSize: 16,
     fontWeight: '600',
     marginBottom: 2,
@@ -234,24 +255,28 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   userLocation: {
-    color: '#8E8E93',
+    color: Colors.gray2,
     fontSize: 12,
     marginLeft: 4,
   },
-  timeAgo: {
-    color: '#8E8E93',
+    timeLabel: {
+    position: 'absolute',
+    right: 10,          // Position near the right edge
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    color: Colors.gray2,
     fontSize: 12,
   },
   imageContainer: {
     position: 'relative',
     marginBottom: 15,
-    borderRadius: 12,
+    borderRadius: 10,
     overflow: 'hidden',
   },
   postImage: {
     width: '100%',
     height: 300,
-    backgroundColor: '#E5E5E5',
+    backgroundColor: Colors.gray4,
   },
   likeOverlay: {
     position: 'absolute',
@@ -261,18 +286,18 @@ const styles = StyleSheet.create({
   likeButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(21, 21, 28, 0.7)',
+    backgroundColor: 'rgba(21, 21, 28, 0.50)', 
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 20,
-    shadowColor: '#000',
+    shadowColor: Colors.black,
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
+    shadowOpacity: 0.15,
     shadowRadius: 4,
     elevation: 4,
   },
   likeCount: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: '600',
     marginRight: 6,
   },
@@ -287,7 +312,7 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   description: {
-    color: '#fff',
+    color: Colors.white,
     fontSize: 16,
     lineHeight: 22,
   },
