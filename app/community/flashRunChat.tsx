@@ -18,8 +18,8 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { auth, db } from '../../backend/db/firebase'; // db 인스턴스 import 필요
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { auth, db } from '../../backend/db/firebase'; // db 인스턴스 import 필요
 
 type ChatMessage = {
   id: string;
