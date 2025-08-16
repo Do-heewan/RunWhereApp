@@ -1,7 +1,8 @@
 // TapToDropPin.tsx
+import SignUpAppbar from "@/components/SignUpAppbar";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useRef, useState } from "react";
-import { Button, StyleSheet, TextInput, View } from "react-native";
+import { Button, SafeAreaView, StyleSheet, TextInput, View } from "react-native";
 import MapView, { Camera, LatLng, MapPressEvent, Marker, UrlTile } from "react-native-maps";
 
 export default function TapToDropPin(){
@@ -43,7 +44,8 @@ export default function TapToDropPin(){
   };
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
+      <SignUpAppbar />
       <TextInput style={styles.input} placeholder="동네 이름" />
       <MapView
         ref={mapRef}
@@ -68,7 +70,7 @@ export default function TapToDropPin(){
         <Button title="마커 지우기" onPress={() => setPin(null)} />
       </View>
       <Button title="다음" onPress={handleNext} />
-    </View>
+    </SafeAreaView>
   );
 }
 

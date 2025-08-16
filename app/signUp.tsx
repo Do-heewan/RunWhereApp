@@ -1,53 +1,86 @@
+import SignUpAppbar from '@/components/SignUpAppbar';
+import { Colors } from '@/constants/Colors';
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import { Button, StyleSheet, TextInput, View } from "react-native";
+import { Button, SafeAreaView, StyleSheet, TextInput, View } from "react-native";
 
 
 export default function SignUp() {
 
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [passwordConfirm, setPasswordConfirm] = useState("");
-  const [gender, setGender] = useState("");
-  const [birthday, setBirthday] = useState("");
+    const [name, setName] = useState("");
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [passwordConfirm, setPasswordConfirm] = useState("");
+    const [gender, setGender] = useState("");
+    const [birthday, setBirthday] = useState("");
+    const router = useRouter();
 
-  const router = useRouter();
-
-  return (
-    <View>
-      <TextInput style={styles.input} placeholder="Name" value={name} onChangeText={setName} />
-      <TextInput style={styles.input} placeholder="Email" value={email} onChangeText={setEmail} />
-      <TextInput style={styles.input} placeholder="Password" value={password} onChangeText={setPassword} secureTextEntry />
-      <TextInput style={styles.input} placeholder="Password Confirm" value={passwordConfirm} onChangeText={setPasswordConfirm} secureTextEntry />
-      <TextInput style={styles.input} placeholder="Gender" value={gender} onChangeText={setGender} />
-      <TextInput style={styles.input} placeholder="Birthday" value={birthday} onChangeText={setBirthday} />
-      <Button onPress={() =>
-        router.push({
-          pathname: '/signUpLocation',
-          params: {
-            name,
-            email,
-            password,
-            gender,
-            birthday,
-          },
-        })
-      } title="다음" 
-      />
-    </View>
-  );
-}           
+    return (
+        <SafeAreaView style={styles.container}>
+            {/* 상단 앱바 */}
+            <SignUpAppbar />
+            {/* 회원가입 폼 */}
+            <View style={styles.content}>
+                <TextInput style={styles.input} placeholder="Name" value={name} onChangeText={setName} />
+                <TextInput style={styles.input} placeholder="Email" value={email} onChangeText={setEmail} />
+                <TextInput style={styles.input} placeholder="Password" value={password} onChangeText={setPassword} secureTextEntry />
+                <TextInput style={styles.input} placeholder="Password Confirm" value={passwordConfirm} onChangeText={setPasswordConfirm} secureTextEntry />
+                <TextInput style={styles.input} placeholder="Gender" value={gender} onChangeText={setGender} />
+                <TextInput style={styles.input} placeholder="Birthday" value={birthday} onChangeText={setBirthday} />
+                <Button onPress={() =>
+                    router.push({
+                        pathname: '/signUpLocation',
+                        params: {
+                            name,
+                            email,
+                            password,
+                            gender,
+                            birthday,
+                        },
+                    })
+                } title="다음"
+                />
+            </View>
+        </SafeAreaView>
+    );
+}
 
 const styles = StyleSheet.create({
-  input: {
-    borderWidth: 1,
-    borderColor: "gray",
-    backgroundColor: "white",
-    color: "black",
-    padding: 10,
-    margin: 10,
-  },
+    container: {
+        flex: 1,
+        backgroundColor: Colors.blackGray,
+    },
+    header: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingTop: 10,
+        paddingBottom: 15,
+        paddingLeft: 19,
+    },
+    backButton: {
+        padding: 8,
+    },
+    headerTitle: {
+        color: Colors.white,
+        fontWeight: '600',
+    },
+    placeholder: {
+        width: 40, // backButton과 동일한 너비로 균형 맞춤
+    },
+    content: {
+        flex: 1,
+        padding: 20,
+    },
+    input: {
+        borderWidth: 1,
+        borderColor: Colors.gray2,
+        backgroundColor: Colors.white,
+        color: Colors.blackGray,
+        padding: 15,
+        marginBottom: 15,
+        borderRadius: 8,
+        fontSize: 16,
+    },
 });
 
 /*
