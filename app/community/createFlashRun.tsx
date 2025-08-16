@@ -80,9 +80,11 @@ const CreateRun = () => {
         title: item.title,
         createdAt: serverTimestamp(),
         creator: {
+          // 생성자 정보 추가
           id: user.uid,
           name: nickname,
         },
+        
         organizer: [
           {
             id: user.uid,

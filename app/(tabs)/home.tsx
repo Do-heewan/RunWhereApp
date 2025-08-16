@@ -7,7 +7,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { Image, SafeAreaView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Image, SafeAreaView, StyleSheet, TouchableOpacity, View, StatusBar } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
 
 export default function CourseDetailScreen() {
@@ -21,23 +21,27 @@ export default function CourseDetailScreen() {
   const handleDistanceChange = (item: { id: string; label: string; value: [number, number] }) => {
     setSelectedDistance(item);
   };
+  
   useEffect(() => {
     
   }, []); 
+
   return (
     <SafeAreaView style={styles.container}>
       <Eclipse />
       {/* 현재 위도, 경도값이 고정되어있는데, 처음에 회원가입할때 위치 정보를 저장해놓았다가 쓰는 것이 좋을 듯함. 매번 api 호출 해야하는건 좋지 않음. */}
-      <WeatherBar latitude={36.911111} longitude={127.111111} />
+      <View style={styles.headerContainer}>
+        <WeatherBar latitude={36.911111} longitude={127.111111} />
+      </View>     
       <View style={{
         justifyContent: 'center',
         flexDirection: 'row',
         alignItems: 'center',
         marginHorizontal: 30,
-        marginTop: 38,
+        marginTop: 10,
       }}>
         <TouchableOpacity>
-          <Ionicons name="chevron-back" size={35} color={Colors.primary} />
+          <Ionicons name="chevron-down" size={35} color={Colors.primary} />
         </TouchableOpacity>
         <ThemedText type="h2" style={{color: Colors.primary}}>울산시 울주군 러닝동</ThemedText>
       </View>
@@ -66,8 +70,6 @@ export default function CourseDetailScreen() {
       <ThemedText type="body2" style={{color: Colors.gray4,marginTop:5,alignSelf:'center'}}>당신에게 딱 맞는 러닝 코스를 추천해드릴게요</ThemedText>
       <DistanceChips onChange={handleDistanceChange} initialId="" />
       
-      
-      
       <View style={{marginTop: 60}}>
         {selectedDistance ? (
           <TouchableOpacity style={styles.CourseButton} onPress={handleHomePress}>
@@ -83,7 +85,7 @@ export default function CourseDetailScreen() {
             </LinearGradient>
           </TouchableOpacity>
         ) : (
-          <TouchableOpacity style={styles.selectCourseButton} onPress={handleHomePress}>
+          <TouchableOpacity style={styles.selectCourseButton} onPress={handleHomePress} disabled={true}>
             <ThemedText type="button1" style={{color:Colors.gray4}}>
               러닝 코스 추천 받기
             </ThemedText>
@@ -96,6 +98,7 @@ export default function CourseDetailScreen() {
 
 const styles = StyleSheet.create({
   container: {
+    paddingTop: 10,
     flex: 1,
     backgroundColor: Colors.blackGray,
     paddingBottom: 50,
@@ -103,8 +106,9 @@ const styles = StyleSheet.create({
   headerContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 20,
+    marginHorizontal: 12,
+    marginVertical: 12,
+    paddingTop: 10,
   },
   homeButton: {
     padding: 12,
