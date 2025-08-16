@@ -12,7 +12,6 @@ import {
   Keyboard,
   KeyboardAvoidingView,
   Platform,
-  SafeAreaView,
   StyleSheet,
   Text,
   TextInput,
@@ -20,6 +19,7 @@ import {
   View,
 } from 'react-native';
 import { auth, db } from '../../backend/db/firebase'; // db 인스턴스 import 필요
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 type ChatMessage = {
   id: string;
@@ -29,8 +29,11 @@ type ChatMessage = {
   createdAt: string;
 };
 
-export default function FlashRunChatPage() {
 
+
+export default function FlashRunChatPage() {
+  const params = useLocalSearchParams();
+  const chatTitle = params.title || '번개런 채팅방'; // fallback if missing
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [myUid, setMyUid] = useState('');
@@ -38,12 +41,12 @@ export default function FlashRunChatPage() {
   const [participants, setParticipants] = useState(0);
   const [maxParticipants, setMaxParticipants] = useState(0);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
-
   const chatRoomId = useLocalSearchParams().chatRoomId;
-  
-
-
   const flatListRef = useRef<FlatList>(null);
+  const currentParticipants = params.current ? Number(params.current) : participants; // fallback to state (if string: Number())
+  const maxParticipantCount = params.max ? Number(params.max) : maxParticipants; // fallback to state
+
+
 
   // 로그인 유저 정보 가져오기
   useEffect(() => {
@@ -65,8 +68,8 @@ export default function FlashRunChatPage() {
       const chatRoomSnap = await getDoc(chatRoomRef);
       if (chatRoomSnap.exists()) {
         const data = chatRoomSnap.data();
-        setParticipants(data.participants || 0);
-        setMaxParticipants(data.maxParticipants || 0); // maxParticipants 필드가 있다면
+        setParticipants(currentParticipants || 0);
+        setMaxParticipants(maxParticipantCount || 0); // maxParticipants 필드가 있다면
       }
     };
     fetchParticipants();
@@ -100,10 +103,17 @@ export default function FlashRunChatPage() {
     const q = query(collection(db, messagesCollection), orderBy("createdAt", "desc"));
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      const messageList = [];
-      snapshot.forEach((doc) => {
-        messageList.push({ id: doc.id, ...doc.data() });
+      const messageList: ChatMessage[] = snapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          uid: data.uid ?? '', // fallback if uid is missing
+          user: data.user ?? '익명',
+          text: data.text ?? '',
+          createdAt: data.createdAt?.toDate?.().toISOString() ?? '', // convert to ISO string
+        };
       });
+
       setMessages(messageList);
     });
 
@@ -134,26 +144,26 @@ export default function FlashRunChatPage() {
           text: '나가기', 
           style: 'destructive',
           onPress: async () => {
-          if (!chatRoomId || !myUid) {
-            router.back();
-            return;
-          }
-          // 1. organizer 배열에서 내 정보 제거
-          const chatRoomRef = doc(db, 'flashRunChatsRooms', String(chatRoomId));
-          const chatRoomSnap = await getDoc(chatRoomRef);
-          if (chatRoomSnap.exists()) {
-            const data = chatRoomSnap.data();
-            const organizers = Array.isArray(data.organizer) ? data.organizer : [];
-            const newOrganizers = organizers.filter((org: any) => org.id !== myUid);
-            await updateDoc(chatRoomRef, { organizer: newOrganizers });
+            if (!chatRoomId || !myUid) {
+              router.back();
+              return;
+            }
+            // 1. organizer 배열에서 내 정보 제거
+            const chatRoomRef = doc(db, 'flashRunChatsRooms', String(chatRoomId));
+            const chatRoomSnap = await getDoc(chatRoomRef);
+            if (chatRoomSnap.exists()) {
+              const data = chatRoomSnap.data();
+              const organizers = Array.isArray(data.organizer) ? data.organizer : [];
+              const newOrganizers = organizers.filter((org: any) => org.id !== myUid);
+              await updateDoc(chatRoomRef, { organizer: newOrganizers });
 
-            // 2. flashRun participants 필드 업데이트
-            const flashRunRef = doc(db, 'flashRun', String(chatRoomId));
-            await updateDoc(flashRunRef, { participants: newOrganizers.length });
+              // 2. flashRun participants 필드 업데이트
+              const flashRunRef = doc(db, 'flashRun', String(chatRoomId));
+              await updateDoc(flashRunRef, { participants: newOrganizers.length });
+            }
+            // 3. 화면 이동
+            router.back();
           }
-          // 3. 화면 이동
-          router.back();
-        }
         }
       ]
     );
@@ -167,29 +177,36 @@ export default function FlashRunChatPage() {
   };
 
   // ...renderItem 수정
-  const renderItem = ({ item }: { item: ChatMessage }) => (
+  const renderItem = ({ item }: { item: ChatMessage }) => {
+    const isMyMessage = item.uid === 'user-uid';
+    const avatarColor = getAvatarColor(item.user);
+
+    return (    
     <View style={[styles.msgContainer, item.uid === myUid && styles.myMsgContainer]}>
       {item.uid !== myUid && (
-        <View style={styles.avatar}>
-        </View>
+      <View style={[styles.avatar, { backgroundColor: avatarColor }]}>
+        <ThemedText type="body3" style={styles.avatarText}>
+          {item.user.charAt(0)}
+        </ThemedText>
+      </View>
       )}
       <View style={styles.messageContent}>
         {item.uid !== myUid && (
-          <Text style={styles.msgUser}>{item.user}</Text>
+          <Text style={styles.username}>{item.user}</Text>
         )}
-        <View style={[styles.msgBubble, item.uid === myUid && styles.myMsgBubble]}>
-          <Text style={[styles.msgText, item.uid === myUid && styles.myMsgText]}>
+        <View style={[styles.othersMsgBubble, item.uid === myUid && styles.myMsgBubble]}>
+          <Text style={[styles.othersMsgText, item.uid === myUid && styles.myMsgText]}>
             {item.text}
           </Text>
         </View>
       </View>
     </View>
   );
+};
 
   return (
-    <SafeAreaView style={styles.root}>
+    <SafeAreaView style={styles.container}>
       <Eclipse />
-
       {/* header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
@@ -198,10 +215,10 @@ export default function FlashRunChatPage() {
 
         <View style={styles.headerCenter}>
           <ThemedText type="sub1" style={styles.title}>
-            유니스트 앞에서 9시
+            {chatTitle}
           </ThemedText>
           <ThemedText type="body3" style={styles.participants}>
-            ({participants} / {maxParticipants})
+            ({currentParticipants + 1} / {maxParticipantCount})
           </ThemedText>
         </View>
 
@@ -215,12 +232,13 @@ export default function FlashRunChatPage() {
       {/* chat area */}
       <KeyboardAvoidingView
         style={styles.chatContainer}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}      >
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
         <View style={styles.messagesContainer}>
           <FlatList
             ref={flatListRef}
             data={messages}
-            keyExtractor={m => m.uid}
+            keyExtractor={m => m.id}
             renderItem={renderItem}
             inverted
             contentContainerStyle={{ paddingTop: 16, paddingBottom: 16, flexGrow: 1 }}
@@ -229,16 +247,14 @@ export default function FlashRunChatPage() {
           />
         </View>
 
-        <View style={[
-          styles.inputContainer
-        ]}>
+        <View style={styles.inputContainer}>
           <View style={styles.inputRow}>
             <TextInput
               value={input}
               onChangeText={setInput}
               placeholder="메시지를 입력하세요..."
               placeholderTextColor={Colors.gray2}
-              style={[styles.input, { textAlignVertical: 'top' }]} // Added
+              style={[styles.input, { textAlignVertical: 'top' }]}
               onSubmitEditing={sendMessage}
               returnKeyType="send"
               multiline
@@ -263,7 +279,7 @@ export default function FlashRunChatPage() {
 
 /* ---------- styles ---------- */
 const styles = StyleSheet.create({
-  root: { 
+  container: { 
     flex: 1, 
     backgroundColor: Colors.blackGray 
   },
@@ -303,11 +319,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 15,
-    backgroundColor : Colors.gray1  },
-  
-    leaveBtnText: {
+    backgroundColor: Colors.gray1
+  },
+  leaveBtnText: {
     color: Colors.red,
-    padding:3,
+    padding: 3,
     fontSize: 14,
     fontWeight: '500',
   },
@@ -320,9 +336,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 
-  /* input container - Fixed positioning */
+  /* input container - SafeAreaView handles safe areas */
   inputContainer: {
-    marginBottom:30,
     backgroundColor: Colors.blackGray,
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: Colors.gray1,
@@ -332,16 +347,16 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    paddingBottom: Platform.OS === 'ios' ? 20 : 12,
+    paddingBottom: 20,
   },
 
   /* message container */
   msgContainer: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    marginHorizontal: 16,
-    marginVertical: 6,
-  },
+  flexDirection: 'row',
+  alignItems: 'flex-start',
+  marginHorizontal: 16,
+  marginVertical: 6,
+},
   myMsgContainer: {
     justifyContent: 'flex-end',
     alignItems: 'flex-end',
@@ -349,9 +364,9 @@ const styles = StyleSheet.create({
 
   /* avatar */
   avatar: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 42,
+    height: 42,
+    borderRadius: 20,
     marginRight: 8,
     justifyContent: 'center',
     alignItems: 'center',
@@ -368,38 +383,36 @@ const styles = StyleSheet.create({
     maxWidth: '75%',
   },
 
-    msgBubble: {
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    backgroundColor: Colors.primary,
-    borderRadius: 20,
-    borderTopLeftRadius: 6,
-  },
-
-  /*user message */
+  /* user message */
   myMsgBubble: {
     backgroundColor: Colors.gray4,
     borderTopLeftRadius: 20,
-    borderBottomRightRadius: 6,
-  },
-    myMsgText: {
+    borderTopRightRadius: 0,   
+    },
+  myMsgText: {
     color: Colors.blackGray,
   },
 
   /* different user message text */
-  msgUser: {
+  othersMsgBubble: {
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    backgroundColor: Colors.primary,
+    borderRadius: 20,
+    borderTopLeftRadius: 0,
+  },
+  username: {
     color: Colors.primary,
     marginBottom: 4,
     marginLeft: 4,
     fontSize: 12,
     fontWeight: '500',
   },
-  msgText: {
+  othersMsgText: {
     color: Colors.blackGray,
     fontSize: 16,
     lineHeight: 21,
   },
-
 
   /* input styling */
   input: {
@@ -410,7 +423,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     color: Colors.blackGray,
     fontSize: 16,
-    maxHeight: 100, // Allow for more lines
+    maxHeight: 100,
     marginRight: 8,
     textAlignVertical: 'center',
   },
