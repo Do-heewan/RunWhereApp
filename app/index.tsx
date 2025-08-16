@@ -2,5 +2,5 @@
 import { Redirect } from 'expo-router';
 
 export default function Redirecting() {
-  return <Redirect href="/community" />;
+  return <Redirect href="/login" />;
 }
