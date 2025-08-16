@@ -6,7 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { Dimensions, SafeAreaView, StyleSheet, TouchableOpacity, View } from 'react-native';
-import MapView, { UrlTile } from 'react-native-maps';
+import MapView from 'react-native-maps';
 import Carousel from 'react-native-reanimated-carousel';
 
 
@@ -75,13 +75,7 @@ export default function HomeScreen() {
                 longitudeDelta: 0.01,
               }}
               onPress={() => handleMapPress(index)}
-            >
-              <UrlTile
-                urlTemplate={`https://api.maptiler.com/maps/${urlList[index]}/{z}/{x}/{y}.png?key=zj59kKsjCm6jcyYTg7qQ`}
-                maximumZ={19}
-                flipY={false}
-              />
-            </MapView>
+            />
           </View>
         )}
       />
