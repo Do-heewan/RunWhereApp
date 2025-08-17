@@ -9,6 +9,8 @@ import {
   StyleSheet,
   Text,
   TextInput,
+  Platform,
+  KeyboardAvoidingView,
   TouchableOpacity,
   View,
 } from 'react-native';
@@ -114,6 +116,10 @@ const CreateRun = () => {
         </View>
       </View>
 
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.keyboardAvoidingView}
+      >
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {/* Title Section */}
         <View style={styles.section}>
@@ -239,7 +245,8 @@ const CreateRun = () => {
 
         <View style={styles.bottomPadding} />
       </ScrollView>
-
+    </KeyboardAvoidingView>
+    
       {/* Submit Button */}
       <TouchableOpacity
         style={styles.floatingButton}
@@ -337,6 +344,10 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontFamily: 'Pretendard Variable',
     fontWeight: '600',
+  },
+  // KeyboardAvoidingView style
+  keyboardAvoidingView: {
+    flex: 1,
   },
   scrollContent: {
     padding: 30,

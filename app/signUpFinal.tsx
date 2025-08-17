@@ -83,10 +83,23 @@ export default function SignUpFinal() {
         <ThemedText type="body2" style={{ color: Colors.gray4, textAlign: 'center', marginTop: 10 }}>
           콘솔에서 전달된 정보를 확인하세요.
         </ThemedText>
-        <ThemedText type="button1" onPress={() => {
-          handleSignUp();
-          router.replace("/login");
-        }}>
+        <ThemedText
+          type="button1"
+          onPress={() => {
+            handleSignUp();
+            router.replace("/login");
+          }}
+          style={{
+            marginTop: 30,
+            paddingVertical: 12,
+            paddingHorizontal: 24,
+            backgroundColor: Colors.primary,
+            color: Colors.white,
+            borderRadius: 8,
+            textAlign: 'center',
+            overflow: 'hidden',
+          }}
+        >
           로그인 페이지로 이동
         </ThemedText>
       </View>

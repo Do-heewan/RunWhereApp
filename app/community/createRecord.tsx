@@ -8,6 +8,8 @@ import React, { useState } from 'react';
 import {
   ActivityIndicator,
   Image,
+  KeyboardAvoidingView,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -20,13 +22,16 @@ import { db, storage } from '../../backend/db/firebase';
 import Eclipse from '../../components/EclipseSVG';
 
 
+
 const CreateRecord = () => {
   const [reviewText, setReviewText] = useState('');
   const [imageUri, setImageUri] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
+
   // Check if all fields are filled
   const isFormComplete = imageUri && reviewText.trim().length > 0 ;
+
 
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -34,10 +39,12 @@ const CreateRecord = () => {
       quality: 1,
     });
 
+
     if (!result.canceled) {
       setImageUri(result.assets[0].uri);
     }
   };
+
 
   const handleSubmit = async () => {
         if (!reviewText || !imageUri) {
@@ -55,6 +62,7 @@ const CreateRecord = () => {
           const storageRef = ref(storage, filename);
           await uploadBytes(storageRef, blob);
           const downloadURL = await getDownloadURL(storageRef);
+
 
           const docRef = await addDoc(collection(db, 'sharedRecord'), {
             id: Date.now(), // 간단한 고유값
@@ -77,6 +85,7 @@ const CreateRecord = () => {
         }
       };
 
+
   return (
     <SafeAreaView style={styles.container}>
     <Eclipse />
@@ -86,6 +95,7 @@ const CreateRecord = () => {
         <Text style={styles.loadingText}>업로드 중...</Text>
       </View>
     )}
+
 
       {/* Header */}
       <View style={styles.header}>
@@ -103,67 +113,75 @@ const CreateRecord = () => {
         <View style={styles.headerRight} />
       </View>
 
-      {/* Scrollable Content */}
-      <ScrollView 
-        style={styles.scrollContainer}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.keyboardAvoidingView}
       >
-        {/* Add Photo Section */}
-        <TouchableOpacity style={styles.photoBox} onPress={pickImage}>
-          {imageUri ? (
-            <Image source={{ uri: imageUri }} style={styles.photo} />
+        {/* Scrollable Content */}
+        <ScrollView 
+          style={styles.scrollContainer}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Add Photo Section */}
+          <TouchableOpacity style={styles.photoBox} onPress={pickImage}>
+            {imageUri ? (
+              <Image source={{ uri: imageUri }} style={styles.photo} />
+            ) : (
+              <>
+                <Ionicons name="camera" size={32} color="#7C7C7C" />
+                <Text style={styles.photoText}>사진추가</Text>
+              </>
+            )}
+          </TouchableOpacity>
+
+
+          {/* Review Input */}
+          <Text style={styles.sub1Text}>텍스트 후기</Text>
+          <View style={styles.inputBox}>
+            <TextInput
+              style={styles.textInput}
+              placeholder="후기를 작성해보세요.."
+              placeholderTextColor="#8E8E93"
+              multiline
+              maxLength={100}
+              value={reviewText}
+              onChangeText={setReviewText}
+            />
+            <Text style={styles.charCount}>{reviewText.length}/100</Text>
+          </View>
+
+
+          {/* Bottom padding to ensure content doesn't get hidden behind floating button */}
+          <View style={styles.bottomPadding} />
+        </ScrollView>
+      </KeyboardAvoidingView>
+      
+       {/* Floating Submit Button */}
+        <TouchableOpacity 
+          style={styles.floatingButton}
+          onPress={handleSubmit}
+          disabled={!isFormComplete}
+        >
+          {isFormComplete ? (
+            <LinearGradient
+              colors={['#54f895', '#2afbea']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.gradientButton}
+            >
+              <Text style={styles.submitTextActive}>작성완료</Text>
+            </LinearGradient>
           ) : (
-            <>
-              <Ionicons name="camera" size={32} color="#7C7C7C" />
-              <Text style={styles.photoText}>사진추가</Text>
-            </>
+            <View style={styles.grayButton}>
+              <Text style={styles.submitTextInactive}>작성완료</Text>
+            </View>
           )}
         </TouchableOpacity>
-
-        {/* Review Input */}
-        <Text style={styles.sub1Text}>텍스트 후기</Text>
-        <View style={styles.inputBox}>
-          <TextInput
-            style={styles.textInput}
-            placeholder="후기를 작성해보세요.."
-            placeholderTextColor="#8E8E93"
-            multiline
-            maxLength={100}
-            value={reviewText}
-            onChangeText={setReviewText}
-          />
-          <Text style={styles.charCount}>{reviewText.length}/100</Text>
-        </View>
-
-        {/* Bottom padding to ensure content doesn't get hidden behind floating button */}
-        <View style={styles.bottomPadding} />
-      </ScrollView>
-
-      {/* Floating Submit Button */}
-      <TouchableOpacity 
-        style={styles.floatingButton}
-        onPress={handleSubmit}
-        disabled={!isFormComplete}
-      >
-        {isFormComplete ? (
-          <LinearGradient
-            colors={['#54f895', '#2afbea']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={styles.gradientButton}
-          >
-            <Text style={styles.submitTextActive}>작성완료</Text>
-          </LinearGradient>
-        ) : (
-          <View style={styles.grayButton}>
-            <Text style={styles.submitTextInactive}>작성완료</Text>
-          </View>
-        )}
-      </TouchableOpacity>
     </SafeAreaView>
   );
 };
+
 
 const styles = StyleSheet.create({
   container: {
@@ -216,6 +234,11 @@ const styles = StyleSheet.create({
   headerRight: {
     width: 40,
     height: 40,
+  },
+  
+  // KeyboardAvoidingView style
+  keyboardAvoidingView: {
+    flex: 1,
   },
   
   // ScrollView styles
@@ -329,5 +352,6 @@ const styles = StyleSheet.create({
     fontFamily: 'Pretendard-SemiBold',
   },
 });
+
 
 export default CreateRecord;
