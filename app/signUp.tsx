@@ -6,7 +6,7 @@ import { Colors } from '@/constants/Colors';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
-import { ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
+import { ScrollView, StyleSheet, TouchableOpacity, View,  KeyboardAvoidingView, Platform } from "react-native";
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 
@@ -62,6 +62,10 @@ export default function SignUp() {
             {/* 상단 앱바 */}
             <SignUpAppbar />
 
+            <KeyboardAvoidingView
+                    behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                    style={styles.keyboardAvoidingView}
+            >
             {/* 회원가입 폼 */}
             <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
                 <ThemedText type="sub1" style={{ color: Colors.white, marginBottom: 10 }}>이름</ThemedText>
@@ -87,7 +91,7 @@ export default function SignUp() {
                         
                         <ThemedTextInput
                             type="body1"
-                            placeholder="도메인을 입력하세요"
+                            placeholder="email.com"
                             value={emailDomain}
                             onChangeText={setEmailDomain}
                             style={[styles.emailDomainInput]}
@@ -148,7 +152,7 @@ export default function SignUp() {
                     onChangeText={setPassword}
                     secureTextEntry
                 />
-                <ThemedText type="body3" style={{ color: Colors.gray4, marginTop: 5 }}>****를 포함해주세요</ThemedText>
+                <ThemedText type="body3" style={{ color: Colors.gray4, marginTop: 5 }}>******를 포함해주세요</ThemedText>
 
                              <ThemedText type="sub1" style={{ color: Colors.white, marginBottom: 10, marginTop: 30 }}>성별을 선택해주세요</ThemedText>
              <View style={styles.genderButtonsContainer}>
@@ -214,6 +218,7 @@ export default function SignUp() {
                 {/* 스크롤 영역 하단에 여백 추가 */}
                 <View style={{ height: 100 }} />
             </ScrollView>
+            </KeyboardAvoidingView>
             
             {/* 절대 위치 버튼 */}
             <View style={styles.buttonContainer}>
@@ -333,6 +338,10 @@ const styles = StyleSheet.create({
          right: 20,
          zIndex: 1000,
      },
+       // KeyboardAvoidingView style
+        keyboardAvoidingView: {
+            flex: 1,
+        },
      disabledButton: {
          height: 68,
          backgroundColor: Colors.gray2,

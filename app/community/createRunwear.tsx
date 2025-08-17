@@ -13,6 +13,8 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
+  Platform,
+  KeyboardAvoidingView,
   View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -109,6 +111,10 @@ const CreateRunwear = () => {
         <View style={styles.headerRight} />
       </View>
 
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.keyboardAvoidingView}
+      >
       {/* Scrollable Content */}
       <ScrollView 
         style={styles.scrollContainer}
@@ -165,6 +171,7 @@ const CreateRunwear = () => {
         {/* Bottom padding to ensure content doesn't get hidden behind floating button */}
         <View style={styles.bottomPadding} />
       </ScrollView>
+      </KeyboardAvoidingView>
 
       {/* Floating Submit Button */}
       <TouchableOpacity 
@@ -243,7 +250,10 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
   },
-  
+   // KeyboardAvoidingView style
+  keyboardAvoidingView: {
+    flex: 1,
+  },
   // ScrollView styles
   scrollContainer: {
     flex: 1,
