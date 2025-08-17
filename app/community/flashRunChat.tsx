@@ -19,7 +19,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { auth, db } from '../../backend/db/firebase'; // db 인스턴스 import 필요
+import { auth, db } from '../../backend/db/firebase';
 
 type ChatMessage = {
   id: string;
@@ -40,8 +40,6 @@ export default function FlashRunChatPage() {
   const [keyboardHeight, setKeyboardHeight] = useState(0);
 
   const chatRoomId = useLocalSearchParams().chatRoomId;
-  
-
 
   const flatListRef = useRef<FlatList>(null);
 

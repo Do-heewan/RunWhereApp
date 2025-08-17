@@ -31,10 +31,6 @@ const CreateRun = () => {
       id: string;
       name: string;
     };
-    organizer: {
-      id: string;
-      name: string;
-    }[];
     startHour: number;
     startMinute: number;
     targetMinute: number;
@@ -269,10 +265,6 @@ const CreateRun = () => {
                 name: nickname,
                 id: user.uid,
               },
-              organizer: [{
-                name: nickname,
-                id: user.uid,
-              },],
               startHour: Number(startHour),
               startMinute: Number(startMinute),
               targetMinute: Number(targetMinute),

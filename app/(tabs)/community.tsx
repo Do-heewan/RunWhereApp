@@ -4,9 +4,10 @@ import { styles } from '@/styles/community.styles';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
-import { collection, doc, getDoc, getDocs, onSnapshot, orderBy, query, updateDoc, where } from 'firebase/firestore';
+import { arrayUnion, collection, doc, getDoc, getDocs, onSnapshot, orderBy, query, updateDoc, where } from 'firebase/firestore';
 import React, { useEffect, useState } from 'react';
 import {
+  Alert,
   Image,
   Modal,
   ScrollView,
@@ -15,7 +16,7 @@ import {
   View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { db } from '../../backend/db/firebase';
+import { auth, db } from '../../backend/db/firebase';
 import Eclipse from '../../components/EclipseSVG';
 import { FlashIcon, LikeIcon, LikeIconActive, StarIcon, StarIconActive } from '../../components/IconSVG';
 
@@ -26,6 +27,7 @@ type SneakerItem = {
   likes: number
   rating: number
 }
+
 type ShareRecord = {
   id: number;
   image: { uri: string };
@@ -48,7 +50,7 @@ type FlashRunEvent = {
   hashtags: string[]
   participants: number
   maxParticipants: number
-  organizer: { name: string; avatar: string }
+  organizer: { id: string; name: string; avatar: string }
   startHour: number
   startMinute: number
   targetMinute: number
@@ -56,6 +58,7 @@ type FlashRunEvent = {
   status: 'upcoming' | 'full' | 'past'
   messages: string[]
 }
+
 type FilterType = '최신순' | '임박순' | '페이스순'
 
 const TABS = ['러닝템', '기록공유', '번개런'] as const
@@ -120,8 +123,8 @@ export default function CommunityPage() {
     return unsubscribe
   }, [])
 
-    type PaceInfo = { label: string, color: string }
-    function getPaceInfo(min: number, sec: number): PaceInfo {
+  type PaceInfo = { label: string, color: string }
+  function getPaceInfo(min: number, sec: number): PaceInfo {
     const pace = Number(min) + Number(sec) / 60;
 
     if (pace >= 3 && pace < 5) {
@@ -150,6 +153,7 @@ export default function CommunityPage() {
       default: return data
     }
   }
+
   const dataByTab: Record<TabKey, any[]> = {
     러닝템: runwearList,
     기록공유: sharedRecordList,
@@ -185,14 +189,17 @@ export default function CommunityPage() {
           : item
       ),
     );
+
     setLikedItems(prev => {
       const set = new Set(prev)
       set.has(itemId) ? set.delete(itemId) : set.add(itemId)
       return set
     })
+
     const newLikes =
       runwearList.find(it => it.id === itemId)!.likes +
       (likedItems.has(itemId) ? -1 : 1)
+
     updateSneakerLikes(itemId, newLikes)
   }
 
@@ -239,8 +246,7 @@ export default function CommunityPage() {
   >
     <Image source={item.image} style={styles.galleryImg} />
   </TouchableOpacity>
-)
-
+  )
 
   const renderFlashRunCard = (item: FlashRunEvent) => {
     const disabled = item.status === 'full';
@@ -291,19 +297,53 @@ export default function CommunityPage() {
               const snapshot = await getDocs(q);
 
               let chatRoomId: string | null = null;
-              chatRoomId = snapshot.docs[0].id;
+              chatRoomId = snapshot.docs[0]?.id;
+              if (!chatRoomId) return;
 
-              if (chatRoomId) {
-                router.push({
-                  pathname: '/community/flashRunChat',
-                  params: {
-                    chatRoomId,
-                    title: item.title, //send event title
-                    current: item.participants.toString(),
-                    max: item.maxParticipants.toString(),
-                  },
-                });
+              // 2. 현재 로그인한 사용자 정보 가져오기
+              const user = auth.currentUser;
+              if (!user) {
+                Alert.alert('로그인이 필요합니다.');
+                return;
               }
+
+              // 3. 채팅방 organizer 정보 가져오기
+              const chatRoomRef = doc(db, 'flashRunChatsRooms', String(chatRoomId));
+              const chatRoomSnap = await getDoc(chatRoomRef);
+              let organizers = chatRoomSnap.data()?.organizer || [];
+
+              // 4. 내 정보가 organizer에 있는지 확인
+              const isParticipant = organizers.some((org: any) => org.id === user.uid);
+
+              // 5. 참가자가 아니라면 organizer에 내 정보 추가
+              if (!isParticipant) {
+                // Firestore users 컬렉션에서 닉네임 가져오기
+                const userDoc = await getDoc(doc(db, 'users', user.uid));
+                const nickname = userDoc.exists() ? userDoc.data().name : '';
+
+                await updateDoc(chatRoomRef, {
+                  organizer: arrayUnion({
+                    id: user.uid,
+                    name: nickname,
+                  }),
+                });
+
+                organizers = [...organizers, { id: user.uid, name: nickname }];
+              }
+
+              // 6. FlashRun 참가자 수 업데이트
+              const flashRunRef = doc(db, 'flashRun', String(item.id));
+              await updateDoc(flashRunRef, {
+                participants: organizers.length,
+              });
+
+              // 7. 채팅방으로 이동
+              router.push({
+                pathname: '/community/flashRunChat',
+                params: {
+                  chatRoomId,
+                },
+              });
             }}
           >
             <LinearGradient
