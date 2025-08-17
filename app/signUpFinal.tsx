@@ -34,8 +34,17 @@ export default function SignUpFinal() {
         email: email,
         gender: gender,
         birthday: birthday,
-        latitude: latitude,
-        longitude: longitude,
+        phone: phone,
+        phoneCode: phoneCode,
+        nickname: nickname,
+        paceMinutes: paceMinutes,
+        paceSeconds: paceSeconds,
+        dontKnowPace: dontKnowPace,
+        showPaceInProfile: showPaceInProfile,
+        location: {
+          latitude: latitude,
+          longitude: longitude,
+        },
       });
       router.replace("/login");
     } catch (e) {
@@ -73,6 +82,12 @@ export default function SignUpFinal() {
         </ThemedText>
         <ThemedText type="body2" style={{ color: Colors.gray4, textAlign: 'center', marginTop: 10 }}>
           콘솔에서 전달된 정보를 확인하세요.
+        </ThemedText>
+        <ThemedText type="button1" onPress={() => {
+          handleSignUp();
+          router.replace("/login");
+        }}>
+          로그인 페이지로 이동
         </ThemedText>
       </View>
     </SafeAreaView>

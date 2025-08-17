@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 const menuItems = [
   { label: '프로필', key: 'profile' },
@@ -10,6 +10,9 @@ const menuItems = [
 ];
 
 export default function ProfileMenu() {
+
+  
+
   return (
     <View style={styles.root}>
       {/* Top Right "현재채팅중인" */}
