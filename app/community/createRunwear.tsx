@@ -12,8 +12,6 @@ import {
   Platform,
   ScrollView,
   StyleSheet,
-  Text,
-  TextInput,
   TouchableOpacity,
   View
 } from 'react-native';
@@ -21,6 +19,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { auth, db, storage } from '../../backend/db/firebase';
 import Eclipse from '../../components/EclipseSVG';
 import { StarIcon, StarIconActive } from '../../components/IconSVG';
+import { ThemedText } from '../../components/ThemedText';
+import ThemedTextInput from '../../components/ThemedTextInput';
+import { Colors } from '../../constants/Colors';
+
 
 const CreateRunwear = () => {
   const [reviewText, setReviewText] = useState('');
@@ -29,6 +31,7 @@ const CreateRunwear = () => {
   const [loading, setLoading] = useState(false);
 
   const [profile, setProfile] = useState<any>(null);
+
 
   // Check if all fields are filled
   const isFormComplete = imageUri && reviewText.trim().length > 0 && rating > 0;
@@ -46,16 +49,19 @@ const CreateRunwear = () => {
     fetchProfile();
   }, []);
 
+
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       quality: 1,
     });
 
+
     if (!result.canceled) {
       setImageUri(result.assets[0].uri);
     }
   };
+
 
   const handleSubmit = async () => {
     if (!profile) {
@@ -79,13 +85,14 @@ const CreateRunwear = () => {
       await uploadBytes(storageRef, blob);
       const downloadURL = await getDownloadURL(storageRef);
 
+
       // 2. Firestore에 downloadURL 저장
       const docRef = await addDoc(collection(db, 'runwearItem'), {
         id: Date.now(), // 간단한 고유값
         image: { uri: downloadURL },
         likes: 0,
         rating,
-        backgroundColor: '#2C2C2E', // 기본값, 필요시 변경
+        backgroundColor: Colors.gray1, // 기본값, 필요시 변경
         review: reviewText,
         createdAt: new Date(),
         userId: profile.uid,
@@ -106,15 +113,17 @@ const CreateRunwear = () => {
     }
   };
 
+
   return (
     <SafeAreaView style={styles.container}>
       <Eclipse />
       {loading && (
         <View style={styles.loadingOverlay}>
-          <ActivityIndicator size="large" color="#54f895" />
-          <Text style={styles.loadingText}>업로드 중...</Text>
+          <ActivityIndicator size="large" color={Colors.primary} />
+          <ThemedText type="body2" style={styles.loadingText}>업로드 중...</ThemedText>
         </View>
       )}
+
 
       {/* Header */}
       <View style={styles.header}>
@@ -122,15 +131,16 @@ const CreateRunwear = () => {
           style={styles.backButton}
           onPress={() => router.back()}
         >
-          <Ionicons name="chevron-back" size={24} color="#fff" />
+          <Ionicons name="chevron-back" size={24} color={Colors.white} />
         </TouchableOpacity>
         
         <View style={styles.titleContainer}>
-          <Text style={styles.headerTitle}>작성하기</Text>
+          <ThemedText type="sub1" style={styles.headerTitle}>작성하기</ThemedText>
         </View>
         
         <View style={styles.headerRight} />
       </View>
+
 
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -148,16 +158,17 @@ const CreateRunwear = () => {
             <Image source={{ uri: imageUri }} style={styles.photo} />
           ) : (
             <>
-              <Ionicons name="camera" size={32} color="#7C7C7C" />
-              <Text style={styles.photoText}>사진추가</Text>
+              <Ionicons name="camera" size={32} color={Colors.gray2} />
+              <ThemedText type="body2" style={styles.photoText}>사진추가</ThemedText>
             </>
           )}
         </TouchableOpacity>
 
+
         {/* Review Input */}
-        <Text style={styles.sub1Text}>텍스트 후기</Text>
+        <ThemedText type="sub1" style={styles.sub1Text}>텍스트 후기</ThemedText>
         <View style={styles.inputBox}>
-          <TextInput
+          <ThemedTextInput
             style={styles.textInput}
             placeholder="후기를 작성해보세요.."
             placeholderTextColor="#8E8E93"
@@ -166,12 +177,13 @@ const CreateRunwear = () => {
             value={reviewText}
             onChangeText={setReviewText}
           />
-          <Text style={styles.charCount}>{reviewText.length}/100</Text>
+          <ThemedText type="body3" style={styles.charCount}>{reviewText.length}/100</ThemedText>
         </View>
+
 
         {/* Rating Slider */}
         <View style={styles.sliderBox}>
-          <Text style={styles.sub1Text}>별점</Text>
+          <ThemedText type="sub1" style={styles.sub1Text}>별점</ThemedText>
           <View style={{ flexDirection: 'row', justifyContent: 'center', marginVertical: 10 }}>
             {[1, 2, 3, 4, 5].map((star) => (
               <TouchableOpacity
@@ -182,17 +194,19 @@ const CreateRunwear = () => {
                 {star <= rating ? (
                   <StarIconActive width={40} height={40} />
                 ) : (
-                  <StarIcon width={40} height={40} color="#ADADB2" />
+                  <StarIcon width={40} height={40} color={Colors.gray3} />
                 )}
               </TouchableOpacity>
             ))}
           </View>
         </View>
 
+
         {/* Bottom padding to ensure content doesn't get hidden behind floating button */}
         <View style={styles.bottomPadding} />
       </ScrollView>
       </KeyboardAvoidingView>
+
 
       {/* Floating Submit Button */}
       <TouchableOpacity 
@@ -202,16 +216,16 @@ const CreateRunwear = () => {
       >
         {isFormComplete ? (
           <LinearGradient
-            colors={['#54f895', '#2afbea']}
+            colors={[Colors.primary, '#2afbea']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={styles.gradientButton}
           >
-            <Text style={styles.submitTextActive}>작성완료</Text>
+            <ThemedText type="body2" style={styles.submitTextActive}>작성완료</ThemedText>
           </LinearGradient>
         ) : (
-          <View style={styles.grayButton}>
-            <Text style={styles.submitTextInactive}>작성완료</Text>
+          <View style={styles.disabledButton}>
+            <ThemedText type="body2" style={styles.submitTextInactive}>작성완료</ThemedText>
           </View>
         )}
       </TouchableOpacity>
@@ -219,10 +233,11 @@ const CreateRunwear = () => {
   );
 };
 
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#15151C',
+    backgroundColor: Colors.blackGray,
   },
   loadingOverlay: {
     position: 'absolute',
@@ -236,9 +251,7 @@ const styles = StyleSheet.create({
     zIndex: 1000,
   },
   loadingText: {
-    color: '#fff',
     marginTop: 12,
-    fontSize: 16,
   },
   
   // Header styles
@@ -249,7 +262,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 15,
     borderBottomWidth: 1,
-    borderBottomColor: '#2C2C2E',
+    borderBottomColor: Colors.gray1,
   },
   backButton: {
     width: 40,
@@ -262,9 +275,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   headerTitle: {
-    color: '#fff',
-    fontSize: 18,
-    fontFamily: 'Pretendard-SemiBold',
     textAlign: 'center',
   },
   headerRight: {
@@ -294,7 +304,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: 10,
-    backgroundColor: '#303034',
+    backgroundColor: Colors.gray1,
     flexShrink: 0,
     alignSelf: 'stretch',
     marginBottom: 20,
@@ -305,43 +315,24 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   photoText: {
-    color: '#7C7C7C', 
-    fontFamily: 'Pretendard-Variable',
-    fontSize: 16,
-    fontStyle: 'normal',
-    fontWeight: '600',
-    lineHeight: 22.4,
-    letterSpacing: -0.32,
     marginTop: 8,
   },
   sub1Text: {
-    color: '#FFF',
-    fontFamily: 'Pretendard-Variable',
-    fontSize: 18,
-    fontStyle: 'normal',
-    fontWeight: '600',
-    lineHeight: 27,
     marginBottom: 10,
   },
   inputBox: {
-    backgroundColor: '#2C2C2E',
+    backgroundColor: Colors.gray1,
     borderRadius: 12,
     padding: 15,
     marginBottom: 20,
   },
   textInput: {
-    color: '#FFFFFF',
-    fontSize: 16,
     height: 100,
     textAlignVertical: 'top',
-    fontFamily: 'Pretendard-Regular',
   },
   charCount: {
-    color: '#8E8E93',
-    fontSize: 12,
     textAlign: 'right',
     marginTop: 5,
-    fontFamily: 'Pretendard-Regular',
   },
   sliderBox: {
     marginBottom: 30,
@@ -355,7 +346,7 @@ const styles = StyleSheet.create({
     height: 68,
     borderRadius: 30,
     elevation: 8,
-    shadowColor: '#000',
+    shadowColor: Colors.black,
     shadowOffset: {
       width: 0,
       height: 4,
@@ -369,25 +360,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  grayButton: {
+  disabledButton: {
     flex: 1,
-    backgroundColor: '#6C6C70',
+    backgroundColor: Colors.disableButton,
     borderRadius: 28,
     alignItems: 'center',
     justifyContent: 'center',
   },
   submitTextActive: {
-    color: '#000000',
-    fontSize: 16,
+    color: Colors.black,
     fontWeight: '600',
-    fontFamily: 'Pretendard-SemiBold',
   },
   submitTextInactive: {
-    color: '#FFFFFF',
-    fontSize: 16,
+    color: Colors.white,
     fontWeight: '600',
-    fontFamily: 'Pretendard-SemiBold',
   },
 });
+
 
 export default CreateRunwear;

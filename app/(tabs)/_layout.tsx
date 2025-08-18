@@ -123,7 +123,7 @@ const TabBarIcon = ({
           marginTop: 10,
           backgroundColor: 'rgba(236, 236, 236, 0.2)',
           shadowColor: '#fff',
-          shadowOffset: { width: 65, height: 55 },
+          shadowOffset: { width: 0, height: 4 },
           shadowOpacity: 0.75,
           shadowRadius: 4,
           elevation:5, //for android
