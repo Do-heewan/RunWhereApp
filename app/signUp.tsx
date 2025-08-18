@@ -14,15 +14,15 @@ export default function SignUp() {
     const router = useRouter();
     const params = useLocalSearchParams();
 
-    const [name, setName] = useState("");
+  const [name, setName] = useState("");
     const [emailUsername, setEmailUsername] = useState("runwhere");
     const [emailDomain, setEmailDomain] = useState("");
     const [showDomainDropdown, setShowDomainDropdown] = useState(false);
     const [isCustomDomain, setIsCustomDomain] = useState(true);
-    const [password, setPassword] = useState("");
-    const [passwordConfirm, setPasswordConfirm] = useState("");
+  const [password, setPassword] = useState("");
+  const [passwordConfirm, setPasswordConfirm] = useState("");
     const [gender, setGender] = useState<string | null>(null);
-    const [birthday, setBirthday] = useState("");
+  const [birthday, setBirthday] = useState("");
     const [carrier, setCarrier] = useState("");
     const [showCarrierDropdown, setShowCarrierDropdown] = useState(false);
     const [phone, setPhone] = useState("");
@@ -70,13 +70,12 @@ export default function SignUp() {
                           emailDomain.trim() !== "" && 
                           password.trim() !== "" && 
                           gender !== null && 
-                          birthday.trim() !== "" && 
                           carrier.trim() !== "" && 
                           phone.trim() !== "" && 
                           phoneCode.trim() !== "" &&
                           !phoneError;
 
-    return (
+  return (
         <SafeAreaView style={styles.container}>
             {/* 상단 앱바 */}
             <SignUpAppbar />
@@ -327,15 +326,15 @@ export default function SignUp() {
                         style={{height:68}}
                         title="이제 한 단계 남았어요!" 
                         onPress={() => {
-                            router.push({
+        router.push({
                                 pathname: '/signUpRunning',
-                                params: {
+          params: {
                                     ...params,
-                                    name,
+            name,
                                     email: `${emailUsername}@${emailDomain}`,
-                                    password,
-                                    gender,
-                                    birthday,
+            password,
+            gender,
+            birthday,
                                     carrier,
                                     phone,
                                     phoneCode,
@@ -350,10 +349,10 @@ export default function SignUp() {
                         </ThemedText>
                     </View>
                 )}
-            </View>
+    </View>
         </SafeAreaView>
-    );
-}
+  );
+}           
 
 const styles = StyleSheet.create({
      container: {
@@ -497,7 +496,7 @@ const styles = StyleSheet.create({
      },
      phoneCodeButton: {
          flex: 1,
-         borderWidth: 1,
+    borderWidth: 1,
          borderRadius: 10,
          justifyContent: 'center',
          alignItems: 'center',
@@ -511,8 +510,8 @@ const styles = StyleSheet.create({
      phoneCodeButtonInactive: {
          backgroundColor: Colors.gray2,
          borderColor: Colors.gray2,
-     },
- });
+  },
+});
 
 /*
 
