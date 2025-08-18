@@ -2,9 +2,9 @@ import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
-import { addDoc, collection } from 'firebase/firestore';
+import { addDoc, collection, doc, getDoc } from 'firebase/firestore';
 import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Image,
@@ -18,15 +18,28 @@ import {
   View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { db, storage } from '../../backend/db/firebase';
+import { auth, db, storage } from '../../backend/db/firebase';
 import Eclipse from '../../components/EclipseSVG';
-
-
 
 const CreateRecord = () => {
   const [reviewText, setReviewText] = useState('');
   const [imageUri, setImageUri] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  const [profile, setProfile] = useState<any>(null);
+  
+  // 프로필 정보 가져오기
+  useEffect(() => {
+    const fetchProfile = async () => {
+      const user = auth.currentUser;
+      if (!user) return;
+
+      const userDoc = await getDoc(doc(db, `users/${user.uid}`));
+      if (userDoc.exists()) setProfile(userDoc.data());
+    };
+    
+    fetchProfile();
+  }, []);
 
 
   // Check if all fields are filled
@@ -47,44 +60,51 @@ const CreateRecord = () => {
 
 
   const handleSubmit = async () => {
-        if (!reviewText || !imageUri) {
-          alert('모든 필드를 채워주세요.');
-          return;
-        }
-    
-        setLoading(true);
-    
-        try {
-          // 1. 이미지 firebase storage에 업로드
-          const response = await fetch(imageUri);
-          const blob = await response.blob();
-          const filename = `sharedRecord/${Date.now()}_${Math.floor(Math.random()*10000)}.jpg`;
-          const storageRef = ref(storage, filename);
-          await uploadBytes(storageRef, blob);
-          const downloadURL = await getDownloadURL(storageRef);
+    if (!profile) {
+      alert('접근 권한이 없습니다. 다시 로그인해주세요.');
+      return;
+    }
 
+    if (!reviewText || !imageUri) {
+      alert('모든 필드를 채워주세요.');
+      return;
+    }
 
-          const docRef = await addDoc(collection(db, 'sharedRecord'), {
-            id: Date.now(), // 간단한 고유값
-            image: { uri: downloadURL },
-            review: reviewText,
-            createdAt: new Date(),
-          });
-          console.log('리뷰가 성공적으로 저장되었습니다. ID:', docRef.id);
-          alert('등록 완료!');
-          // Reset form
-          setReviewText('');
-          setImageUri(null);
-          // 이전 페이지로 이동
-          router.back();
-        } catch (error) {
-          console.error('리뷰 저장 중 오류 발생:', error);
-          alert('리뷰 저장에 실패했습니다. 다시 시도해주세요.');
-        } finally {
-          setLoading(false);
-        }
-      };
+    setLoading(true);
 
+    try {
+      // 1. 이미지 firebase storage에 업로드
+      const response = await fetch(imageUri);
+      const blob = await response.blob();
+      const filename = `sharedRecord/${Date.now()}_${Math.floor(Math.random()*10000)}.jpg`;
+      const storageRef = ref(storage, filename);
+      await uploadBytes(storageRef, blob);
+      const downloadURL = await getDownloadURL(storageRef);
+
+      const docRef = await addDoc(collection(db, 'sharedRecord'), {
+        id: Date.now(), // 간단한 고유값
+        image: { uri: downloadURL },
+        review: reviewText,
+        createdAt: new Date(),
+        userId: profile.uid,
+      });
+
+      console.log('리뷰가 성공적으로 저장되었습니다. ID:', docRef.id);
+      alert('등록 완료!');
+
+      // Reset form
+      setReviewText('');
+      setImageUri(null);
+
+      // 이전 페이지로 이동
+      router.back();
+    } catch (error) {
+      console.error('리뷰 저장 중 오류 발생:', error);
+      alert('리뷰 저장에 실패했습니다. 다시 시도해주세요.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
