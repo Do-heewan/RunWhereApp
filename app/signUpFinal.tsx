@@ -28,7 +28,7 @@ export default function SignUpFinal() {
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
-      await setDoc(doc(db, "users", user.uid), {
+      await setDoc(doc(db, `users/${user.uid}`), {
         uid: user.uid,
         name: name,
         email: email,
@@ -52,6 +52,7 @@ export default function SignUpFinal() {
       router.replace("/login");
     }
   };
+  
   // 모든 회원가입 정보를 console.log로 출력
   React.useEffect(() => {
     console.log("=== 회원가입 완료 정보 ===");
