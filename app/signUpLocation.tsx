@@ -14,7 +14,7 @@ export default function SignUpLocation(){
   const [location, setLocation] = useState("서초동");
 
   const handleCurrentLocation = () => {
-    // 현재 위치로 찾기 기능 (나중에 구현)
+    // 현재 위치로 찾기 기능 (나중에 구현) 카카오 api사용하면됨.
     console.log("현재 위치로 찾기");
   };
 

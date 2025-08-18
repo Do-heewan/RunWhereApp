@@ -6,7 +6,7 @@ import { Colors } from '@/constants/Colors';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
-import { ScrollView, StyleSheet, TouchableOpacity, View,  KeyboardAvoidingView, Platform } from "react-native";
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 
@@ -23,8 +23,12 @@ export default function SignUp() {
     const [passwordConfirm, setPasswordConfirm] = useState("");
     const [gender, setGender] = useState<string | null>(null);
     const [birthday, setBirthday] = useState("");
+    const [carrier, setCarrier] = useState("");
+    const [showCarrierDropdown, setShowCarrierDropdown] = useState(false);
     const [phone, setPhone] = useState("");
     const [phoneCode, setPhoneCode] = useState("");
+    const [showPhoneCodeInput, setShowPhoneCodeInput] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
 
     // 전화번호 형식 검증 함수
     const validatePhoneNumber = (phoneNumber: string) => {
@@ -33,9 +37,23 @@ export default function SignUp() {
         return phoneRegex.test(phoneNumber);
     };
 
+    const validatePassword = (password: string) => {
+        // 6자 이상 검증
+        return password.length >= 6;
+    };
+
     // 전화번호 에러 상태
     const [phoneError, setPhoneError] = useState(false);
+    const [passwordError, setPasswordError] = useState(false);
 
+    const handlePasswordChange = (text: string) => {
+        setPassword(text);
+        if (text.trim() !== "") {
+            setPasswordError(!validatePassword(text));
+        } else {
+            setPasswordError(false);
+        }
+    };
     // 전화번호 변경 핸들러
     const handlePhoneChange = (text: string) => {
         setPhone(text);
@@ -53,6 +71,7 @@ export default function SignUp() {
                           password.trim() !== "" && 
                           gender !== null && 
                           birthday.trim() !== "" && 
+                          carrier.trim() !== "" && 
                           phone.trim() !== "" && 
                           phoneCode.trim() !== "" &&
                           !phoneError;
@@ -87,8 +106,6 @@ export default function SignUp() {
                     />
                     <ThemedText type="body1" style={{ color: Colors.white, marginLeft: 5, marginRight: 5 }}>@</ThemedText>
                     <View style={styles.emailDomainContainer}>
-                        
-                        
                         <ThemedTextInput
                             type="body1"
                             placeholder="email.com"
@@ -145,13 +162,28 @@ export default function SignUp() {
                 </View>
 
                 <ThemedText type="sub1" style={{ color: Colors.white, marginBottom: 10, marginTop: 30 }}>비밀번호</ThemedText>
-                <ThemedTextInput
-                    type="body1"
-                    placeholder="비밀번호를 입력하세요"
-                    value={password}
-                    onChangeText={setPassword}
-                    secureTextEntry
-                />
+                <View style={styles.passwordContainer}>
+                    <ThemedTextInput
+                        type="body1"
+                        placeholder="비밀번호를 입력하세요"
+                        value={password}
+                        onChangeText={handlePasswordChange}
+                        hasError={passwordError}
+                        secureTextEntry={!showPassword}
+                        style={{flex:1}}
+                    />
+                    <TouchableOpacity 
+                        style={{padding:16}}
+                        onPress={() => setShowPassword(!showPassword)}
+                    >
+                        <Ionicons 
+                            name={showPassword ? "eye-off-outline" : "eye-outline"} 
+                            size={24} 
+                            color={Colors.gray3} 
+                        />
+                    </TouchableOpacity>
+                </View>
+                
                 <ThemedText type="body3" style={{ color: Colors.gray4, marginTop: 5 }}>******를 포함해주세요</ThemedText>
 
                              <ThemedText type="sub1" style={{ color: Colors.white, marginBottom: 10, marginTop: 30 }}>성별을 선택해주세요</ThemedText>
@@ -192,12 +224,55 @@ export default function SignUp() {
              </View>
 
                 <ThemedText type="sub1" style={{ color: Colors.white, marginBottom: 10,marginTop:30 }}>휴대폰 번호</ThemedText>
-                <ThemedTextInput
-                    type="body1"
-                    placeholder="통신사 선택"
-                    value={birthday}
-                    onChangeText={setBirthday}
-                />
+                <View style={styles.carrierContainer}>
+                    <View style={styles.carrierDisplay}>
+                        <ThemedText type="body1" style={{ color: carrier ? Colors.white : Colors.gray3 }}>
+                            {carrier || "통신사 선택"}
+                        </ThemedText>
+                    </View>
+                    <TouchableOpacity 
+                        style={styles.carrierSelectButton}
+                        onPress={() => setShowCarrierDropdown(!showCarrierDropdown)}
+                    >
+                        <Ionicons 
+                            name={showCarrierDropdown ? "chevron-up" : "chevron-down"} 
+                            size={24} 
+                            color={Colors.gray3} 
+                        />
+                    </TouchableOpacity>
+                    
+                    {showCarrierDropdown && (
+                        <View style={styles.carrierDropdownContainer}>
+                            <TouchableOpacity 
+                                style={styles.carrierDropdownItem}
+                                onPress={() => {
+                                    setCarrier("SKT");
+                                    setShowCarrierDropdown(false);
+                                }}
+                            >
+                                <ThemedText type="body1" style={{ color: Colors.white }}>SKT</ThemedText>
+                            </TouchableOpacity>
+                            <TouchableOpacity 
+                                style={styles.carrierDropdownItem}
+                                onPress={() => {
+                                    setCarrier("KT");
+                                    setShowCarrierDropdown(false);
+                                }}
+                            >
+                                <ThemedText type="body1" style={{ color: Colors.white }}>KT</ThemedText>
+                            </TouchableOpacity>
+                            <TouchableOpacity 
+                                style={styles.carrierDropdownItem}
+                                onPress={() => {
+                                    setCarrier("LG");
+                                    setShowCarrierDropdown(false);
+                                }}
+                            >
+                                <ThemedText type="body1" style={{ color: Colors.white }}>LG</ThemedText>
+                            </TouchableOpacity>
+                        </View>
+                    )}
+                </View>
                 <View style={{flexDirection:'row',gap:10,marginTop:10,marginBottom:10}}>
                     <ThemedTextInput
                         style={{flex:1}}
@@ -207,12 +282,37 @@ export default function SignUp() {
                         onChangeText={handlePhoneChange}
                         hasError={phoneError}
                     />
-                    <ThemedTextInput
-                        type="body1"    
-                        placeholder="인증번호 받기"
-                        value={phoneCode}
-                        onChangeText={setPhoneCode}
-                    />
+                    {!showPhoneCodeInput ? (
+                        <TouchableOpacity 
+                            style={[
+                                styles.phoneCodeButton,
+                                validatePhoneNumber(phone) && !phoneError ? styles.phoneCodeButtonActive : styles.phoneCodeButtonInactive
+                            ]}
+                            onPress={() => {
+                                if (validatePhoneNumber(phone) && !phoneError) {
+                                    setShowPhoneCodeInput(true);
+                                }
+                            }}
+                            disabled={!validatePhoneNumber(phone) || phoneError}
+                        >
+                            <ThemedText 
+                                type="body1" 
+                                style={{ 
+                                    color: validatePhoneNumber(phone) && !phoneError ? Colors.white : Colors.gray4 
+                                }}
+                            >
+                                인증번호 받기
+                            </ThemedText>
+                        </TouchableOpacity>
+                    ) : (
+                        <ThemedTextInput
+                            style={{flex:1}}
+                            type="body1"    
+                            placeholder="인증번호 입력"
+                            value={phoneCode}
+                            onChangeText={setPhoneCode}
+                        />
+                    )}
                 </View>
                 
                 {/* 스크롤 영역 하단에 여백 추가 */}
@@ -236,6 +336,7 @@ export default function SignUp() {
                                     password,
                                     gender,
                                     birthday,
+                                    carrier,
                                     phone,
                                     phoneCode,
                                 },
@@ -288,6 +389,9 @@ const styles = StyleSheet.create({
          alignItems: 'center',
          marginBottom: 20,
          
+     },
+     passwordContainer: {
+        flexDirection: 'row',
      },
      emailUsernameInput: {
          flex: 1,
@@ -348,6 +452,65 @@ const styles = StyleSheet.create({
          borderRadius: 50,
          justifyContent: 'center',
          alignItems: 'center',
+     },
+     carrierContainer: {
+         flexDirection: 'row',
+         alignItems: 'center',
+         marginBottom: 10,
+         position: 'relative',
+     },
+     carrierDisplay: {
+         flex: 1,
+         borderWidth: 1,
+         borderColor: Colors.gray1,
+         backgroundColor: Colors.gray1,
+         borderRadius: 10,
+         paddingVertical: 10,
+         paddingHorizontal: 20,
+         justifyContent: 'center',
+     },
+     carrierSelectButton: {
+         justifyContent: 'center',
+         alignItems: 'center',
+         width: 24,
+         height: 24,
+         marginLeft: 10,
+     },
+     carrierDropdownContainer: {
+         position: 'absolute',
+         top: '100%',
+         left: 0,
+         backgroundColor: Colors.gray1,
+         borderRadius: 10,
+         borderWidth: 1,
+         borderColor: Colors.gray2,
+         zIndex: 1000,
+         marginTop: 5,
+         minWidth: 120,
+     },
+     carrierDropdownItem: {
+         paddingVertical: 12,
+         paddingHorizontal: 20,
+         borderBottomWidth: 1,
+         borderBottomColor: Colors.gray2,
+         minWidth: 120,
+     },
+     phoneCodeButton: {
+         flex: 1,
+         borderWidth: 1,
+         borderRadius: 10,
+         justifyContent: 'center',
+         alignItems: 'center',
+         paddingVertical: 10,
+         paddingHorizontal: 20,
+     },
+     phoneCodeButtonActive: {
+         backgroundColor: Colors.primary,
+         borderColor: Colors.primary,
+     },
+     phoneCodeButtonInactive: {
+         backgroundColor: Colors.gray2,
+         borderColor: Colors.gray2,
      },
  });
 

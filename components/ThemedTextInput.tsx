@@ -21,6 +21,7 @@ export type ThemedTextInputProps = TextInputProps & {
   secureTextEntry?: boolean;
   style?: any;
   hasError?: boolean;           // 에러 상태 추가
+  autoCapitalize?: 'none' | 'sentences' | 'words' | 'characters'; // 자동 대문자화 설정
 };
 
 const FONT = 'Pretendard';
@@ -40,6 +41,7 @@ export default function ThemedTextInput({
   secureTextEntry = false,
   style,
   hasError = false,
+  autoCapitalize = 'none',
   ...rest
 }: ThemedTextInputProps) {
   const [isFocused, setIsFocused] = React.useState(false);
@@ -62,6 +64,7 @@ export default function ThemedTextInput({
         value={value}
         onChangeText={onChangeText}
         secureTextEntry={secureTextEntry}
+        autoCapitalize={autoCapitalize}
         onFocus={() => setIsFocused(true)}
         onBlur={() => setIsFocused(false)}
         {...rest}
@@ -76,7 +79,7 @@ const styles = StyleSheet.create({
     borderColor: Colors.gray1,
     backgroundColor: Colors.gray1,
     borderRadius: 10,
-    paddingVertical: 10,    
+    paddingVertical: 15,    
     paddingHorizontal: 20,
   },
   containerFocused: {
@@ -95,6 +98,8 @@ const styles = StyleSheet.create({
   input: {
     height: 22,
     padding: 0, // TextInput 기본 패딩 제거
+    textAlignVertical: 'center', // Android에서 세로 중앙 정렬
+    lineHeight: 22, // iOS에서 세로 중앙 정렬을 위한 lineHeight 설정
   },
 
   // Headings
