@@ -107,8 +107,8 @@ export const styles = StyleSheet.create({
   hashTag: { color: Colors.primary, fontSize: 14, marginRight: 6 },
 
   joinButton: {
-    borderRadius: 25,
-    paddingVertical: 12,
+    borderRadius: 30,
+    paddingVertical: 19,
     paddingHorizontal: 20,
     marginTop: 12,
     alignItems: 'center',

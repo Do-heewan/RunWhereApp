@@ -5,12 +5,12 @@ import { collection, doc, getDoc, serverTimestamp, setDoc } from 'firebase/fires
 import React, { useState } from 'react';
 import {
   Alert,
+  KeyboardAvoidingView,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
   TextInput,
-  Platform,
-  KeyboardAvoidingView,
   TouchableOpacity,
   View,
 } from 'react-native';
@@ -128,8 +128,8 @@ const CreateRun = () => {
           <View style={styles.inputWrapper}>
             <TextInput
               style={styles.input}
-              placeholder="오전 9시 유니스트 앞에"
-              placeholderTextColor="#8E8E93"
+              placeholder="오전 9시 유니스트 정문"
+              placeholderTextColor="#ADADB2"
               maxLength={15}
               value={title}
               onChangeText={setTitle}
@@ -144,15 +144,15 @@ const CreateRun = () => {
           <Text style={styles.sublabel}>간단하게 작성하면 보기 편할 거예요</Text>
           <View style={styles.inputWrapper}>
             <TextInput
-              style={[styles.input, styles.multilineInput]}
-              placeholder="오늘 같이 뛸 사람 구해요! 초보자도 괜찮고 편하게 달리실 분 구해요"
-              placeholderTextColor="#8E8E93"
+              style={[styles.input]}
+              placeholder="오늘 오전 9시 유니스트 정문에서 만나 가볍게 뛸 사람 구합니다~"
+              placeholderTextColor="#ADADB2"
               multiline
-              maxLength={100}
+              maxLength={50}
               value={description}
               onChangeText={setDescription}
             />
-            <Text style={styles.charCountInside}>{description.length}/100</Text>
+            <Text style={styles.charCountInside}>{description.length}/50</Text>
           </View>
         </View>
 
@@ -162,13 +162,13 @@ const CreateRun = () => {
           <View style={styles.inputWrapper}>
             <TextInput
               style={styles.input}
-              placeholder="#러닝팀 #초보자환영 #주말"
-              placeholderTextColor="#8E8E93"
-              maxLength={50}
+              placeholder="#천천히 #빠르게 #초보"
+              placeholderTextColor="#ADADB2"
+              maxLength={30}
               value={hashtags}
               onChangeText={setHashtags}
             />
-            <Text style={styles.charCountInside}>{hashtags.length}/50</Text>
+            <Text style={styles.charCountInside}>{hashtags.length}/30</Text>
           </View>
         </View>
 
@@ -179,7 +179,7 @@ const CreateRun = () => {
             <TextInput
               style={styles.participantInput}
               placeholder="5"
-              placeholderTextColor="#8E8E93"
+              placeholderTextColor="#ADADB2"
               keyboardType="numeric"
               maxLength={2}
               value={maxParticipants}
@@ -351,45 +351,44 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: 30,
-    paddingBottom: 30, // Extra padding for floating button
+    paddingBottom: 10, // Extra padding for floating button
   },  
-  section: { marginBottom: 24 },
+  section: { marginBottom: 30 },
   label: {
-    color: '#FFF',
-    fontSize: 16,
+    fontFamily: 'Pretendard-SemiBold',
+    color: '#FAFAF8',
+    fontSize: 18,
     fontWeight: '600',
-    marginBottom: 8,
-    fontFamily: 'Pretendard Variable',
+    marginBottom: 4,
   },
   sublabel: {
-    color: '#8E8E93',
-    fontSize: 14,
+    color: '#D9D9D9',
+    fontSize: 16,
     marginBottom: 12,
     fontFamily: 'Pretendard-Regular',
   },
   inputWrapper: {
+    marginTop:10,
     position: 'relative',
   },
   input: {
     backgroundColor: '#303034',
     borderRadius: 10,
-    padding: 16,
+    padding: 15,
     paddingRight: 60,
     color: '#fff',
     fontSize: 16,
     fontFamily: 'Pretendard-Regular',
-    minHeight: 52,
-  },
-  multilineInput: {
-    height: 100,
+    width: 333,
+    height:100,
     textAlignVertical: 'top',
   },
   charCountInside: {
     position: 'absolute',
     bottom: 8,
     right: 12,
-    fontSize: 12,
-    color: '#8E8E93',
+    fontSize: 14,
+    color: '#ADADB2',
     fontFamily: 'Pretendard-Regular',
   },
   bottomPadding: { height: 50 },
@@ -412,6 +411,8 @@ const styles = StyleSheet.create({
   },
   grayButton: {
     flex: 1,
+    width:364,
+    height: 68,
     backgroundColor: '#7c7c7c',
     justifyContent: 'center',
     alignItems: 'center',
@@ -435,19 +436,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   participantInput: {
-    backgroundColor: '#B3B3B3',
+    backgroundColor: '#303034',
     borderRadius: 10,
     width: 60,
-    height: 52,
+    height: 40,
     textAlign: 'center',
-    color: '#151515',
+    color: '#FAFAF8',
     fontSize: 18,
     fontWeight: '600',
     fontFamily: 'Pretendard-SemiBold',
+    marginTop:15,
     marginRight: 12,
   },
   participantUnit: {
-    color: '#B3B3B3',
+    color: '#FAFAF8',
     fontSize: 18,
     fontWeight: '600',
     fontFamily: 'Pretendard-SemiBold',
@@ -457,19 +459,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   timeInput: {
-    backgroundColor: '#B3B3B3',
+    backgroundColor: '#303034',
     borderRadius: 10,
-    width: 60,
-    height: 52,
+    width: 65,
+    height: 40,
     textAlign: 'center',
-    color: '#151515',
+    color: '#FAFAF8',
     fontSize: 18,
     fontWeight: '600',
     fontFamily: 'Pretendard-SemiBold',
+    marginTop:15,
     marginRight: 12,
   },
   unitText: {
-    color: '#B3B3B3',
+    color: '#FAFAF8',
     fontSize: 18,
     fontWeight: '600',
     fontFamily: 'Pretendard-SemiBold',

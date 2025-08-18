@@ -176,7 +176,7 @@ const CreateRecord = () => {
           <View style={styles.bottomPadding} />
         </ScrollView>
       </KeyboardAvoidingView>
-      
+
        {/* Floating Submit Button */}
         <TouchableOpacity 
           style={styles.floatingButton}
@@ -354,7 +354,7 @@ const styles = StyleSheet.create({
   },
   grayButton: {
     flex: 1,
-    backgroundColor: '#6C6C70',
+    backgroundColor: '#7c7c7c',
     borderRadius: 28,
     alignItems: 'center',
     justifyContent: 'center',
