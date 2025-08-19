@@ -45,6 +45,7 @@ export default function SignUp() {
     // 전화번호 에러 상태
     const [phoneError, setPhoneError] = useState(false);
     const [passwordError, setPasswordError] = useState(false);
+    
 
     const handlePasswordChange = (text: string) => {
         setPassword(text);
@@ -56,9 +57,25 @@ export default function SignUp() {
     };
     // 전화번호 변경 핸들러
     const handlePhoneChange = (text: string) => {
-        setPhone(text);
-        if (text.trim() !== "") {
-            setPhoneError(!validatePhoneNumber(text));
+        // 숫자만 필터링
+        const numbersOnly = text.replace(/[^0-9]/g, '');
+        
+        if(numbersOnly.length > 11) {
+            return;
+        }
+        
+        // 숫자만으로 하이픈 추가
+        let formattedText = numbersOnly;
+        if(numbersOnly.length >= 4) {
+            formattedText = numbersOnly.slice(0, 3) + "-" + numbersOnly.slice(3);
+        }
+        if(numbersOnly.length >= 8) {
+            formattedText = numbersOnly.slice(0, 3) + "-" + numbersOnly.slice(3, 7) + "-" + numbersOnly.slice(7);
+        }
+        
+        setPhone(formattedText);
+        if (formattedText.trim() !== "") {
+            setPhoneError(!validatePhoneNumber(formattedText));
         } else {
             setPhoneError(false);
         }
@@ -280,6 +297,7 @@ export default function SignUp() {
                         value={phone}
                         onChangeText={handlePhoneChange}
                         hasError={phoneError}
+                        keyboardType="numeric"
                     />
                     {!showPhoneCodeInput ? (
                         <TouchableOpacity 
