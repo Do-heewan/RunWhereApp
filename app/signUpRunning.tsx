@@ -40,12 +40,6 @@ export default function SignUpRunning() {
       // 이메일 조합 및 검증
       const email = params.email as string;
       
-      // 디버깅용 로그
-      console.log("=== 회원가입 디버깅 ===");
-      console.log("email:", email);
-      console.log("password:", params.password);
-      console.log("==========================");
-      
       // 이메일 형식 검증
       if (!email) {
         Alert.alert("오류", "이메일 정보가 누락되었습니다.");
