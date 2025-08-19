@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Alert, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Alert, Image, StyleSheet, TouchableOpacity, View } from 'react-native';
 
 import Eclipse from '@/components/EclipseSVG';
 import GradientButton from '@/components/GradientButton';
@@ -30,6 +30,14 @@ export default function Login() {
     return (
         <SafeAreaView style={styles.container}>
             <Eclipse/>
+            <View style={{
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginBottom: 70,
+            }}>
+                <Image source={require('@/assets/images/main_logo.png')} style={{width: 130, height: 100, marginBottom: 27}} />
+                <Image source={require('@/assets/images/main_title.png')} style={{width: 175, height: 20}} />
+            </View>
             <ThemedTextInput
                 style={{marginBottom:15}}
                 type="body1"
@@ -72,8 +80,6 @@ export default function Login() {
                     onPress={handleLogin}
                 />
             </View>
-        
-
         </SafeAreaView>
     );
 }
