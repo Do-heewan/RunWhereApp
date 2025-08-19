@@ -6,7 +6,7 @@ import { ThemedText } from '@/components/ThemedText';
 import { Colors } from '@/constants/Colors';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Dimensions, SafeAreaView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import MapView, { Marker, Polyline } from 'react-native-maps';
 import Carousel from 'react-native-reanimated-carousel';
@@ -30,22 +30,9 @@ export default function HomeScreen() {
   const [selectedMapIndex, setSelectedMapIndex] = useState<number | null>(null);
   const [routes, setRoutes] = useState<Route[]>([]);
   const [loading, setLoading] = useState(true);
+  const carouselRef = useRef<any>(null);
 
-  // GPX 좌표 파싱 함수
-  const parseGPXCoordinates = (gpxText: string) => {
-    const coordinates = [];
-    const regex = /<trkpt lat="([^"]+)" lon="([^"]+)"[^>]*\/?>/g;
-    let match;
-    
-    while ((match = regex.exec(gpxText)) !== null) {
-      const lat = parseFloat(match[1]);
-      const lon = parseFloat(match[2]);
-      coordinates.push({ latitude: lat, longitude: lon });
-    }
-    
-    console.log(`GPX에서 ${coordinates.length}개 좌표 추출`);
-    return coordinates;
-  };
+
 
   // 원형 좌표 생성 함수
   const generateCircleCoordinates = (centerLat: number, centerLon: number, radius: number, points: number) => {
@@ -59,136 +46,81 @@ export default function HomeScreen() {
     return coordinates;
   };
 
-  // 테스트용 경로 데이터 생성
-  const createTestRoutes = (): Route[] => {
-    return [
-      {
-        id: "route_1",
-        name: "강남 러닝 코스",
-        difficulty: "easy",
-        coordinates: [
-          { latitude: 37.521021, longitude: 127.034989 },
-          { latitude: 37.521259, longitude: 127.035735 },
-          { latitude: 37.520696, longitude: 127.036015 },
-          { latitude: 37.520879, longitude: 127.036624 },
-          { latitude: 37.520327, longitude: 127.036910 },
-          { latitude: 37.520184, longitude: 127.037251 },
-          { latitude: 37.520276, longitude: 127.037616 },
-          { latitude: 37.520295, longitude: 127.037694 },
-          { latitude: 37.519752, longitude: 127.037903 },
-          { latitude: 37.519205, longitude: 127.038105 },
-          { latitude: 37.519296, longitude: 127.038515 },
-          { latitude: 37.519422, longitude: 127.039007 },
-          { latitude: 37.519495, longitude: 127.039374 },
-          { latitude: 37.519493, longitude: 127.039461 },
-          { latitude: 37.519408, longitude: 127.039969 },
-          { latitude: 37.519362, longitude: 127.040237 },
-          { latitude: 37.519300, longitude: 127.040609 },
-          { latitude: 37.519232, longitude: 127.041009 },
-          { latitude: 37.519174, longitude: 127.041357 },
-          { latitude: 37.519080, longitude: 127.041914 },
-          { latitude: 37.519005, longitude: 127.042359 },
-          { latitude: 37.518517, longitude: 127.042240 },
-          { latitude: 37.518637, longitude: 127.042903 },
-          { latitude: 37.518287, longitude: 127.042977 },
-          { latitude: 37.517985, longitude: 127.043065 },
-          { latitude: 37.517994, longitude: 127.043120 },
-          { latitude: 37.517828, longitude: 127.043159 },
-          { latitude: 37.517823, longitude: 127.043123 },
-          { latitude: 37.517191, longitude: 127.043294 },
-          { latitude: 37.517417, longitude: 127.044645 },
-          { latitude: 37.516889, longitude: 127.044781 },
-          { latitude: 37.515739, longitude: 127.045043 },
-          { latitude: 37.515391, longitude: 127.045172 },
-          { latitude: 37.515068, longitude: 127.045321 },
-          { latitude: 37.514541, longitude: 127.045569 },
-          { latitude: 37.514056, longitude: 127.045794 },
-          { latitude: 37.513758, longitude: 127.045928 },
-          { latitude: 37.512487, longitude: 127.046515 },
-          { latitude: 37.512176, longitude: 127.047063 },
-          { latitude: 37.511925, longitude: 127.047442 },
-          { latitude: 37.512058, longitude: 127.047920 },
-          { latitude: 37.512173, longitude: 127.048335 },
-          { latitude: 37.512562, longitude: 127.048152 },
-          { latitude: 37.512895, longitude: 127.047995 },
-          { latitude: 37.512680, longitude: 127.047252 },
-          { latitude: 37.513154, longitude: 127.047034 },
-          { latitude: 37.513059, longitude: 127.046695 },
-          { latitude: 37.513861, longitude: 127.046294 },
-          { latitude: 37.513758, longitude: 127.045928 },
-          { latitude: 37.513737, longitude: 127.045853 },
-          { latitude: 37.513546, longitude: 127.045206 },
-          { latitude: 37.513447, longitude: 127.044858 },
-          { latitude: 37.513416, longitude: 127.044750 },
-          { latitude: 37.513336, longitude: 127.044476 },
-          { latitude: 37.514631, longitude: 127.043883 },
-          { latitude: 37.515087, longitude: 127.043651 },
-          { latitude: 37.515534, longitude: 127.043562 },
-          { latitude: 37.516165, longitude: 127.043492 },
-          { latitude: 37.516649, longitude: 127.043427 },
-          { latitude: 37.517191, longitude: 127.043294 },
-          { latitude: 37.516945, longitude: 127.041956 },
-          { latitude: 37.517591, longitude: 127.041788 },
-          { latitude: 37.517756, longitude: 127.041749 },
-          { latitude: 37.518395, longitude: 127.041565 },
-          { latitude: 37.518245, longitude: 127.040734 },
-          { latitude: 37.518169, longitude: 127.040310 },
-          { latitude: 37.518097, longitude: 127.039913 },
-          { latitude: 37.518018, longitude: 127.039495 },
-          { latitude: 37.517932, longitude: 127.039038 },
-          { latitude: 37.517794, longitude: 127.038551 },
-          { latitude: 37.518251, longitude: 127.038393 },
-          { latitude: 37.518717, longitude: 127.038223 },
-          { latitude: 37.518629, longitude: 127.037820 },
-          { latitude: 37.519096, longitude: 127.037643 },
-          { latitude: 37.519654, longitude: 127.037439 },
-          { latitude: 37.520184, longitude: 127.037251 },
-          { latitude: 37.520026, longitude: 127.036552 },
-          { latitude: 37.519844, longitude: 127.035748 },
-          { latitude: 37.520494, longitude: 127.035622 },
-          { latitude: 37.520675, longitude: 127.035598 },
-          { latitude: 37.521167, longitude: 127.035533 },
-          { latitude: 37.520879, longitude: 127.034624 },
-          { latitude: 37.521445, longitude: 127.034340 },
-          { latitude: 37.521259, longitude: 127.033735 },
-          { latitude: 37.521021, longitude: 127.034989 },
-        ],
-        distance: 4.8,
-        duration: 29,
-      },
-      {
-        id: "route_2",
-        name: "중간 원형 코스",
-        difficulty: "medium",
-        coordinates: generateCircleCoordinates(37.522000, 127.035000, 0.005, 20),
-        distance: 3.2,
-        duration: 19,
-      },
-      {
-        id: "route_3",
-        name: "큰 원형 코스",
-        difficulty: "hard",
-        coordinates: generateCircleCoordinates(37.520000, 127.033000, 0.008, 25),
-        distance: 5.1,
-        duration: 31,
-      },
-      {
-        id: "route_4",
-        name: "작은 원형 코스",
-        difficulty: "easy",
-        coordinates: generateCircleCoordinates(37.523000, 127.037000, 0.003, 15),
-        distance: 1.9,
-        duration: 11,
-      },
-      {
-        id: "route_5",
-        name: "타원형 코스",
-        difficulty: "medium",
-        coordinates: generateCircleCoordinates(37.519000, 127.032000, 0.006, 22),
-        distance: 3.8,
-        duration: 23,
-      },
-    ];
+  // 로컬 JSON 파일에서 경로 데이터 생성 (폴백용)
+  const createLocalRoutes = (): Route[] => {
+    try {
+      // JSON 파일 로드
+      const routesData = require('@/assets/routes/routes.json');
+      console.log('JSON 파일 로드 성공:', routesData.routes.length, '개 경로');
+      
+      return routesData.routes.map((route: any, index: number) => {
+        // coords 배열에서 좌표 추출 (경도가 첫 번째, 위도가 두 번째)
+        const coordinates = route.coords.map((coord: number[]) => ({
+          latitude: coord[1],  // 두 번째 값이 위도
+          longitude: coord[0]  // 첫 번째 값이 경도
+        }));
+        
+        // 난이도 결정 (score 기반)
+        let difficulty = 'easy';
+        if (route.score > 0.4) difficulty = 'hard';
+        else if (route.score > 0.1) difficulty = 'medium';
+        
+        return {
+          id: `route_${route.id}`,
+          name: `${route.kind} 코스 ${route.id}`,
+          difficulty: difficulty,
+          coordinates: coordinates,
+          distance: route.length_km,
+          duration: Math.round(route.length_km * 6), // 6분/km 가정
+        };
+      });
+    } catch (error) {
+      console.error('JSON 파일 로드 실패:', error);
+      
+      // JSON 파일 로드 실패 시 기존 하드코딩된 데이터 사용
+      return [
+        {
+          id: "route_1",
+          name: "강남 러닝 코스",
+          difficulty: "easy",
+          coordinates: generateCircleCoordinates(37.521021, 127.034989, 0.005, 20),
+          distance: 4.8,
+          duration: 29,
+        },
+        {
+          id: "route_2",
+          name: "중간 원형 코스",
+          difficulty: "medium",
+          coordinates: generateCircleCoordinates(37.522000, 127.035000, 0.005, 20),
+          distance: 3.2,
+          duration: 19,
+        },
+        {
+          id: "route_3",
+          name: "큰 원형 코스",
+          difficulty: "hard",
+          coordinates: generateCircleCoordinates(37.520000, 127.033000, 0.008, 25),
+          distance: 5.1,
+          duration: 31,
+        },
+        {
+          id: "route_4",
+          name: "작은 원형 코스",
+          difficulty: "easy",
+          coordinates: generateCircleCoordinates(37.523000, 127.037000, 0.003, 15),
+          distance: 1.9,
+          duration: 11,
+        },
+        {
+          id: "route_5",
+          name: "타원형 코스",
+          difficulty: "medium",
+          coordinates: generateCircleCoordinates(37.519000, 127.032000, 0.006, 22),
+          distance: 3.8,
+          duration: 23,
+        },
+      ];
+    }
   };
 
   // 경로 데이터 초기화
@@ -196,102 +128,85 @@ export default function HomeScreen() {
     const loadRoutes = async () => {
       setLoading(true);
       try {
-        // 1단계: 경로 후보 목록 생성 요청
+        // 서버 API 요청
         console.log('서버 API 요청 시작...');
-        const generateResponse = await fetch('https://runwhere-deploy-1.onrender.com/api/routes/generate', {
+        const response = await fetch('https://runwhere-deploy-1.onrender.com/api/routes/generate', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            mode: 'out_back',
-            target_km: 3,
+            mode: 'loop',
+            target_km: 5,
             start: {
-              lat: 37.521021,
-              lon: 127.034989
+              lat: 37.5,
+              lon: 127.0
             },
-            count: 5
+            count: 2
           }),
         });
         
-        console.log('서버 응답 상태:', generateResponse.status);
+        console.log('서버 응답 상태:', response.status);
         
-        if (generateResponse.ok) {
-          const generateData = await generateResponse.json();
-          console.log('경로 후보 목록:', generateData);
+        if (response.ok) {
+          const serverData = await response.json();
+          console.log('서버 응답 데이터:', serverData);
           
-          if (generateData && generateData.job_id && generateData.routes && generateData.routes.length > 0) {
-            const jobId = generateData.job_id;
-            const routeCandidates = generateData.routes;
+          // 서버에서 routes.json 형식으로 응답이 왔는지 확인
+          if (serverData && serverData.routes && serverData.routes.length > 0) {
+            console.log('서버에서 받은 경로 데이터 사용:', serverData.routes.length, '개');
             
-            console.log(`Job ID: ${jobId}, 경로 후보 ${routeCandidates.length}개`);
-            
-            // 2단계: 각 경로의 GPX 파일 다운로드
-            const routesWithGPX = [];
-            
-            for (let i = 0; i < routeCandidates.length; i++) {
-              const route = routeCandidates[i];
-              console.log(`GPX 다운로드 중: ${jobId}/${route.idx}.gpx`);
+            // 서버 데이터를 Route 형식으로 변환
+            const serverRoutes = serverData.routes.map((route: any) => {
+              // coords 배열에서 좌표 추출 (경도가 첫 번째, 위도가 두 번째)
+              const coordinates = route.coords.map((coord: number[]) => ({
+                latitude: coord[1],  // 두 번째 값이 위도
+                longitude: coord[0]  // 첫 번째 값이 경도
+              }));
               
-              try {
-                const gpxResponse = await fetch(`https://runwhere-deploy-1.onrender.com/api/routes/${jobId}/${route.idx}.gpx`);
-                
-                if (gpxResponse.ok) {
-                  const gpxText = await gpxResponse.text();
-                  console.log(`GPX ${route.idx} 다운로드 성공:`, gpxText.substring(0, 200) + '...');
-                  
-                  // GPX 파싱하여 좌표 추출
-                  const coordinates = parseGPXCoordinates(gpxText);
-                  
-                  routesWithGPX.push({
-                    id: `route_${route.idx}`,
-                    name: `${route.kind} 코스 ${route.idx}`,
-                    difficulty: route.score > 0.7 ? 'hard' : route.score > 0.4 ? 'medium' : 'easy',
-                    coordinates: coordinates,
-                    distance: route.length_km,
-                    duration: Math.round(route.length_km * 6), // 6분/km 가정
-                  });
-                } else {
-                  console.error(`GPX ${route.idx} 다운로드 실패:`, gpxResponse.status);
-                }
-              } catch (error) {
-                console.error(`GPX ${route.idx} 다운로드 오류:`, error);
-              }
-            }
+              // 난이도 결정 (score 기반)
+              let difficulty = 'easy';
+              if (route.score > 0.4) difficulty = 'hard';
+              else if (route.score > 0.1) difficulty = 'medium';
+              
+              return {
+                id: `route_${route.id}`,
+                name: `${route.kind} 코스 ${route.id}`,
+                difficulty: difficulty,
+                coordinates: coordinates,
+                distance: route.length_km,
+                duration: Math.round(route.length_km * 6), // 6분/km 가정
+              };
+            });
             
-            if (routesWithGPX.length > 0) {
-              setRoutes(routesWithGPX);
-              console.log('서버에서 받은 경로 로딩 완료:', routesWithGPX.length, '개');
-            } else {
-              console.log('GPX 다운로드 실패로 테스트 데이터 사용');
-              const testRoutes = createTestRoutes();
-              setRoutes(testRoutes);
+            setRoutes(serverRoutes);
+            console.log('서버에서 받은 경로 로딩 완료:', serverRoutes.length, '개');
+                      } else {
+              console.log('서버에서 경로 데이터가 없어서 로컬 데이터 사용');
+              const localRoutes = createLocalRoutes();
+              setRoutes(localRoutes);
             }
-          } else {
-            console.log('서버에서 경로 데이터가 없어서 테스트 데이터 사용');
-            const testRoutes = createTestRoutes();
-            setRoutes(testRoutes);
-          }
         } else {
-          console.error('서버 응답 오류:', generateResponse.status, generateResponse.statusText);
+          console.error('서버 응답 오류:', response.status, response.statusText);
           
-          // 400 오류일 때 응답 본문 확인
+          // 서버 오류일 때 응답 본문 확인
           try {
-            const errorText = await generateResponse.text();
+            const errorText = await response.text();
             console.error('서버 오류 응답 본문:', errorText);
           } catch (e) {
             console.error('응답 본문 읽기 실패:', e);
           }
           
-          // 서버 오류 시 테스트 데이터 사용
-          const testRoutes = createTestRoutes();
-          setRoutes(testRoutes);
+          // 서버 오류 시 로컬 데이터 사용
+          console.log('서버 오류로 로컬 데이터 사용');
+          const localRoutes = createLocalRoutes();
+          setRoutes(localRoutes);
         }
       } catch (error) {
         console.error('API 요청 실패:', error);
-        // 네트워크 오류 시 테스트 데이터 사용
-        const testRoutes = createTestRoutes();
-        setRoutes(testRoutes);
+        // 네트워크 오류 시 로컬 데이터 사용
+        const localRoutes = createLocalRoutes();
+        setRoutes(localRoutes);
       } finally {
         setLoading(false);
       }
@@ -337,6 +252,7 @@ export default function HomeScreen() {
       ) : (
         <>
           <Carousel
+            ref={carouselRef}
             width={Dimensions.get('window').width}
             height={Dimensions.get('window').width}
             data={routes}
@@ -346,6 +262,7 @@ export default function HomeScreen() {
               parallaxScrollingOffset: 70,
             }}
             loop={false}
+            defaultIndex={currentIndex}
             onSnapToItem={onSnapToItem}
             renderItem={({ item, index }) => (
               <View style={styles.carouselItem}>
@@ -406,6 +323,47 @@ export default function HomeScreen() {
                 ]}
               />
             ))}
+          </View>
+          
+          {/* 하단 컨트롤 바 */}
+          <View style={styles.controlBar}>
+            <TouchableOpacity 
+              style={styles.controlButton}
+              onPress={() => {
+                if (currentIndex > 0) {
+                  carouselRef.current?.scrollTo({ index: currentIndex - 1, animated: true });
+                }
+              }}
+              disabled={currentIndex === 0}
+            >
+              <Ionicons 
+                name="chevron-back" 
+                size={24} 
+                color={currentIndex === 0 ? Colors.gray3 : Colors.white} 
+              />
+            </TouchableOpacity>
+            
+            <View style={styles.distanceContainer}>
+              <ThemedText type="h2" style={styles.distanceText}>
+                {routes[currentIndex]?.distance?.toFixed(1) || '0.0'}km
+              </ThemedText>
+            </View>
+            
+            <TouchableOpacity 
+              style={styles.controlButton}
+              onPress={() => {
+                if (currentIndex < routes.length - 1) {
+                  carouselRef.current?.scrollTo({ index: currentIndex + 1, animated: true });
+                }
+              }}
+              disabled={currentIndex === routes.length - 1}
+            >
+              <Ionicons 
+                name="chevron-forward" 
+                size={24} 
+                color={currentIndex === routes.length - 1 ? Colors.gray3 : Colors.white} 
+              />
+            </TouchableOpacity>
           </View>
         </>
       )}
@@ -561,5 +519,32 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.7)',
     padding: 15,
     borderRadius: 10,
+  },
+  controlBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingVertical: 15,
+    marginTop: 10,
+  },
+  controlButton: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: Colors.gray4,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  distanceContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 20,
+  },
+  distanceText: {
+    color: Colors.primary,
+    fontSize: 20,
+    fontWeight: '600',
   },
 });
