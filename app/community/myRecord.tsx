@@ -4,12 +4,14 @@ import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import { collection, doc, onSnapshot, orderBy, query, updateDoc } from 'firebase/firestore';
 import React, { useEffect, useState } from 'react';
+import CustomAlert from '@/components/CustomAlert';
 import {
   Image,
   ScrollView,
   StyleSheet,
   TouchableOpacity,
   View,
+  Text,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { db } from '../../backend/db/firebase';
@@ -120,9 +122,19 @@ useEffect(() => {
             </View>
           </View>
         </View>
-        <ThemedText type="body3" style={styles.timeLabel}>
-          {post.timeAgo || '방금 전'}
-        </ThemedText>
+        <TouchableOpacity
+          style={styles.editButton}
+          onPress={() => router.push({
+            pathname: '/community/editRecord',
+            params: {
+              id: post.id.toString(),
+              description: post.description || '',
+              imageUri: post.image.uri,
+            }
+          })}
+        >
+      <Text style={styles.editButtonText}>편집하기</Text>
+        </TouchableOpacity>
       </View>
       {/* Main image */}
       <View style={styles.imageContainer}>
@@ -271,14 +283,21 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginLeft: 4,
   },
-    timeLabel: {
+
+    editButton: {
     position: 'absolute',
-    right: 10,          // Position near the right edge
+    right: 10,
     paddingHorizontal: 8,
     paddingVertical: 4,
-    color: Colors.gray2,
+    backgroundColor: Colors.gray1, 
+    borderRadius: 10,
+  },
+
+  editButtonText: {
+    color: Colors.gray3,
     fontSize: 12,
   },
+
   imageContainer: {
     position: 'relative',
     marginBottom: 15,
@@ -312,16 +331,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     marginRight: 6,
-  },
-  ratingSection: {
-    marginBottom: 10,
-  },
-  starsContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  starWrapper: {
-    marginRight: 8,
   },
   description: {
     color: Colors.white,

@@ -3,7 +3,7 @@ import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
   Image, ScrollView, StyleSheet,
-  TouchableOpacity, View,
+  TouchableOpacity, View,Text
 } from 'react-native';
 import { LikeIcon, LikeIconActive, StarIcon, StarIconActive } from '../../components/IconSVG';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -139,9 +139,21 @@ export default function RunwearPage() {
               </View>
             </View>
           </View>
-          <ThemedText type="body3" style={styles.timeLabel}>
-            {post.timeAgo || '방금 전'}
-          </ThemedText>
+          <TouchableOpacity
+          style={styles.editButton}
+          onPress={() => router.push({
+            pathname: '/community/editRunwear',
+            params: {
+            id: post.id.toString(),
+            description: post.description || '',
+            rating: post.rating.toString(),
+            imageUri: post.image.uri,
+          }
+          })}
+        >
+          <Text style={styles.editButtonText}>편집하기</Text>
+        </TouchableOpacity>
+
         </View>
 
         {/* Post Image */}
@@ -294,12 +306,17 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginLeft: 4,
   },
-    timeLabel: {
+    editButton: {
     position: 'absolute',
-    right: 10,          // Position near the right edge
+    right: 10,
     paddingHorizontal: 8,
     paddingVertical: 4,
-    color: Colors.gray2,
+    backgroundColor: Colors.gray1, 
+    borderRadius: 10,
+  },
+
+  editButtonText: {
+    color: Colors.gray3,
     fontSize: 12,
   },
   imageContainer: {
