@@ -1,5 +1,3 @@
-import { ThemedText } from '@/components/ThemedText';
-import { Colors } from '@/constants/Colors';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { onAuthStateChanged } from 'firebase/auth';
@@ -11,9 +9,10 @@ import {
   TouchableOpacity, View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { auth, db } from '../../backend/db/firebase';
-import Eclipse from '../../components/EclipseSVG';
-import { LikeIcon, LikeIconActive, StarIcon, StarIconActive } from '../../components/IconSVG';
+import { db } from '../../backend/db/firebase';
+import Eclipse from '../../components/EclipseSVG'; //background Image
+import { ThemedText } from '../../components/ThemedText';
+import { Colors } from '../../constants/Colors';
 
 // Updated type to match database structure
 type SneakerItem = {

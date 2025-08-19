@@ -1,3 +1,8 @@
+import Eclipse from '../../components/EclipseSVG'; //background Image
+import { ThemedText } from '../../components/ThemedText';
+import ThemedTextInput from '../../components/ThemedTextInput';
+import { Colors } from '../../constants/Colors';
+import CustomAlert from '@/components/CustomAlert';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
@@ -7,9 +12,6 @@ import {
 } from 'react-native';
 import { LikeIcon, LikeIconActive, StarIcon, StarIconActive } from '../../components/IconSVG';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Eclipse from '../../components/EclipseSVG';
-import { Colors } from '@/constants/Colors';
-import { ThemedText } from '@/components/ThemedText';
 import { collection, onSnapshot, orderBy, query, getDocs, updateDoc } from 'firebase/firestore';
 import { db } from '../../backend/db/firebase';
 

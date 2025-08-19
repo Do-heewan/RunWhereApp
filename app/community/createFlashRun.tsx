@@ -1,3 +1,7 @@
+import Eclipse from '../../components/EclipseSVG'; //background Image
+import { ThemedText } from '../../components/ThemedText';
+import { Colors } from '../../constants/Colors';
+import CustomAlert from '@/components/CustomAlert';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
@@ -16,7 +20,6 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { auth, db } from '../../backend/db/firebase';
-import Eclipse from '../../components/EclipseSVG';
 
 const CreateRun = () => {
 

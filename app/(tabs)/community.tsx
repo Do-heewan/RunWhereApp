@@ -1,5 +1,3 @@
-import { ThemedText } from '@/components/ThemedText';
-import { Colors } from '@/constants/Colors';
 import { styles } from '@/styles/community.styles';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -17,9 +15,10 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { auth, db } from '../../backend/db/firebase';
-import Eclipse from '../../components/EclipseSVG';
+import Eclipse from '../../components/EclipseSVG'; //background Image
 import { FlashIcon, LikeIcon, LikeIconActive, StarIcon, StarIconActive } from '../../components/IconSVG';
-
+import { ThemedText } from '../../components/ThemedText';
+import { Colors } from '../../constants/Colors';
 
 type SneakerItem = {
   id: number

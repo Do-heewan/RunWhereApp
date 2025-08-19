@@ -1,5 +1,8 @@
-import { ThemedText } from '@/components/ThemedText';
-import { Colors } from '@/constants/Colors';
+import Eclipse from '../../components/EclipseSVG'; //background Image
+import { ThemedText } from '../../components/ThemedText';
+import ThemedTextInput from '../../components/ThemedTextInput';
+import { Colors } from '../../constants/Colors';
+import CustomAlert from '@/components/CustomAlert';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
@@ -23,7 +26,6 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { auth, db } from '../../backend/db/firebase'; 
 import { FlashIcon } from '../../components/IconSVG'; 
-import Eclipse from '../../components/EclipseSVG';
 
 // Type definitions
 type FlashRunEvent = {

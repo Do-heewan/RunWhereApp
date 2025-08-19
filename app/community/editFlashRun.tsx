@@ -223,7 +223,6 @@ const CreateRun = () => {
             onClose={() => setShowDeleteAlert(false)}
             onConfirm={async () => {
             setShowDeleteAlert(false);
-            // TODO: Add actual delete logic here
             router.back();
             }}
             onCancel={() => setShowDeleteAlert(false)}
