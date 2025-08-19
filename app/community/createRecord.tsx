@@ -91,7 +91,7 @@ const CreateRecord = () => {
         createdAt: new Date(),
         userId: profile.uid,
       });
-
+      
       console.log('리뷰가 성공적으로 저장되었습니다. ID:', docRef.id);
       alert('등록 완료!');
 

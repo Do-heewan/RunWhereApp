@@ -5,8 +5,6 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
-  Image,
-  ImageSourcePropType,
 } from 'react-native';
 import LottieView from 'lottie-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -26,6 +24,7 @@ const CustomAlert: React.FC<CustomAlertProps> = ({
   visible,
   onClose,
   onConfirm,
+  onCancel,
   title,
   message,
   confirmText,
@@ -35,9 +34,12 @@ const CustomAlert: React.FC<CustomAlertProps> = ({
 
   useEffect(() => {
     if (visible) {
+      // Play the animation when the alert becomes visible
       animationRef.current?.play();
     }
   }, [visible]);
+
+  const handleCancel = onCancel || onClose;
 
   return (
     <Modal
@@ -50,7 +52,7 @@ const CustomAlert: React.FC<CustomAlertProps> = ({
         <View style={styles.alertContainer}>
           <LottieView
             ref={animationRef}
-            source={require('../assets/alertMotion.json')}
+            source={require('../assets/alertMotion.json')} // Make sure this path is correct
             autoPlay={false}
             loop={false}
             style={styles.lottieAnimation}
@@ -62,31 +64,31 @@ const CustomAlert: React.FC<CustomAlertProps> = ({
           {confirmText && cancelText && onConfirm ? (
             <View style={styles.buttonGroup}>
               <TouchableOpacity
-                onPress={onClose}
-                style={[styles.buttonWrapper, styles.cancelButton]}
+                style={[styles.button, styles.cancelButton]}
+                onPress={handleCancel}
               >
-                <View style={[styles.button, { backgroundColor: '#303034' }]}>
-                  <Text style={[styles.cancelButtonText, { color: '#FAFAF8' }]}>
-                    {cancelText}
-                  </Text>
-                </View>
+                <Text style={styles.buttonText}>{cancelText}</Text>
               </TouchableOpacity>
-
-              <TouchableOpacity onPress={onConfirm} style={styles.buttonWrapper}>
-                <View style={[styles.button, { backgroundColor: '#303034' }]}>
-                  <Text style={styles.confirmText}>{confirmText}</Text>
-                </View>
+              <TouchableOpacity
+                style={[styles.button, styles.confirmButton]}
+                onPress={onConfirm}
+              >
+                <Text style={[styles.buttonText, styles.confirmButtonText]}>
+                  {confirmText}
+                </Text>
               </TouchableOpacity>
             </View>
           ) : (
-             <TouchableOpacity onPress={onClose} style={styles.buttonWrapper}>
+            <TouchableOpacity onPress={onClose} style={styles.alertButton}>
               <LinearGradient
                 colors={['#54F895', '#2AFBEA']}
                 start={{ x: 0, y: 0.5 }}
                 end={{ x: 1, y: 0.5 }}
-                style={styles.button}
+                style={styles.primaryButton}
               >
-                <Text style={styles.primaryButtonText}>{confirmText || '확인했어요'}</Text>
+                <Text style={styles.primaryButtonText}>
+                  {confirmText || '확인했어요'}
+                </Text>
               </LinearGradient>
             </TouchableOpacity>
           )}
@@ -105,83 +107,70 @@ const styles = StyleSheet.create({
   },
   alertContainer: {
     width: '85%',
-    maxWidth: 320,
-    backgroundColor: '#15151C',
-    borderRadius: 20,
+    maxWidth: 340,
+    backgroundColor: '#2D2D2D',
+    borderRadius: 16,
     padding: 24,
     alignItems: 'center',
-    overflow: 'hidden',
   },
   lottieAnimation: {
-    position: 'absolute',
     width: 250,
     height: 250,
+    position: 'absolute',
   },
-  icon: {
-    width: 100,
-    height: 100,
-    resizeMode: 'contain',
-    marginBottom: 20,
-  },
-    title: {
+  title: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#FAFAF8',
+    color: '#FFFFFF',
     textAlign: 'center',
     marginBottom: 8,
   },
   message: {
     fontSize: 14,
-    color: '#D9D9D9',
+    color: '#A9A9A9',
     textAlign: 'center',
     marginBottom: 24,
-  },
-  buttonWrapper: {
-    flex: 1,
-    shadowColor: '#34D399',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.9,
-    shadowRadius: 15,
-    elevation: 10,
-  },
-    buttonWrapperFullWidth: {
-    width: '100%',
-    shadowColor: '#34D399',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.8,
-    shadowRadius: 10,
-    elevation: 10,
-  },
-    button: {
-    width: 250,
-    height:68,
-    paddingVertical: 14,
-    borderRadius: 30,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-    primaryButtonText: {
-    color: '#15151C', // Dark text for green button
-    fontSize: 16,
-  },
-  confirmText: {
-    color: '#E77C7C',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  cancelButtonText: {
-    color: '#FAFAF8', // Light text for gray button
-    fontSize: 16,
-    fontWeight: 'bold',
   },
   buttonGroup: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     width: '100%',
-    gap: 12,
+  },
+  button: {
+    flex: 1,
+    height: 52,
+    borderRadius: 26,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginHorizontal: 6,
   },
   cancelButton: {
-    flex: 1,
+    backgroundColor: '#3C3C3C',
+  },
+  confirmButton: {
+    backgroundColor: '#3C3C3C',
+  },
+  buttonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  confirmButtonText: {
+    color: '#E77C7C',
+  },
+  alertButton: {
+    width: '100%',
+  },
+  primaryButton: {
+    height: 52,
+    borderRadius: 26,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  primaryButtonText: {
+    color: '#15151C',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });
 

@@ -21,7 +21,7 @@ export default function Rain({ precipitation }: RainProps) {
         <Image source={rainIcon} style={styles.icon} />
       </View>
       <ThemedText type="h2" style={{color: Colors.white, marginLeft: 5}}>
-        {precipitation === 0 ? '--' : Math.round(precipitation)}mm
+        {precipitation === 0 ? '--' : Math.round(precipitation) + 'mm'}
       </ThemedText>
     </View>
   );

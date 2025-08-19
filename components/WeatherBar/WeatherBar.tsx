@@ -111,13 +111,13 @@ export default function WeatherBar({latitude, longitude}: {latitude:number, long
   return (
     <View style={{
         flexDirection: 'row',
-        justifyContent: 'space-between',
+        justifyContent: 'center',
         alignItems: 'center',
-        marginHorizontal: 30,
         marginTop: 11,
+        gap:30,
       }}>
         <View>
-          <ThemedText type="h1" style={{color: Colors.white, marginLeft: 10}}>
+          <ThemedText type="h1" style={{color: Colors.white}}>
             {Math.round(weatherData.weather.current.temperature_2m)}°
           </ThemedText>
         </View>
