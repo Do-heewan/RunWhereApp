@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "RunWhere",
-    "slug": "RunWhere",
+    "slug": "runwhere",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -9,14 +9,20 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.RunWhere.ios",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
+        "jsEngine": "jsc",
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "package": "com.kaydee21.RunWhere"
     },
     "web": {
       "bundler": "metro",
@@ -37,6 +43,19 @@
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "327ea47b-08cd-4f44-95fc-3174262e3100"
+      }
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/006bf062-90b6-4acc-b6d9-3c163a30f480"
+    },
+    "owner": "kaydee21"
   }
 }

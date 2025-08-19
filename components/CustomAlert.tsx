@@ -15,7 +15,7 @@ interface CustomAlertProps {
   visible: boolean;
   onClose: () => void;
   onConfirm?: () => void;
-  onCancel?: () => void; // ✅ Add this line
+  onCancel?: () => void; 
   title: string;
   message: string;
   confirmText?: string;
@@ -66,7 +66,7 @@ const CustomAlert: React.FC<CustomAlertProps> = ({
                 style={[styles.buttonWrapper, styles.cancelButton]}
               >
                 <View style={[styles.button, { backgroundColor: '#303034' }]}>
-                  <Text style={[styles.buttonText, { color: '#FAFAF8' }]}>
+                  <Text style={[styles.cancelButtonText, { color: '#FAFAF8' }]}>
                     {cancelText}
                   </Text>
                 </View>
@@ -74,19 +74,19 @@ const CustomAlert: React.FC<CustomAlertProps> = ({
 
               <TouchableOpacity onPress={onConfirm} style={styles.buttonWrapper}>
                 <View style={[styles.button, { backgroundColor: '#303034' }]}>
-                  <Text style={styles.buttonText}>{confirmText}</Text>
+                  <Text style={styles.confirmText}>{confirmText}</Text>
                 </View>
               </TouchableOpacity>
             </View>
           ) : (
-            <TouchableOpacity onPress={onClose} style={styles.buttonWrapper}>
+             <TouchableOpacity onPress={onClose} style={styles.buttonWrapper}>
               <LinearGradient
-                colors={['#45F5B9', '#00D68F']}
+                colors={['#54F895', '#2AFBEA']}
                 start={{ x: 0, y: 0.5 }}
                 end={{ x: 1, y: 0.5 }}
                 style={styles.button}
               >
-                <Text style={styles.buttonText}>확인했어요</Text>
+                <Text style={styles.primaryButtonText}>{confirmText || '확인했어요'}</Text>
               </LinearGradient>
             </TouchableOpacity>
           )}
@@ -123,16 +123,16 @@ const styles = StyleSheet.create({
     resizeMode: 'contain',
     marginBottom: 20,
   },
-  title: {
+    title: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#FFFFFF',
+    color: '#FAFAF8',
     textAlign: 'center',
     marginBottom: 8,
   },
   message: {
     fontSize: 14,
-    color: '#E5E5EA',
+    color: '#D9D9D9',
     textAlign: 'center',
     marginBottom: 24,
   },
@@ -144,15 +144,33 @@ const styles = StyleSheet.create({
     shadowRadius: 15,
     elevation: 10,
   },
-  button: {
+    buttonWrapperFullWidth: {
     width: '100%',
+    shadowColor: '#34D399',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.8,
+    shadowRadius: 10,
+    elevation: 10,
+  },
+    button: {
+    width: 250,
+    height:68,
     paddingVertical: 14,
-    borderRadius: 50,
+    borderRadius: 30,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  buttonText: {
+    primaryButtonText: {
+    color: '#15151C', // Dark text for green button
+    fontSize: 16,
+  },
+  confirmText: {
     color: '#E77C7C',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  cancelButtonText: {
+    color: '#FAFAF8', // Light text for gray button
     fontSize: 16,
     fontWeight: 'bold',
   },

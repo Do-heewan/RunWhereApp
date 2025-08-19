@@ -1,5 +1,8 @@
-import { ThemedText } from '@/components/ThemedText';
-import { Colors } from '@/constants/Colors';
+import Eclipse from '../../components/EclipseSVG'; //background Image
+import { ThemedText } from '../../components/ThemedText';
+import ThemedTextInput from '../../components/ThemedTextInput';
+import { Colors } from '../../constants/Colors';
+import CustomAlert from '@/components/CustomAlert';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import { collection, doc, onSnapshot, orderBy, query, updateDoc } from 'firebase/firestore';
@@ -13,7 +16,6 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { db } from '../../backend/db/firebase';
-import Eclipse from '../../components/EclipseSVG';
 import { LikeIcon, LikeIconActive } from '../../components/IconSVG';
 
 type ShareRecordPost = {
@@ -312,16 +314,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     marginRight: 6,
-  },
-  ratingSection: {
-    marginBottom: 10,
-  },
-  starsContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  starWrapper: {
-    marginRight: 8,
   },
   description: {
     color: Colors.white,

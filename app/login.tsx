@@ -1,15 +1,15 @@
+import Eclipse from '@/components/EclipseSVG'; //background Image
+import { ThemedText } from '@/components/ThemedText';
+import { Colors } from '@/constants/Colors';
+import ThemedTextInput from '@/components/ThemedTextInput';
+import GradientButton from '@/components/GradientButton';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Alert, StyleSheet, TouchableOpacity, View } from 'react-native';
-
-import Eclipse from '@/components/EclipseSVG';
-import GradientButton from '@/components/GradientButton';
-import { ThemedText } from '@/components/ThemedText';
-import ThemedTextInput from '@/components/ThemedTextInput';
-import { Colors } from '@/constants/Colors';
+import { Alert, Button, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { auth } from "../backend/db/firebase";
+
 export default function Login() {
     const [enteredId, setEnteredId] = useState('');
     const [enteredPassword, setEnteredPassword] = useState('');
