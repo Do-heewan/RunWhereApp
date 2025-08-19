@@ -11,26 +11,29 @@ import {
 import LottieView from 'lottie-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 
-// Define the props for the component
 interface CustomAlertProps {
   visible: boolean;
   onClose: () => void;
-  icon: ImageSourcePropType;
+  onConfirm?: () => void;
+  onCancel?: () => void; // ✅ Add this line
   title: string;
   message: string;
+  confirmText?: string;
+  cancelText?: string;
 }
 
 const CustomAlert: React.FC<CustomAlertProps> = ({
   visible,
   onClose,
-  icon,
+  onConfirm,
   title,
   message,
+  confirmText,
+  cancelText,
 }) => {
   const animationRef = useRef<LottieView>(null);
 
   useEffect(() => {
-    // Play the animation when the alert becomes visible
     if (visible) {
       animationRef.current?.play();
     }
@@ -38,40 +41,55 @@ const CustomAlert: React.FC<CustomAlertProps> = ({
 
   return (
     <Modal
-      transparent={true}
+      transparent
       animationType="fade"
       visible={visible}
       onRequestClose={onClose}
     >
       <View style={styles.modalOverlay}>
         <View style={styles.alertContainer}>
-          {/* Lottie animation as a background */}
           <LottieView
             ref={animationRef}
-            source={require('../assets/alertMotion.json')} // Assumes file is in /assets
+            source={require('../assets/alertMotion.json')}
             autoPlay={false}
             loop={false}
             style={styles.lottieAnimation}
           />
 
-          {/* Icon */}
-          <Image source={icon} style={styles.icon} />
-
-          {/* Text Content */}
           <Text style={styles.title}>{title}</Text>
           <Text style={styles.message}>{message}</Text>
 
-          {/* Confirmation Button */}
-          <TouchableOpacity onPress={onClose} style={styles.buttonWrapper}>
-            <LinearGradient
-              colors={['#45F5B9', '#00D68F']}
-              start={{ x: 0, y: 0.5 }}
-              end={{ x: 1, y: 0.5 }}
-              style={styles.button}
-            >
-              <Text style={styles.buttonText}>확인했어요</Text>
-            </LinearGradient>
-          </TouchableOpacity>
+          {confirmText && cancelText && onConfirm ? (
+            <View style={styles.buttonGroup}>
+              <TouchableOpacity
+                onPress={onClose}
+                style={[styles.buttonWrapper, styles.cancelButton]}
+              >
+                <View style={[styles.button, { backgroundColor: '#303034' }]}>
+                  <Text style={[styles.buttonText, { color: '#FAFAF8' }]}>
+                    {cancelText}
+                  </Text>
+                </View>
+              </TouchableOpacity>
+
+              <TouchableOpacity onPress={onConfirm} style={styles.buttonWrapper}>
+                <View style={[styles.button, { backgroundColor: '#303034' }]}>
+                  <Text style={styles.buttonText}>{confirmText}</Text>
+                </View>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <TouchableOpacity onPress={onClose} style={styles.buttonWrapper}>
+              <LinearGradient
+                colors={['#45F5B9', '#00D68F']}
+                start={{ x: 0, y: 0.5 }}
+                end={{ x: 1, y: 0.5 }}
+                style={styles.button}
+              >
+                <Text style={styles.buttonText}>확인했어요</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          )}
         </View>
       </View>
     </Modal>
@@ -88,16 +106,16 @@ const styles = StyleSheet.create({
   alertContainer: {
     width: '85%',
     maxWidth: 320,
-    backgroundColor: '#2C2C2E',
+    backgroundColor: '#15151C',
     borderRadius: 20,
     padding: 24,
     alignItems: 'center',
-    overflow: 'hidden', // Ensures Lottie doesn't overflow rounded corners
+    overflow: 'hidden',
   },
   lottieAnimation: {
     position: 'absolute',
-    width: '150%',
-    height: '150%',
+    width: 250,
+    height: 250,
   },
   icon: {
     width: 100,
@@ -119,15 +137,12 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   buttonWrapper: {
-    width: '100%',
-    shadowColor: '#34D399', // Glow effect
-    shadowOffset: {
-      width: 0,
-      height: 0,
-    },
+    flex: 1,
+    shadowColor: '#34D399',
+    shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.9,
     shadowRadius: 15,
-    elevation: 10, // For Android
+    elevation: 10,
   },
   button: {
     width: '100%',
@@ -137,9 +152,18 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   buttonText: {
-    color: '#1C1C1E',
+    color: '#E77C7C',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  buttonGroup: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+    gap: 12,
+  },
+  cancelButton: {
+    flex: 1,
   },
 });
 
