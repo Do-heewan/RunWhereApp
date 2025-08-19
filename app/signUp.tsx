@@ -350,6 +350,8 @@ export default function SignUp() {
                                     ...params,
                                     name,
                                     email: `${emailUsername}@${emailDomain}`,
+                                    emailUsername,
+                                    emailDomain,
                                     password,
                                     gender,
                                     birthday,

@@ -1,11 +1,14 @@
+import { auth, db } from "@/backend/db/firebase";
 import GradientButton from '@/components/GradientButton';
 import SignUpAppbar from '@/components/SignUpAppbar';
 import { ThemedText } from '@/components/ThemedText';
 import ThemedTextInput from '@/components/ThemedTextInput';
 import { Colors } from '@/constants/Colors';
 import { useLocalSearchParams, useRouter } from "expo-router";
+import { createUserWithEmailAndPassword } from "firebase/auth";
+import { doc, setDoc } from "firebase/firestore";
 import { useState } from "react";
-import { ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
+import { Alert, ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function SignUpRunning() {
@@ -32,18 +35,59 @@ export default function SignUpRunning() {
                         paceSeconds.trim() !== "" && 
                         showPaceInProfile !== null;
 
-  const handleNext = () => {
-    router.push({
-      pathname: '/signUpFinal',
-      params: {
-        ...params,
-        nickname,
-        paceMinutes,
-        paceSeconds,
-        dontKnowPace: dontKnowPace.toString(),
-        showPaceInProfile: showPaceInProfile?.toString() || '',
-      },
-    });
+  const handleSignUp = async () => {
+    try {
+      // 이메일 조합 및 검증
+      const email = params.email as string;
+      
+      // 디버깅용 로그
+      console.log("=== 회원가입 디버깅 ===");
+      console.log("email:", email);
+      console.log("password:", params.password);
+      console.log("==========================");
+      
+      // 이메일 형식 검증
+      if (!email) {
+        Alert.alert("오류", "이메일 정보가 누락되었습니다.");
+        return;
+      }
+      
+      if (!email.includes('@') || email.trim() === '') {
+        Alert.alert("오류", "올바른 이메일 형식이 아닙니다.");
+        return;
+      }
+      
+      // Firebase Auth로 사용자 생성
+      const userCredential = await createUserWithEmailAndPassword(auth, email, params.password as string);
+      const user = userCredential.user;
+      
+      // Firestore에 사용자 정보 저장
+      await setDoc(doc(db, `users/${user.uid}`), {
+        uid: user.uid,
+        name: params.name as string,
+        email: email,
+        gender: params.gender as string,
+        birthday: params.birthday as string,
+        phone: params.phone as string,
+        phoneCode: params.phoneCode as string,
+        carrier: params.carrier as string,
+        nickname: nickname,
+        paceMinutes: Number(paceMinutes),
+        paceSeconds: Number(paceSeconds),
+        dontKnowPace: dontKnowPace,
+        showPaceInProfile: showPaceInProfile,
+        location: {
+          latitude: Number(params.latitude as string),
+          longitude: Number(params.longitude as string),
+        },
+      });
+      
+      Alert.alert("회원가입 완료", "성공적으로 가입되었습니다!");
+      router.replace("/login");
+    } catch (error: any) {
+      console.error("회원가입 실패:", error);
+      Alert.alert("회원가입 실패", error.message || "회원가입 중 오류가 발생했습니다.");
+    }
   };
 
   return (
@@ -165,7 +209,7 @@ export default function SignUpRunning() {
           <GradientButton 
             style={{ height: 68 }}
             title="회원가입 완료" 
-            onPress={handleNext}
+            onPress={handleSignUp}
           />
         ) : (
           <View style={styles.disabledButton}>
