@@ -1,9 +1,0 @@
-{
-  "name": "runwhere",
-  "main": "src/index.js",
-  "compatibility_date": "2025-08-19",
-  "assets": {
-    "directory": "./dist",
-    "binding": "ASSETS"
-  }
-}
