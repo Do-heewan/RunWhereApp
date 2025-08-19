@@ -70,7 +70,7 @@ const CreateRunwear = () => {
       return;
     }
 
-    if (!reviewText || !imageUri) {
+   if (!reviewText || !imageUri) {
       alert('모든 필드를 채워주세요.');
       return;
     }
@@ -86,14 +86,13 @@ const CreateRunwear = () => {
       await uploadBytes(storageRef, blob);
       const downloadURL = await getDownloadURL(storageRef);
 
-
       // 2. Firestore에 downloadURL 저장
       const docRef = await addDoc(collection(db, 'runwearItem'), {
         id: Date.now(), // 간단한 고유값
         image: { uri: downloadURL },
         likes: 0,
         rating,
-        backgroundColor: Colors.gray1, // 기본값, 필요시 변경
+        backgroundColor: '#2C2C2E', // 기본값, 필요시 변경
         review: reviewText,
         createdAt: new Date(),
         userId: profile.uid,
