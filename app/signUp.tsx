@@ -14,15 +14,15 @@ export default function SignUp() {
     const router = useRouter();
     const params = useLocalSearchParams();
 
-  const [name, setName] = useState("");
+    const [name, setName] = useState("");
     const [emailUsername, setEmailUsername] = useState("");
     const [emailDomain, setEmailDomain] = useState("");
     const [showDomainDropdown, setShowDomainDropdown] = useState(false);
     const [isCustomDomain, setIsCustomDomain] = useState(true);
-  const [password, setPassword] = useState("");
-  const [passwordConfirm, setPasswordConfirm] = useState("");
+    const [password, setPassword] = useState("");
+    const [passwordConfirm, setPasswordConfirm] = useState("");
     const [gender, setGender] = useState<string | null>(null);
-  const [birthday, setBirthday] = useState("");
+    const [birthday, setBirthday] = useState("");
     const [carrier, setCarrier] = useState("");
     const [showCarrierDropdown, setShowCarrierDropdown] = useState(false);
     const [phone, setPhone] = useState("");
@@ -45,7 +45,7 @@ export default function SignUp() {
     // 전화번호 에러 상태
     const [phoneError, setPhoneError] = useState(false);
     const [passwordError, setPasswordError] = useState(false);
-    
+
 
     const handlePasswordChange = (text: string) => {
         setPassword(text);
@@ -59,20 +59,20 @@ export default function SignUp() {
     const handlePhoneChange = (text: string) => {
         // 숫자만 필터링
         const numbersOnly = text.replace(/[^0-9]/g, '');
-        
-        if(numbersOnly.length > 11) {
+
+        if (numbersOnly.length > 11) {
             return;
         }
-        
+
         // 숫자만으로 하이픈 추가
         let formattedText = numbersOnly;
-        if(numbersOnly.length >= 4) {
+        if (numbersOnly.length >= 4) {
             formattedText = numbersOnly.slice(0, 3) + "-" + numbersOnly.slice(3);
         }
-        if(numbersOnly.length >= 8) {
+        if (numbersOnly.length >= 8) {
             formattedText = numbersOnly.slice(0, 3) + "-" + numbersOnly.slice(3, 7) + "-" + numbersOnly.slice(7);
         }
-        
+
         setPhone(formattedText);
         if (formattedText.trim() !== "") {
             setPhoneError(!validatePhoneNumber(formattedText));
@@ -82,283 +82,283 @@ export default function SignUp() {
     };
 
     // 모든 필수 입력이 완료되었는지 확인
-    const isFormComplete = name.trim() !== "" && 
-                          emailUsername.trim() !== "" && 
-                          emailDomain.trim() !== "" && 
-                          password.trim() !== "" && 
-                          gender !== null && 
-                          carrier.trim() !== "" && 
-                          phone.trim() !== "" && 
-                          phoneCode.trim() !== "" &&
-                          !phoneError;
+    const isFormComplete = name.trim() !== "" &&
+        emailUsername.trim() !== "" &&
+        emailDomain.trim() !== "" &&
+        password.trim() !== "" &&
+        gender !== null &&
+        carrier.trim() !== "" &&
+        phone.trim() !== "" &&
+        phoneCode.trim() !== "" &&
+        !phoneError;
 
-  return (
+    return (
         <SafeAreaView style={styles.container}>
             {/* 상단 앱바 */}
             <SignUpAppbar />
 
             <KeyboardAvoidingView
-                    behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-                    style={styles.keyboardAvoidingView}
+                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                style={styles.keyboardAvoidingView}
             >
-            {/* 회원가입 폼 */}
-            <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-                <ThemedText type="sub1" style={{ color: Colors.white, marginBottom: 10 }}>이름</ThemedText>
-                <ThemedTextInput
-                    type="body1"
-                    placeholder="이름을 입력하세요"
-                    value={name}
-                    onChangeText={setName}
-                />
-
-                <ThemedText type="sub1" style={{ color: Colors.white, marginBottom: 10, marginTop: 30 }}>이메일</ThemedText>
-                <View style={styles.emailContainer}>
+                {/* 회원가입 폼 */}
+                <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+                    <ThemedText type="sub1" style={{ color: Colors.white, marginBottom: 10 }}>이름</ThemedText>
                     <ThemedTextInput
                         type="body1"
-                        placeholder="이메일"
-                        value={emailUsername}
-                        onChangeText={setEmailUsername}
-                        style={styles.emailUsernameInput}
+                        placeholder="이름을 입력하세요"
+                        value={name}
+                        onChangeText={setName}
                     />
-                    <ThemedText type="body1" style={{ color: Colors.white, marginLeft: 5, marginRight: 5 }}>@</ThemedText>
-                    <View style={styles.emailDomainContainer}>
+
+                    <ThemedText type="sub1" style={{ color: Colors.white, marginBottom: 10, marginTop: 30 }}>이메일</ThemedText>
+                    <View style={styles.emailContainer}>
                         <ThemedTextInput
                             type="body1"
-                            placeholder="email.com"
-                            value={emailDomain}
-                            onChangeText={setEmailDomain}
-                            style={[styles.emailDomainInput]}
+                            placeholder="이메일"
+                            value={emailUsername}
+                            onChangeText={setEmailUsername}
+                            style={styles.emailUsernameInput}
                         />
-                        <TouchableOpacity 
-                            style={styles.domainSelectButton}
-                            onPress={() => setShowDomainDropdown(!showDomainDropdown)}
+                        <ThemedText type="body1" style={{ color: Colors.white, marginLeft: 5, marginRight: 5 }}>@</ThemedText>
+                        <View style={styles.emailDomainContainer}>
+                            <ThemedTextInput
+                                type="body1"
+                                placeholder="email.com"
+                                value={emailDomain}
+                                onChangeText={setEmailDomain}
+                                style={[styles.emailDomainInput]}
+                            />
+                            <TouchableOpacity
+                                style={styles.domainSelectButton}
+                                onPress={() => setShowDomainDropdown(!showDomainDropdown)}
+                            >
+                                <Ionicons
+                                    name={showDomainDropdown ? "chevron-up" : "chevron-down"}
+                                    size={24}
+                                    color={Colors.gray3}
+                                />
+                            </TouchableOpacity>
+
+                            {showDomainDropdown && (
+                                <View style={styles.dropdownContainer}>
+                                    <TouchableOpacity
+                                        style={styles.dropdownItem}
+                                        onPress={() => {
+                                            setEmailDomain("naver.com");
+                                            setShowDomainDropdown(false);
+                                            setIsCustomDomain(false);
+                                        }}
+                                    >
+                                        <ThemedText type="body1" style={{ color: Colors.white }}>naver.com</ThemedText>
+                                    </TouchableOpacity>
+                                    <TouchableOpacity
+                                        style={styles.dropdownItem}
+                                        onPress={() => {
+                                            setEmailDomain("gmail.com");
+                                            setShowDomainDropdown(false);
+                                            setIsCustomDomain(false);
+                                        }}
+                                    >
+                                        <ThemedText type="body1" style={{ color: Colors.white }}>gmail.com</ThemedText>
+                                    </TouchableOpacity>
+                                    <TouchableOpacity
+                                        style={styles.dropdownItem}
+                                        onPress={() => {
+                                            setIsCustomDomain(true);
+                                            setShowDomainDropdown(false);
+                                            setEmailDomain("");
+                                        }}
+                                    >
+                                        <ThemedText type="body1" style={{ color: Colors.white }}>직접입력</ThemedText>
+                                    </TouchableOpacity>
+                                </View>
+                            )}
+                        </View>
+                    </View>
+
+                    <ThemedText type="sub1" style={{ color: Colors.white, marginBottom: 10, marginTop: 30 }}>비밀번호</ThemedText>
+                    <View style={styles.passwordContainer}>
+                        <ThemedTextInput
+                            type="body1"
+                            placeholder="비밀번호를 입력하세요"
+                            value={password}
+                            onChangeText={handlePasswordChange}
+                            hasError={passwordError}
+                            secureTextEntry={!showPassword}
+                            style={{ flex: 1 }}
+                        />
+                        <TouchableOpacity
+                            style={{ padding: 16 }}
+                            onPress={() => setShowPassword(!showPassword)}
                         >
-                            <Ionicons 
-                                name={showDomainDropdown ? "chevron-up" : "chevron-down"} 
-                                size={24} 
-                                color={Colors.gray3} 
+                            <Ionicons
+                                name={showPassword ? "eye-off-outline" : "eye-outline"}
+                                size={24}
+                                color={Colors.gray3}
                             />
                         </TouchableOpacity>
-                        
-                        {showDomainDropdown && (
-                            <View style={styles.dropdownContainer}>
-                                <TouchableOpacity 
-                                    style={styles.dropdownItem}
+                    </View>
+
+                    <ThemedText type="body3" style={{ color: passwordError ? Colors.red : Colors.gray4, marginTop: 5 }}>******를 포함해주세요</ThemedText>
+
+                    <ThemedText type="sub1" style={{ color: Colors.white, marginBottom: 10, marginTop: 30 }}>성별을 선택해주세요</ThemedText>
+                    <View style={styles.genderButtonsContainer}>
+                        <TouchableOpacity
+                            style={[
+                                styles.genderButton,
+                                gender === '남성' && styles.genderButtonSelected
+                            ]}
+                            onPress={() => setGender('남성')}
+                        >
+                            <ThemedText
+                                type="body1"
+                                style={{
+                                    color: gender === '남성' ? Colors.gray1 : Colors.white
+                                }}
+                            >
+                                남성
+                            </ThemedText>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                            style={[
+                                styles.genderButton,
+                                gender === '여성' && styles.genderButtonSelected
+                            ]}
+                            onPress={() => setGender('여성')}
+                        >
+                            <ThemedText
+                                type="body1"
+                                style={{
+                                    color: gender === '여성' ? Colors.gray1 : Colors.white
+                                }}
+                            >
+                                여성
+                            </ThemedText>
+                        </TouchableOpacity>
+                    </View>
+
+                    <ThemedText type="sub1" style={{ color: Colors.white, marginBottom: 10, marginTop: 30 }}>휴대폰 번호</ThemedText>
+                    <View style={styles.carrierContainer}>
+                        <View style={styles.carrierDisplay}>
+                            <ThemedText type="body1" style={{ color: carrier ? Colors.white : Colors.gray3 }}>
+                                {carrier || "통신사 선택"}
+                            </ThemedText>
+                        </View>
+                        <TouchableOpacity
+                            style={styles.carrierSelectButton}
+                            onPress={() => setShowCarrierDropdown(!showCarrierDropdown)}
+                        >
+                            <Ionicons
+                                name={showCarrierDropdown ? "chevron-up" : "chevron-down"}
+                                size={24}
+                                color={Colors.gray3}
+                            />
+                        </TouchableOpacity>
+
+                        {showCarrierDropdown && (
+                            <View style={styles.carrierDropdownContainer}>
+                                <TouchableOpacity
+                                    style={styles.carrierDropdownItem}
                                     onPress={() => {
-                                        setEmailDomain("naver.com");
-                                        setShowDomainDropdown(false);
-                                        setIsCustomDomain(false);
+                                        setCarrier("SKT");
+                                        setShowCarrierDropdown(false);
                                     }}
                                 >
-                                    <ThemedText type="body1" style={{ color: Colors.white }}>naver.com</ThemedText>
+                                    <ThemedText type="body1" style={{ color: Colors.white }}>SKT</ThemedText>
                                 </TouchableOpacity>
-                                <TouchableOpacity 
-                                    style={styles.dropdownItem}
+                                <TouchableOpacity
+                                    style={styles.carrierDropdownItem}
                                     onPress={() => {
-                                        setEmailDomain("gmail.com");
-                                        setShowDomainDropdown(false);
-                                        setIsCustomDomain(false);
+                                        setCarrier("KT");
+                                        setShowCarrierDropdown(false);
                                     }}
                                 >
-                                    <ThemedText type="body1" style={{ color: Colors.white }}>gmail.com</ThemedText>
+                                    <ThemedText type="body1" style={{ color: Colors.white }}>KT</ThemedText>
                                 </TouchableOpacity>
-                                <TouchableOpacity 
-                                    style={styles.dropdownItem}
+                                <TouchableOpacity
+                                    style={styles.carrierDropdownItem}
                                     onPress={() => {
-                                        setIsCustomDomain(true);
-                                        setShowDomainDropdown(false);
-                                        setEmailDomain("");
+                                        setCarrier("LG");
+                                        setShowCarrierDropdown(false);
                                     }}
                                 >
-                                    <ThemedText type="body1" style={{ color: Colors.white }}>직접입력</ThemedText>
+                                    <ThemedText type="body1" style={{ color: Colors.white }}>LG</ThemedText>
                                 </TouchableOpacity>
                             </View>
                         )}
                     </View>
-                </View>
-
-                <ThemedText type="sub1" style={{ color: Colors.white, marginBottom: 10, marginTop: 30 }}>비밀번호</ThemedText>
-                <View style={styles.passwordContainer}>
-                    <ThemedTextInput
-                        type="body1"
-                        placeholder="비밀번호를 입력하세요"
-                        value={password}
-                        onChangeText={handlePasswordChange}
-                        hasError={passwordError}
-                        secureTextEntry={!showPassword}
-                        style={{flex:1}}
-                    />
-                    <TouchableOpacity 
-                        style={{padding:16}}
-                        onPress={() => setShowPassword(!showPassword)}
-                    >
-                        <Ionicons 
-                            name={showPassword ? "eye-off-outline" : "eye-outline"} 
-                            size={24} 
-                            color={Colors.gray3} 
-                        />
-                    </TouchableOpacity>
-                </View>
-                
-                <ThemedText type="body3" style={{ color: Colors.gray4, marginTop: 5 }}>******를 포함해주세요</ThemedText>
-
-                             <ThemedText type="sub1" style={{ color: Colors.white, marginBottom: 10, marginTop: 30 }}>성별을 선택해주세요</ThemedText>
-             <View style={styles.genderButtonsContainer}>
-                 <TouchableOpacity 
-                     style={[
-                         styles.genderButton, 
-                         gender === '남성' && styles.genderButtonSelected
-                     ]}
-                     onPress={() => setGender('남성')}
-                 >
-                     <ThemedText 
-                         type="body1" 
-                         style={{ 
-                             color: gender === '남성' ? Colors.gray1 : Colors.white 
-                         }}
-                     >
-                         남성
-                     </ThemedText>
-                 </TouchableOpacity>
-                 
-                 <TouchableOpacity 
-                     style={[
-                         styles.genderButton, 
-                         gender === '여성' && styles.genderButtonSelected
-                     ]}
-                     onPress={() => setGender('여성')}
-                 >
-                     <ThemedText 
-                         type="body1" 
-                         style={{ 
-                             color: gender === '여성' ? Colors.gray1 : Colors.white 
-                         }}
-                     >
-                         여성
-                     </ThemedText>
-                 </TouchableOpacity>
-             </View>
-
-                <ThemedText type="sub1" style={{ color: Colors.white, marginBottom: 10,marginTop:30 }}>휴대폰 번호</ThemedText>
-                <View style={styles.carrierContainer}>
-                    <View style={styles.carrierDisplay}>
-                        <ThemedText type="body1" style={{ color: carrier ? Colors.white : Colors.gray3 }}>
-                            {carrier || "통신사 선택"}
-                        </ThemedText>
-                    </View>
-                    <TouchableOpacity 
-                        style={styles.carrierSelectButton}
-                        onPress={() => setShowCarrierDropdown(!showCarrierDropdown)}
-                    >
-                        <Ionicons 
-                            name={showCarrierDropdown ? "chevron-up" : "chevron-down"} 
-                            size={24} 
-                            color={Colors.gray3} 
-                        />
-                    </TouchableOpacity>
-                    
-                    {showCarrierDropdown && (
-                        <View style={styles.carrierDropdownContainer}>
-                            <TouchableOpacity 
-                                style={styles.carrierDropdownItem}
-                                onPress={() => {
-                                    setCarrier("SKT");
-                                    setShowCarrierDropdown(false);
-                                }}
-                            >
-                                <ThemedText type="body1" style={{ color: Colors.white }}>SKT</ThemedText>
-                            </TouchableOpacity>
-                            <TouchableOpacity 
-                                style={styles.carrierDropdownItem}
-                                onPress={() => {
-                                    setCarrier("KT");
-                                    setShowCarrierDropdown(false);
-                                }}
-                            >
-                                <ThemedText type="body1" style={{ color: Colors.white }}>KT</ThemedText>
-                            </TouchableOpacity>
-                            <TouchableOpacity 
-                                style={styles.carrierDropdownItem}
-                                onPress={() => {
-                                    setCarrier("LG");
-                                    setShowCarrierDropdown(false);
-                                }}
-                            >
-                                <ThemedText type="body1" style={{ color: Colors.white }}>LG</ThemedText>
-                            </TouchableOpacity>
-                        </View>
-                    )}
-                </View>
-                <View style={{flexDirection:'row',gap:10,marginTop:10,marginBottom:10}}>
-                    <ThemedTextInput
-                        style={{flex:1}}
-                        type="body1"
-                        placeholder="010-1234-5678"
-                        value={phone}
-                        onChangeText={handlePhoneChange}
-                        hasError={phoneError}
-                        keyboardType="numeric"
-                    />
-                    {!showPhoneCodeInput ? (
-                        <TouchableOpacity 
-                            style={[
-                                styles.phoneCodeButton,
-                                validatePhoneNumber(phone) && !phoneError ? styles.phoneCodeButtonActive : styles.phoneCodeButtonInactive
-                            ]}
-                            onPress={() => {
-                                if (validatePhoneNumber(phone) && !phoneError) {
-                                    setShowPhoneCodeInput(true);
-                                }
-                            }}
-                            disabled={!validatePhoneNumber(phone) || phoneError}
-                        >
-                            <ThemedText 
-                                type="body1" 
-                                style={{ 
-                                    color: validatePhoneNumber(phone) && !phoneError ? Colors.white : Colors.gray4 
-                                }}
-                            >
-                                인증번호 받기
-                            </ThemedText>
-                        </TouchableOpacity>
-                    ) : (
+                    <View style={{ flexDirection: 'row', gap: 10, marginTop: 10, marginBottom: 10 }}>
                         <ThemedTextInput
-                            style={{flex:1}}
-                            type="body1"    
-                            placeholder="인증번호 입력"
-                            value={phoneCode}
-                            onChangeText={setPhoneCode}
+                            style={{ flex: 1 }}
+                            type="body1"
+                            placeholder="010-1234-5678"
+                            value={phone}
+                            onChangeText={handlePhoneChange}
+                            hasError={phoneError}
+                            keyboardType="numeric"
                         />
-                    )}
-                </View>
-                
-                {/* 스크롤 영역 하단에 여백 추가 */}
-                <View style={{ height: 100 }} />
-            </ScrollView>
+                        {!showPhoneCodeInput ? (
+                            <TouchableOpacity
+                                style={[
+                                    styles.phoneCodeButton,
+                                    validatePhoneNumber(phone) && !phoneError ? styles.phoneCodeButtonActive : styles.phoneCodeButtonInactive
+                                ]}
+                                onPress={() => {
+                                    if (validatePhoneNumber(phone) && !phoneError) {
+                                        setShowPhoneCodeInput(true);
+                                    }
+                                }}
+                                disabled={!validatePhoneNumber(phone) || phoneError}
+                            >
+                                <ThemedText
+                                    type="body1"
+                                    style={{
+                                        color: validatePhoneNumber(phone) && !phoneError ? Colors.white : Colors.gray4
+                                    }}
+                                >
+                                    인증번호 받기
+                                </ThemedText>
+                            </TouchableOpacity>
+                        ) : (
+                            <ThemedTextInput
+                                style={{ flex: 1 }}
+                                type="body1"
+                                placeholder="인증번호 입력"
+                                value={phoneCode}
+                                onChangeText={setPhoneCode}
+                            />
+                        )}
+                    </View>
+
+                    {/* 스크롤 영역 하단에 여백 추가 */}
+                    <View style={{ height: 100 }} />
+                </ScrollView>
             </KeyboardAvoidingView>
-            
+
             {/* 절대 위치 버튼 */}
             <View style={styles.buttonContainer}>
                 {isFormComplete ? (
-                    <GradientButton 
-                        style={{height:68}}
-                        title="이제 한 단계 남았어요!" 
+                    <GradientButton
+                        style={{ height: 68 }}
+                        title="이제 한 단계 남았어요!"
                         onPress={() => {
-        router.push({
+                            router.push({
                                 pathname: '/signUpRunning',
-          params: {
+                                params: {
                                     ...params,
-            name,
+                                    name,
                                     email: `${emailUsername}@${emailDomain}`,
-            password,
-            gender,
-            birthday,
+                                    password,
+                                    gender,
+                                    birthday,
                                     carrier,
                                     phone,
                                     phoneCode,
                                 },
                             });
-                        }} 
+                        }}
                     />
                 ) : (
                     <View style={styles.disabledButton}>
@@ -367,168 +367,168 @@ export default function SignUp() {
                         </ThemedText>
                     </View>
                 )}
-    </View>
+            </View>
         </SafeAreaView>
-  );
-}           
+    );
+}
 
 const styles = StyleSheet.create({
-     container: {
-         flex: 1,
-         backgroundColor: Colors.blackGray,
-     },
-     content: {
-         flex: 1,
-         paddingHorizontal: 20,
-     },
-     genderButtonsContainer: {
-         flexDirection: 'row',
-         gap: 18,
-         justifyContent: 'center',
-         alignItems: 'center',
-     },
-     genderButton: {
-         width: 150,
-         height: 50,
-         borderWidth: 1,
-         borderColor: Colors.gray1,
-         backgroundColor: Colors.gray1,
-         borderRadius: 10,
-         justifyContent: 'center',
-         alignItems: 'center',
-     },
-     genderButtonSelected: {
-         backgroundColor: Colors.primary,
-         borderColor: Colors.primary,
-     },
-     emailContainer: {
-         flexDirection: 'row',
-         alignItems: 'center',
-         marginBottom: 20,
-         
-     },
-     passwordContainer: {
+    container: {
+        flex: 1,
+        backgroundColor: Colors.blackGray,
+    },
+    content: {
+        flex: 1,
+        paddingHorizontal: 20,
+    },
+    genderButtonsContainer: {
         flexDirection: 'row',
-     },
-     emailUsernameInput: {
-         flex: 1,
-         maxWidth: '45%',
-     },
-     emailDomainContainer: {
-         flex: 1,
-         marginLeft: 0,
-         position: 'relative',
-         flexDirection: 'row',
-         alignItems: 'center',
-         maxWidth: '45%',
-         gap: 0,
-     },
-     emailDomainInput: {
-         flex: 1,
-     },
-     domainSelectButton: {
-         justifyContent: 'center',
-         alignItems: 'center',
-         width: 24,
-         height: 24,
-     },
-     dropdownContainer: {
-         position: 'absolute',
-         top: '100%',
-         left: 0,
-         backgroundColor: Colors.gray1,
-         borderRadius: 10,
-         borderWidth: 1,
-         borderColor: Colors.gray2,
-         zIndex: 1000,
-         marginTop: 5,
-         minWidth: 120,
-     },
-     dropdownItem: {
-         paddingVertical: 12,
-         paddingHorizontal: 20,
-         borderBottomWidth: 1,
-         borderBottomColor: Colors.gray2,
-         minWidth: 120,
-     },
-     buttonContainer: {
-         height:68,
-         position: 'absolute',
-         bottom: 0,
-         left: 20,
-         right: 20,
-         zIndex: 1000,
-     },
-       // KeyboardAvoidingView style
-        keyboardAvoidingView: {
-            flex: 1,
-        },
-     disabledButton: {
-         height: 68,
-         backgroundColor: Colors.gray2,
-         borderRadius: 50,
-         justifyContent: 'center',
-         alignItems: 'center',
-     },
-     carrierContainer: {
-         flexDirection: 'row',
-         alignItems: 'center',
-         marginBottom: 10,
-         position: 'relative',
-     },
-     carrierDisplay: {
-         flex: 1,
-         borderWidth: 1,
-         borderColor: Colors.gray1,
-         backgroundColor: Colors.gray1,
-         borderRadius: 10,
-         paddingVertical: 10,
-         paddingHorizontal: 20,
-         justifyContent: 'center',
-     },
-     carrierSelectButton: {
-         justifyContent: 'center',
-         alignItems: 'center',
-         width: 24,
-         height: 24,
-         marginLeft: 10,
-     },
-     carrierDropdownContainer: {
-         position: 'absolute',
-         top: '100%',
-         left: 0,
-         backgroundColor: Colors.gray1,
-         borderRadius: 10,
-         borderWidth: 1,
-         borderColor: Colors.gray2,
-         zIndex: 1000,
-         marginTop: 5,
-         minWidth: 120,
-     },
-     carrierDropdownItem: {
-         paddingVertical: 12,
-         paddingHorizontal: 20,
-         borderBottomWidth: 1,
-         borderBottomColor: Colors.gray2,
-         minWidth: 120,
-     },
-     phoneCodeButton: {
-         flex: 1,
-    borderWidth: 1,
-         borderRadius: 10,
-         justifyContent: 'center',
-         alignItems: 'center',
-         paddingVertical: 10,
-         paddingHorizontal: 20,
-     },
-     phoneCodeButtonActive: {
-         backgroundColor: Colors.primary,
-         borderColor: Colors.primary,
-     },
-     phoneCodeButtonInactive: {
-         backgroundColor: Colors.gray2,
-         borderColor: Colors.gray2,
-  },
+        gap: 18,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    genderButton: {
+        width: 150,
+        height: 50,
+        borderWidth: 1,
+        borderColor: Colors.gray1,
+        backgroundColor: Colors.gray1,
+        borderRadius: 10,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    genderButtonSelected: {
+        backgroundColor: Colors.primary,
+        borderColor: Colors.primary,
+    },
+    emailContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 20,
+
+    },
+    passwordContainer: {
+        flexDirection: 'row',
+    },
+    emailUsernameInput: {
+        flex: 1,
+        maxWidth: '45%',
+    },
+    emailDomainContainer: {
+        flex: 1,
+        marginLeft: 0,
+        position: 'relative',
+        flexDirection: 'row',
+        alignItems: 'center',
+        maxWidth: '45%',
+        gap: 0,
+    },
+    emailDomainInput: {
+        flex: 1,
+    },
+    domainSelectButton: {
+        justifyContent: 'center',
+        alignItems: 'center',
+        width: 24,
+        height: 24,
+    },
+    dropdownContainer: {
+        position: 'absolute',
+        top: '100%',
+        left: 0,
+        backgroundColor: Colors.gray1,
+        borderRadius: 10,
+        borderWidth: 1,
+        borderColor: Colors.gray2,
+        zIndex: 1000,
+        marginTop: 5,
+        minWidth: 120,
+    },
+    dropdownItem: {
+        paddingVertical: 12,
+        paddingHorizontal: 20,
+        borderBottomWidth: 1,
+        borderBottomColor: Colors.gray2,
+        minWidth: 120,
+    },
+    buttonContainer: {
+        height: 68,
+        position: 'absolute',
+        bottom: 0,
+        left: 20,
+        right: 20,
+        zIndex: 1000,
+    },
+    // KeyboardAvoidingView style
+    keyboardAvoidingView: {
+        flex: 1,
+    },
+    disabledButton: {
+        height: 68,
+        backgroundColor: Colors.gray2,
+        borderRadius: 50,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    carrierContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 10,
+        position: 'relative',
+    },
+    carrierDisplay: {
+        flex: 1,
+        borderWidth: 1,
+        borderColor: Colors.gray1,
+        backgroundColor: Colors.gray1,
+        borderRadius: 10,
+        paddingVertical: 10,
+        paddingHorizontal: 20,
+        justifyContent: 'center',
+    },
+    carrierSelectButton: {
+        justifyContent: 'center',
+        alignItems: 'center',
+        width: 24,
+        height: 24,
+        marginLeft: 10,
+    },
+    carrierDropdownContainer: {
+        position: 'absolute',
+        top: '100%',
+        left: 0,
+        backgroundColor: Colors.gray1,
+        borderRadius: 10,
+        borderWidth: 1,
+        borderColor: Colors.gray2,
+        zIndex: 1000,
+        marginTop: 5,
+        minWidth: 120,
+    },
+    carrierDropdownItem: {
+        paddingVertical: 12,
+        paddingHorizontal: 20,
+        borderBottomWidth: 1,
+        borderBottomColor: Colors.gray2,
+        minWidth: 120,
+    },
+    phoneCodeButton: {
+        flex: 1,
+        borderWidth: 1,
+        borderRadius: 10,
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingVertical: 10,
+        paddingHorizontal: 20,
+    },
+    phoneCodeButtonActive: {
+        backgroundColor: Colors.primary,
+        borderColor: Colors.primary,
+    },
+    phoneCodeButtonInactive: {
+        backgroundColor: Colors.gray2,
+        borderColor: Colors.gray2,
+    },
 });
 
 /*
