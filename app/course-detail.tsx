@@ -31,6 +31,22 @@ export default function HomeScreen() {
   const [routes, setRoutes] = useState<Route[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // GPX 좌표 파싱 함수
+  const parseGPXCoordinates = (gpxText: string) => {
+    const coordinates = [];
+    const regex = /<trkpt lat="([^"]+)" lon="([^"]+)"[^>]*\/?>/g;
+    let match;
+    
+    while ((match = regex.exec(gpxText)) !== null) {
+      const lat = parseFloat(match[1]);
+      const lon = parseFloat(match[2]);
+      coordinates.push({ latitude: lat, longitude: lon });
+    }
+    
+    console.log(`GPX에서 ${coordinates.length}개 좌표 추출`);
+    return coordinates;
+  };
+
   // 원형 좌표 생성 함수
   const generateCircleCoordinates = (centerLat: number, centerLon: number, radius: number, points: number) => {
     const coordinates = [];
@@ -177,15 +193,105 @@ export default function HomeScreen() {
 
   // 경로 데이터 초기화
   useEffect(() => {
-    const loadRoutes = () => {
+    const loadRoutes = async () => {
       setLoading(true);
       try {
-        // 테스트용 경로 데이터 생성
+        // 1단계: 경로 후보 목록 생성 요청
+        console.log('서버 API 요청 시작...');
+        const generateResponse = await fetch('https://runwhere-deploy-1.onrender.com/api/routes/generate', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            mode: 'out_back',
+            target_km: 3,
+            start: {
+              lat: 37.521021,
+              lon: 127.034989
+            },
+            count: 5
+          }),
+        });
+        
+        console.log('서버 응답 상태:', generateResponse.status);
+        
+        if (generateResponse.ok) {
+          const generateData = await generateResponse.json();
+          console.log('경로 후보 목록:', generateData);
+          
+          if (generateData && generateData.job_id && generateData.routes && generateData.routes.length > 0) {
+            const jobId = generateData.job_id;
+            const routeCandidates = generateData.routes;
+            
+            console.log(`Job ID: ${jobId}, 경로 후보 ${routeCandidates.length}개`);
+            
+            // 2단계: 각 경로의 GPX 파일 다운로드
+            const routesWithGPX = [];
+            
+            for (let i = 0; i < routeCandidates.length; i++) {
+              const route = routeCandidates[i];
+              console.log(`GPX 다운로드 중: ${jobId}/${route.idx}.gpx`);
+              
+              try {
+                const gpxResponse = await fetch(`https://runwhere-deploy-1.onrender.com/api/routes/${jobId}/${route.idx}.gpx`);
+                
+                if (gpxResponse.ok) {
+                  const gpxText = await gpxResponse.text();
+                  console.log(`GPX ${route.idx} 다운로드 성공:`, gpxText.substring(0, 200) + '...');
+                  
+                  // GPX 파싱하여 좌표 추출
+                  const coordinates = parseGPXCoordinates(gpxText);
+                  
+                  routesWithGPX.push({
+                    id: `route_${route.idx}`,
+                    name: `${route.kind} 코스 ${route.idx}`,
+                    difficulty: route.score > 0.7 ? 'hard' : route.score > 0.4 ? 'medium' : 'easy',
+                    coordinates: coordinates,
+                    distance: route.length_km,
+                    duration: Math.round(route.length_km * 6), // 6분/km 가정
+                  });
+                } else {
+                  console.error(`GPX ${route.idx} 다운로드 실패:`, gpxResponse.status);
+                }
+              } catch (error) {
+                console.error(`GPX ${route.idx} 다운로드 오류:`, error);
+              }
+            }
+            
+            if (routesWithGPX.length > 0) {
+              setRoutes(routesWithGPX);
+              console.log('서버에서 받은 경로 로딩 완료:', routesWithGPX.length, '개');
+            } else {
+              console.log('GPX 다운로드 실패로 테스트 데이터 사용');
+              const testRoutes = createTestRoutes();
+              setRoutes(testRoutes);
+            }
+          } else {
+            console.log('서버에서 경로 데이터가 없어서 테스트 데이터 사용');
+            const testRoutes = createTestRoutes();
+            setRoutes(testRoutes);
+          }
+        } else {
+          console.error('서버 응답 오류:', generateResponse.status, generateResponse.statusText);
+          
+          // 400 오류일 때 응답 본문 확인
+          try {
+            const errorText = await generateResponse.text();
+            console.error('서버 오류 응답 본문:', errorText);
+          } catch (e) {
+            console.error('응답 본문 읽기 실패:', e);
+          }
+          
+          // 서버 오류 시 테스트 데이터 사용
+          const testRoutes = createTestRoutes();
+          setRoutes(testRoutes);
+        }
+      } catch (error) {
+        console.error('API 요청 실패:', error);
+        // 네트워크 오류 시 테스트 데이터 사용
         const testRoutes = createTestRoutes();
         setRoutes(testRoutes);
-        console.log('테스트 경로 로딩 완료:', testRoutes.length, '개');
-      } catch (error) {
-        console.error('경로 로딩 실패:', error);
       } finally {
         setLoading(false);
       }
