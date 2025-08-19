@@ -33,7 +33,7 @@ export default function Login() {
             <ThemedTextInput
                 style={{marginBottom:15}}
                 type="body1"
-                placeholder="Id"
+                placeholder="이메일"
                 value={enteredId}
                 onChangeText={setEnteredId}
             />
@@ -41,9 +41,10 @@ export default function Login() {
             <ThemedTextInput
                 style={{marginBottom:15}}
                 type="body1"
-                placeholder="Password"
+                placeholder="비밀번호"
                 value={enteredPassword}
                 onChangeText={setEnteredPassword}
+                secureTextEntry={true}
             />
             <View style={styles.bottomBarContainer}>
                 <TouchableOpacity>          
@@ -99,10 +100,7 @@ const styles = StyleSheet.create({
     },
     buttonContainer: {
         height:68,
-        position: 'absolute',
-        bottom: 0,
-        left: 20,
-        right: 20,
+        marginTop: 30,
         zIndex: 1000,
     },
 });
