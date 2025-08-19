@@ -1,4 +1,3 @@
-import DistanceChips from '@/components/DistanceChips';
 import Eclipse from '@/components/EclipseSVG';
 import { ThemedText } from '@/components/ThemedText';
 import WeatherBar from '@/components/WeatherBar/WeatherBar';
@@ -7,12 +6,12 @@ import { LinearGradient } from 'expo-linear-gradient';
 import * as Location from 'expo-location';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { Image, SafeAreaView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Image, SafeAreaView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
 
 export default function CourseDetailScreen() {
   const router = useRouter();
-  const [selectedDistance, setSelectedDistance] = useState<{ id: string; label: string; value: [number, number] } | null>(null);
+  const [distanceInput, setDistanceInput] = useState("");
   const [currentLocation, setCurrentLocation] = useState<{
     latitude: number;
     longitude: number;
@@ -23,8 +22,10 @@ export default function CourseDetailScreen() {
     router.push('/course-detail');
   };
 
-  const handleDistanceChange = (item: { id: string; label: string; value: [number, number] }) => {
-    setSelectedDistance(item);
+  const handleDistanceChange = (text: string) => {
+    // 숫자만 입력 가능하도록 필터링
+    const numericText = text.replace(/[^0-9]/g, '');
+    setDistanceInput(numericText);
   };
   
   // 현재 위치 가져오기
@@ -134,10 +135,23 @@ export default function CourseDetailScreen() {
       </View>
       <ThemedText type="h2" style={{color: Colors.white, alignSelf: 'center'}}>오늘 몇km 목표이신가요?</ThemedText>
       <ThemedText type="body2" style={{color: Colors.gray4,marginTop:5,alignSelf:'center'}}>당신에게 딱 맞는 러닝 코스를 추천해드릴게요</ThemedText>
-      <DistanceChips onChange={handleDistanceChange} initialId="" />
+      
+      {/* 거리 입력 TextInput */}
+      <View style={styles.distanceInputContainer}>
+        <TextInput
+          style={styles.distanceInput}
+          value={distanceInput}
+          onChangeText={handleDistanceChange}
+          placeholder="00"
+          placeholderTextColor={Colors.gray4}
+          keyboardType="numeric"
+          maxLength={2}
+        />
+        <ThemedText type="sub1" style={{color: Colors.white, marginLeft: 10}}>km</ThemedText>
+      </View>
       
       <View style={{marginTop: 60}}>
-        {selectedDistance ? (
+        {distanceInput.trim() !== "" && distanceInput.trim() !== "00" && distanceInput.trim() !== "0" ? (
           <TouchableOpacity style={styles.CourseButton} onPress={handleHomePress}>
             <LinearGradient
               colors={['#54F895', '#2AFBEA']}
@@ -222,5 +236,23 @@ const styles = StyleSheet.create({
   gradientButtonText: {
     color: Colors.black,
     fontWeight: '600',
+  },
+  distanceInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 20,
+    marginHorizontal: 20,
+  },
+  distanceInput: {
+    borderRadius: 20,
+    width: 122,
+    height: 72,
+    backgroundColor: Colors.white,
+    paddingHorizontal: 20,
+    textAlign: 'center',
+    fontSize: 16,
+    fontWeight: '600',
+    color: Colors.blackGray,
   },
 });
