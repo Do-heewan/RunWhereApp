@@ -1,5 +1,6 @@
 import { ThemedText } from '@/components/ThemedText';
 import { Colors } from '@/constants/Colors';
+import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { Image, StyleSheet, View } from 'react-native';
 
@@ -8,17 +9,39 @@ interface RainProps {
 }
 
 export default function Rain({ precipitation }: RainProps) {
-  const getRainIcon = (precipitation: number) => {
-    if (precipitation >= 4) { return require('@/assets/images/rain_big.png'); }
-    else { return require('@/assets/images/rain.png'); }
+  const renderIcon = () => {
+    if (precipitation === 0) {
+      // 강수량이 0일 때 해 아이콘 표시
+      return (
+        <Ionicons 
+          name="sunny" 
+          size={32} 
+          color={Colors.primary} 
+        />
+      );
+    } else if (precipitation >= 4) {
+      // 강수량이 4mm 이상일 때 큰 비 아이콘
+      return (
+        <Image 
+          source={require('@/assets/images/rain_big.png')} 
+          style={styles.icon} 
+        />
+      );
+    } else {
+      // 강수량이 1-3mm일 때 작은 비 아이콘
+      return (
+        <Image 
+          source={require('@/assets/images/rain.png')} 
+          style={styles.icon} 
+        />
+      );
+    }
   };
-
-  const rainIcon = getRainIcon(precipitation);
 
   return (
     <View style={styles.container}>
       <View style={styles.iconContainer}>
-        <Image source={rainIcon} style={styles.icon} />
+        {renderIcon()}
       </View>
       <ThemedText type="h2" style={{color: Colors.white, marginLeft: 5}}>
         {precipitation === 0 ? '--' : Math.round(precipitation) + 'mm'}
