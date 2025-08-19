@@ -12,9 +12,9 @@ export default function SignUpRunning() {
   const router = useRouter();
   const params = useLocalSearchParams();
 
-  const [nickname, setNickname] = useState("런웨어");
-  const [paceMinutes, setPaceMinutes] = useState("06");
-  const [paceSeconds, setPaceSeconds] = useState("30");
+  const [nickname, setNickname] = useState("");
+  const [paceMinutes, setPaceMinutes] = useState("");
+  const [paceSeconds, setPaceSeconds] = useState("");
   const [dontKnowPace, setDontKnowPace] = useState(false);
   const [showPaceInProfile, setShowPaceInProfile] = useState<boolean | null>(null);
 

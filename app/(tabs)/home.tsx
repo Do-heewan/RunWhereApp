@@ -3,7 +3,6 @@ import Eclipse from '@/components/EclipseSVG';
 import { ThemedText } from '@/components/ThemedText';
 import WeatherBar from '@/components/WeatherBar/WeatherBar';
 import { Colors } from '@/constants/Colors';
-import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Location from 'expo-location';
 import { useRouter } from 'expo-router';
@@ -100,15 +99,17 @@ export default function CourseDetailScreen() {
         marginHorizontal: 30,
         marginTop: 10,
       }}>
-        <TouchableOpacity>
-          <Ionicons name="chevron-down" size={35} color={Colors.primary} />
-        </TouchableOpacity>
         <ThemedText type="h2" style={{color: Colors.primary}}>
           {locationLoading ? '위치 확인 중...' : 
            currentLocation ? 
            `${currentLocation.latitude.toFixed(4)}°, ${currentLocation.longitude.toFixed(4)}°` : 
            '위치를 가져올 수 없습니다'}
         </ThemedText>
+        <TouchableOpacity
+          onPress={getCurrentLocation}
+        >
+          <Image source={require('@/assets/images/autorenew.png')} style={{ width: 35, height: 35 }} />
+        </TouchableOpacity>
       </View>
       <View style={{alignItems: 'center', position: 'relative'}}>
         {/* SVG 배경 */}
@@ -171,6 +172,7 @@ const styles = StyleSheet.create({
   headerContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     marginHorizontal: 12,
     marginVertical: 12,
     paddingTop: 10,

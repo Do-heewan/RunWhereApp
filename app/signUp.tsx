@@ -15,7 +15,7 @@ export default function SignUp() {
     const params = useLocalSearchParams();
 
   const [name, setName] = useState("");
-    const [emailUsername, setEmailUsername] = useState("runwhere");
+    const [emailUsername, setEmailUsername] = useState("");
     const [emailDomain, setEmailDomain] = useState("");
     const [showDomainDropdown, setShowDomainDropdown] = useState(false);
     const [isCustomDomain, setIsCustomDomain] = useState(true);
