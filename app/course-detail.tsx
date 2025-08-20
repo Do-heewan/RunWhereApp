@@ -32,12 +32,17 @@ export default function HomeScreen() {
   const [routes, setRoutes] = useState<Route[]>([]);
   const [loading, setLoading] = useState(true);
   const carouselRef = useRef<any>(null);
+  const isProgrammaticScroll = useRef(false);
 
   // home.tsx에서 전달받은 값들
-  // const userLatitude = Number(params.latitude as string) || 37.5665;
-  // const userLongitude = Number(params.longitude as string) || 126.9780;
+  // const userLatitude = Number(params.latitude as string) || 35.5709;
+  // const userLongitude = Number(params.longitude as string) || 129.1868;
   const userLatitude = 37.5665;
-  const userLongitude = 126.9780;
+  const userLongitude = 126.9780; //서울
+
+  // const userLatitude = 35.5709;
+  // const userLongitude = 129.1868; //울산
+
   const userDistance = Number(params.distance as string) || 5;
 
 
@@ -265,9 +270,47 @@ export default function HomeScreen() {
     loadRoutes();
   }, []);
 
-  // 선택된 스타일 (기본값: aquarelle)
+  // 캐러셀 아이템 변경 시 호출 (사용자 스와이프만 처리)
   const onSnapToItem = (index: number) => {
+    if (!isProgrammaticScroll.current) {
+      setCurrentIndex(index);
+    }
+  };
+
+  // 이전 버튼 클릭
+  const handlePrevious = () => {
+    if (currentIndex > 0) {
+      const newIndex = currentIndex - 1;
+      isProgrammaticScroll.current = true;
+      setCurrentIndex(newIndex);
+      carouselRef.current?.scrollTo({ index: newIndex, animated: true });
+      setTimeout(() => {
+        isProgrammaticScroll.current = false;
+      }, 100);
+    }
+  };
+
+  // 다음 버튼 클릭
+  const handleNext = () => {
+    if (currentIndex < routes.length - 1) {
+      const newIndex = currentIndex + 1;
+      isProgrammaticScroll.current = true;
+      setCurrentIndex(newIndex);
+      carouselRef.current?.scrollTo({ index: newIndex, animated: true });
+      setTimeout(() => {
+        isProgrammaticScroll.current = false;
+      }, 100);
+    }
+  };
+
+  // 인디케이터 클릭
+  const handleIndicatorPress = (index: number) => {
+    isProgrammaticScroll.current = true;
     setCurrentIndex(index);
+    carouselRef.current?.scrollTo({ index: index, animated: true });
+    setTimeout(() => {
+      isProgrammaticScroll.current = false;
+    }, 100);
   };
 
   const handleMapPress = (index: number) => {
@@ -299,7 +342,7 @@ export default function HomeScreen() {
         <View style={styles.loadingContainer}>
           <ThemedText type="body1" style={{ color: Colors.white }}>경로를 불러오는 중...</ThemedText>
         </View>
-      ) : (
+      ) : routes.length > 0 ? (
         <>
           <Carousel
             ref={carouselRef}
@@ -312,7 +355,6 @@ export default function HomeScreen() {
               parallaxScrollingOffset: 70,
             }}
             loop={false}
-            defaultIndex={currentIndex}
             onSnapToItem={onSnapToItem}
             renderItem={({ item, index }) => (
               <View style={styles.carouselItem}>
@@ -344,48 +386,44 @@ export default function HomeScreen() {
                   </Marker>
                   
                   {/* 경로 폴리라인 */}
+                  <Polyline
+                    coordinates={item.coordinates}
+                    strokeColor={Colors.gray2}
+                    strokeWidth={5}
+                    lineDashPattern={[1]}
+                    zIndex={1}
+                  />
                   
-                    {/* 테두리 폴리라인 */}
-                    <Polyline
-                      coordinates={item.coordinates}
-                      strokeColor={Colors.gray2}
-                      strokeWidth={5}
-                      lineDashPattern={[1]}
-                      zIndex={1}
-                    />
-                    
-                    {/* 그라데이션 폴리라인 */}
-                    <GradientPolyline
-                      coordinates={item.coordinates}
-                      strokeWidth={3}
-                      colors={['#54F895', '#2AFBEA']}
-                    />
-                  
+                  <GradientPolyline
+                    coordinates={item.coordinates}
+                    strokeWidth={3}
+                    colors={['#54F895', '#2AFBEA']}
+                  />
                 </MapView>
               </View>
             )}
           />
+          
+          {/* 인디케이터 */}
           <View style={styles.indicatorContainer}>
             {routes.map((_, index) => (
-              <View
+              <TouchableOpacity
                 key={index}
                 style={[
                   styles.indicator,
                   index === currentIndex && styles.activeIndicator,
                 ]}
+                onPress={() => handleIndicatorPress(index)}
+                activeOpacity={0.7}
               />
             ))}
           </View>
           
-          {/* 하단 컨트롤 바 */}
+          {/* 컨트롤 버튼 */}
           <View style={styles.controlBar}>
             <TouchableOpacity 
               style={styles.controlButton}
-              onPress={() => {
-                if (currentIndex > 0) {
-                  carouselRef.current?.scrollTo({ index: currentIndex - 1, animated: true });
-                }
-              }}
+              onPress={handlePrevious}
               disabled={currentIndex === 0}
             >
               <Ionicons 
@@ -403,11 +441,7 @@ export default function HomeScreen() {
             
             <TouchableOpacity 
               style={styles.controlButton}
-              onPress={() => {
-                if (currentIndex < routes.length - 1) {
-                  carouselRef.current?.scrollTo({ index: currentIndex + 1, animated: true });
-                }
-              }}
+              onPress={handleNext}
               disabled={currentIndex === routes.length - 1}
             >
               <Ionicons 
@@ -418,6 +452,10 @@ export default function HomeScreen() {
             </TouchableOpacity>
           </View>
         </>
+      ) : (
+        <View style={styles.loadingContainer}>
+          <ThemedText type="body1" style={{ color: Colors.white }}>경로를 찾을 수 없습니다.</ThemedText>
+        </View>
       )}
              {selectedMapIndex === null ? (
          <View style={styles.globalOverlay}>
