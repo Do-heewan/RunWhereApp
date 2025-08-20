@@ -19,7 +19,16 @@ export default function CourseDetailScreen() {
   const [locationLoading, setLocationLoading] = useState(true);
 
   const handleHomePress = () => {
-    router.push('/course-detail');
+    if (currentLocation && distanceInput.trim() !== "" && distanceInput.trim() !== "00" && distanceInput.trim() !== "0") {
+      router.push({
+        pathname: '/course-detail',
+        params: {
+          latitude: currentLocation.latitude.toString(),
+          longitude: currentLocation.longitude.toString(),
+          distance: distanceInput,
+        },
+      });
+    }
   };
 
   const handleDistanceChange = (text: string) => {

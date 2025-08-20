@@ -5,7 +5,7 @@ import GradientPolyline from '@/components/GradientPolyline';
 import { ThemedText } from '@/components/ThemedText';
 import { Colors } from '@/constants/Colors';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
 import { Dimensions, SafeAreaView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import MapView, { Marker, Polyline } from 'react-native-maps';
@@ -26,11 +26,17 @@ interface Route {
 
 export default function HomeScreen() {
   const router = useRouter();
+  const params = useLocalSearchParams();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedMapIndex, setSelectedMapIndex] = useState<number | null>(null);
   const [routes, setRoutes] = useState<Route[]>([]);
   const [loading, setLoading] = useState(true);
   const carouselRef = useRef<any>(null);
+
+  // home.tsx에서 전달받은 값들
+  const userLatitude = Number(params.latitude as string) || 37.5665;
+  const userLongitude = Number(params.longitude as string) || 126.9780;
+  const userDistance = Number(params.distance as string) || 5;
 
 
 
@@ -77,47 +83,48 @@ export default function HomeScreen() {
     } catch (error) {
       console.error('JSON 파일 로드 실패:', error);
       
-      // JSON 파일 로드 실패 시 기존 하드코딩된 데이터 사용
+      // JSON 파일 로드 실패 시 사용자 위치 기반 하드코딩된 데이터 사용
+      const radius = userDistance * 0.001; // 거리에 비례한 반지름
       return [
         {
           id: "route_1",
-          name: "강남 러닝 코스",
+          name: "사용자 위치 기반 코스 1",
           difficulty: "easy",
-          coordinates: generateCircleCoordinates(37.521021, 127.034989, 0.005, 20),
-          distance: 4.8,
-          duration: 29,
+          coordinates: generateCircleCoordinates(userLatitude, userLongitude, radius * 0.8, 20),
+          distance: userDistance * 0.9,
+          duration: Math.round(userDistance * 0.9 * 6),
         },
         {
           id: "route_2",
-          name: "중간 원형 코스",
+          name: "사용자 위치 기반 코스 2",
           difficulty: "medium",
-          coordinates: generateCircleCoordinates(37.522000, 127.035000, 0.005, 20),
-          distance: 3.2,
-          duration: 19,
+          coordinates: generateCircleCoordinates(userLatitude, userLongitude, radius, 20),
+          distance: userDistance,
+          duration: Math.round(userDistance * 6),
         },
         {
           id: "route_3",
-          name: "큰 원형 코스",
+          name: "사용자 위치 기반 코스 3",
           difficulty: "hard",
-          coordinates: generateCircleCoordinates(37.520000, 127.033000, 0.008, 25),
-          distance: 5.1,
-          duration: 31,
+          coordinates: generateCircleCoordinates(userLatitude, userLongitude, radius * 1.2, 25),
+          distance: userDistance * 1.1,
+          duration: Math.round(userDistance * 1.1 * 6),
         },
         {
           id: "route_4",
-          name: "작은 원형 코스",
+          name: "사용자 위치 기반 코스 4",
           difficulty: "easy",
-          coordinates: generateCircleCoordinates(37.523000, 127.037000, 0.003, 15),
-          distance: 1.9,
-          duration: 11,
+          coordinates: generateCircleCoordinates(userLatitude, userLongitude, radius * 0.6, 15),
+          distance: userDistance * 0.7,
+          duration: Math.round(userDistance * 0.7 * 6),
         },
         {
           id: "route_5",
-          name: "타원형 코스",
+          name: "사용자 위치 기반 코스 5",
           difficulty: "medium",
-          coordinates: generateCircleCoordinates(37.519000, 127.032000, 0.006, 22),
-          distance: 3.8,
-          duration: 23,
+          coordinates: generateCircleCoordinates(userLatitude, userLongitude, radius * 0.9, 22),
+          distance: userDistance * 0.8,
+          duration: Math.round(userDistance * 0.8 * 6),
         },
       ];
     }
@@ -130,6 +137,9 @@ export default function HomeScreen() {
       try {
         // 서버 API 요청
         console.log('서버 API 요청 시작...');
+        console.log('사용자 위치:', userLatitude, userLongitude);
+        console.log('사용자 요청 거리:', userDistance, 'km');
+        
         const response = await fetch('https://runwhere-deploy-1.onrender.com/api/routes/generate', {
           method: 'POST',
           headers: {
@@ -137,12 +147,12 @@ export default function HomeScreen() {
           },
           body: JSON.stringify({
             mode: 'loop',
-            target_km: 5,
+            target_km: userDistance,
             start: {
-              lat: 37.5,
-              lon: 127.0
+              lat: userLatitude,
+              lon: userLongitude
             },
-            count: 2
+            count: 5
           }),
         });
         
@@ -270,8 +280,8 @@ export default function HomeScreen() {
                   style={selectedMapIndex === index ? styles.selectedMap : styles.map}
                   mapType="standard"
                   initialRegion={{
-                    latitude: item.coordinates[0]?.latitude || 37.5665,
-                    longitude: item.coordinates[0]?.longitude || 126.9780,
+                    latitude: item.coordinates[0]?.latitude || userLatitude,
+                    longitude: item.coordinates[0]?.longitude || userLongitude,
                     latitudeDelta: 0.02,
                     longitudeDelta: 0.02,
                   }}
