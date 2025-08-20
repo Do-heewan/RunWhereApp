@@ -9,8 +9,9 @@ import {
   TouchableOpacity, View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { db } from '../../backend/db/firebase';
+import { auth, db } from '../../backend/db/firebase';
 import Eclipse from '../../components/EclipseSVG'; //background Image
+import { LikeIcon, LikeIconActive, StarIcon, StarIconActive } from '../../components/IconSVG';
 import { ThemedText } from '../../components/ThemedText';
 import { Colors } from '../../constants/Colors';
 
@@ -22,9 +23,9 @@ type SneakerItem = {
   rating: number;
   backgroundColor: string;
   user?: {
+    uid: string;
     name: string;
     avatar: string;
-    location: string;
   };
   description?: string;
   timeAgo?: string;
@@ -146,35 +147,41 @@ export default function RunwearPage() {
   );
 
   const renderPost = (post: SneakerItem) => {
+    const p: any = post;
+
     const isLiked = likedPosts.has(post.id);
+    const currentUid = auth.currentUser?.uid;
+    // const isOwner = p.user?.uid === currentUid;
+
+    console.log(p.user?.name, p.review);
 
     return (
-      <View key={post.id} style={styles.postContainer}>
+      <View key={p.id} style={styles.postContainer}>
         {/* User Header - Use default values if no user data */}
         <View style={styles.userHeader}>
           <View style={styles.userInfo}>
-            {post.user?.avatar ? (
+            {p.user?.avatar ? (
               <Image
-                source={{ uri: post.user.avatar }}
+                source={{ uri: p.user.avatar }}
                 style={styles.userAvatar}
               />
             ) : (
               <View style={styles.noUser}>
                 <ThemedText type="body2" style={styles.avatarInitial}>
-                  {post.user?.name?.charAt(0).toUpperCase() || '철'}
+                  {p.user?.name?.charAt(0).toUpperCase() || '철'}
                 </ThemedText>
               </View>
             )}
             <View style={styles.userDetails}>
               <ThemedText type="sub1" style={styles.userName}>
-                {post.user?.name || '기록왕철수'}
+                {p.user?.name || '기록왕철수'}
               </ThemedText>
-              <View style={styles.locationRow}>
+              {/* <View style={styles.locationRow}>
                 <Ionicons name="location" size={12} color={Colors.gray2} />
                 <ThemedText type="body3" style={styles.userLocation}>
-                  {post.user?.location || '서울특별시 성동구'}
+                  {p.user?.location || '서울특별시 성동구'}
                 </ThemedText>
-              </View>
+              </View> */}
             </View>
           </View>
           <TouchableOpacity
@@ -182,10 +189,10 @@ export default function RunwearPage() {
           onPress={() => router.push({
             pathname: '/community/editRunwear',
             params: {
-            id: post.id.toString(),
-            description: post.description || '',
-            rating: post.rating.toString(),
-            imageUri: post.image.uri,
+            id: p.id.toString(),
+            description: p.description || '',
+            rating: p.rating.toString(),
+            imageUri: p.image.uri,
           }
           })}
         >
@@ -202,7 +209,7 @@ export default function RunwearPage() {
           <View style={styles.likeOverlay}>
             <TouchableOpacity 
               style={styles.likeButton}
-              onPress={() => toggleLike(post.id)}
+              onPress={() => toggleLike(p.id)}
             >
               <ThemedText type="body3" style={[
                 styles.likeCount, 
@@ -226,7 +233,7 @@ export default function RunwearPage() {
 
         {/* Description */}
         <ThemedText type="body2" style={styles.description}>
-          {post.description || '이 러닝화 정말 좋아요!'}
+          {p.review || '이 러닝화 정말 좋아요!'}
         </ThemedText>
       </View>
     );
@@ -243,7 +250,7 @@ export default function RunwearPage() {
         >
           <Ionicons name="chevron-back" size={24} color={Colors.white} />
         </TouchableOpacity>
-        <ThemedText type="h1" style={styles.headerTitle}>러닝템</ThemedText>
+        <ThemedText type="h1" style={styles.headerTitle}>마이 러닝템</ThemedText>
         <View style={styles.headerRight} />
       </View>
       {/* Posts List */}

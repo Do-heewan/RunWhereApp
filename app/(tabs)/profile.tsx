@@ -1,9 +1,9 @@
-import { ThemedText } from '../../components/ThemedText';
-import { Colors } from '../../constants/Colors';
+import { auth, db } from '@/backend/db/firebase';
+import { ChatNotificationIcon } from '@/components/IconSVG';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { signOut } from 'firebase/auth';
-import { GeoPoint,collection, doc, getDoc, getDocs, query, where } from 'firebase/firestore';
+import { GeoPoint, collection, doc, getDoc, getDocs, query, where } from 'firebase/firestore';
 import React, { useEffect, useState } from 'react';
 import {
   Alert,
@@ -14,8 +14,8 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { auth, db } from '@/backend/db/firebase';
-import { ChatNotificationIcon } from '@/components/IconSVG';
+import { ThemedText } from '../../components/ThemedText';
+import { Colors } from '../../constants/Colors';
 
 
 // Type for StatItem props

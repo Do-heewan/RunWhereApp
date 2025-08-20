@@ -1,12 +1,12 @@
 import Eclipse from '@/components/EclipseSVG'; //background Image
-import { ThemedText } from '@/components/ThemedText';
-import { Colors } from '@/constants/Colors';
-import ThemedTextInput from '@/components/ThemedTextInput';
 import GradientButton from '@/components/GradientButton';
+import { ThemedText } from '@/components/ThemedText';
+import ThemedTextInput from '@/components/ThemedTextInput';
+import { Colors } from '@/constants/Colors';
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
-import { Alert, Button, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { signInWithEmailAndPassword } from "firebase/auth";
+import { useState } from 'react';
+import { Alert, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { auth } from "../backend/db/firebase";
 
@@ -22,7 +22,7 @@ export default function Login() {
             Alert.alert('로그인 성공!', `런웨어로 돌아오셨군요!, ${userCredential.user.email}`);
             router.push('/home');
         } catch (error) {
-            console.error('로그인 실패:', error);
+            // console.error('로그인 실패:', error);
             Alert.alert('로그인 실패', 'ID 또는 비밀번호가 잘못되었습니다.');
         }
     };

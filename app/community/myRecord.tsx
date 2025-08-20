@@ -1,31 +1,29 @@
-import Eclipse from '../../components/EclipseSVG'; //background Image
-import { ThemedText } from '../../components/ThemedText';
-import ThemedTextInput from '../../components/ThemedTextInput';
-import { Colors } from '../../constants/Colors';
-import CustomAlert from '@/components/CustomAlert';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
+import { onAuthStateChanged } from 'firebase/auth';
 import { collection, doc, onSnapshot, orderBy, query, updateDoc } from 'firebase/firestore';
 import React, { useEffect, useState } from 'react';
 import {
   Image,
   ScrollView,
   StyleSheet,
+  Text,
   TouchableOpacity,
   View,
-  Text,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { db } from '../../backend/db/firebase';
+import { auth, db } from '../../backend/db/firebase';
+import Eclipse from '../../components/EclipseSVG'; //background Image
 import { LikeIcon, LikeIconActive } from '../../components/IconSVG';
+import { ThemedText } from '../../components/ThemedText';
+import { Colors } from '../../constants/Colors';
 
 type ShareRecordPost = {
   id: number;
-  docId: string; 
   user?: {
+    uid: string;
     name: string;
     avatar: string;
-    location: string;
   };
   image: { uri: string };
   likes: number;
@@ -34,8 +32,8 @@ type ShareRecordPost = {
 };
 
 // Function to update likes in Firestore
-async function updateRecordLikes(docId: string, newLikes: number) {
-  const docRef = doc(db, 'sharedRecord', docId);
+async function updateRecordLikes(id: number, newLikes: number) {
+  const docRef = doc(db, 'sharedRecord', id.toString());
   await updateDoc(docRef, { likes: newLikes });
 }
 
@@ -44,22 +42,42 @@ export default function ShareRecordPage() {
   const [shareRecordPosts, setShareRecordPosts] = useState<ShareRecordPost[]>([]);
   const [likedPosts, setLikedPosts] = useState<Set<number>>(new Set());
 
-useEffect(() => {
-  const unsubscribe = onSnapshot(
-    query(collection(db, 'sharedRecord'), orderBy('id', 'desc')),
-    snapshot => setShareRecordPosts(
-      snapshot.docs.map(doc => {
-        const data = doc.data();
-        return {
-          ...data,
-          docId: doc.id, // ← Store Firestore doc ID
-          likes: typeof data.likes === 'number' ? data.likes : 0,
-        } as ShareRecordPost;
-      })
-    )
-  );
-  return unsubscribe;
-}, []);
+  useEffect(() => {
+    let unsubscribeSnapshot: (() => void) | null = null;
+    const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
+      if (!user) {
+        setShareRecordPosts([]);
+        return;
+      }
+
+      const q = query(collection(db, 'sharedRecord'), orderBy('id', 'desc'));
+      unsubscribeSnapshot = onSnapshot(q, snapshot => {
+        const items = snapshot.docs
+          .map(d => {
+            const data = d.data() as any;
+            return {
+              ...data,
+              docId: d.id,
+              id: typeof data.id === 'number' ? data.id : (data.id ? Number(data.id) : undefined),
+              likes: typeof data.likes === 'number' ? data.likes : 0,
+            };
+          })
+          .filter(item => {
+            const ownerId = item.user?.uid || item.userId || item.uid || item.ownerId || null;
+            return ownerId === user.uid;
+          }) as ShareRecordPost[];
+
+        setShareRecordPosts(items);
+      }, err => {
+        console.warn('sharedRecord 구독 실패', err);
+      });
+    });
+
+    return () => {
+      unsubscribeAuth();
+      if (unsubscribeSnapshot) unsubscribeSnapshot();
+    };
+  }, []);
 
   const toggleLike = async (postId: number) => {
     const isCurrentlyLiked = likedPosts.has(postId);
@@ -89,38 +107,42 @@ useEffect(() => {
     // ✅ Find the post by ID to get docId
     const post = shareRecordPosts.find(item => item.id === postId);
     if (post) {
-      await updateRecordLikes(post.docId, newLikes);
+      await updateRecordLikes(post.id, newLikes);
     }
   };
+
   const renderPost = (post: ShareRecordPost) => {
-  const isLiked = likedPosts.has(post.id);
+  const p: any = post;
+
+  const isLiked = likedPosts.has(p.id);
+
   return (
-    <View key={post.id} style={styles.postContainer}>
+    <View key={p.id} style={styles.postContainer}>
       {/* User header */}
       <View style={styles.userHeader}>
         <View style={styles.userInfo}>
-          {post.user?.avatar ? (
+          {p.user?.avatar ? (
             <Image
-              source={{ uri: post.user.avatar }}
+              source={{ uri: p.user.avatar }}
               style={styles.userAvatar}
             />
           ) : (
             <View style={styles.noUser}>
               <ThemedText type="body2" style={styles.avatarInitial}>
-                {post.user?.name?.charAt(0).toUpperCase() || '철'}
+                {p.user?.name?.charAt(0).toUpperCase() || '철'}
               </ThemedText>
             </View>
           )}
           <View style={styles.userDetails}>
             <ThemedText type="sub1" style={styles.userName}>
-              {post.user?.name || '기록왕철수'}
+              {p.user?.name || '기록왕철수'}
             </ThemedText>
-            <View style={styles.locationRow}>
+            {/* <View style={styles.locationRow}>
               <Ionicons name="location" size={12} color={Colors.gray2} />
               <ThemedText type="body3" style={styles.userLocation}>
-                {post.user?.location || '서울특별시 성동구'}
+                {p.user?.location || '서울특별시 성동구'}
               </ThemedText>
-            </View>
+            </View> */}
           </View>
         </View>
         <TouchableOpacity
@@ -128,9 +150,9 @@ useEffect(() => {
           onPress={() => router.push({
             pathname: '/community/editRecord',
             params: {
-              id: post.id.toString(),
-              description: post.description || '',
-              imageUri: post.image.uri,
+              id: p.id.toString(),
+              description: p.description || '',
+              imageUri: p.image.uri,
             }
           })}
         >
@@ -139,20 +161,20 @@ useEffect(() => {
       </View>
       {/* Main image */}
       <View style={styles.imageContainer}>
-        <Image source={post.image} style={styles.postImage} />
+        <Image source={p.image} style={styles.postImage} />
 
         {/* Like overlay */}
         <View style={styles.likeOverlay}>
           <TouchableOpacity
             style={styles.likeButton}
-            onPress={() => toggleLike(post.id)}
+            onPress={() => toggleLike(p.id)}
           >
             <ThemedText type="body3" style={[
               styles.likeCount,
               { color: isLiked ? Colors.primary : Colors.gray4 }
             ]}>
               {/* Fix for NaN - ensure it's always a valid number */}
-              {post.likes && typeof post.likes === 'number' ? post.likes : 0}
+              {p.likes && typeof p.likes === 'number' ? p.likes : 0}
             </ThemedText>
             {isLiked ? (
               <LikeIconActive width={18} height={17} />
@@ -165,7 +187,7 @@ useEffect(() => {
 
       {/* Description */}
       <ThemedText type="body2" style={styles.description}>
-        {post.description || '새벽 10 km 기록! 기분 최고🔥'}
+        {p.review || '새벽 10 km 기록! 기분 최고🔥'}
       </ThemedText>
     </View>
   );
@@ -181,7 +203,7 @@ useEffect(() => {
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
           <Ionicons name="chevron-back" size={24} color={Colors.white} />
         </TouchableOpacity>
-        <ThemedText type="h1" style={styles.headerTitle}>기록공유</ThemedText>
+        <ThemedText type="h1" style={styles.headerTitle}>마이 기록공유</ThemedText>
         <View style={styles.headerRight} />
       </View>
 
