@@ -1,17 +1,19 @@
+import { ThemedText } from '@/components/ThemedText';
+import { Colors } from '@/constants/Colors';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
+import { onAuthStateChanged } from 'firebase/auth';
+import { collection, doc, getDoc, getDocs, onSnapshot, orderBy, query, updateDoc } from 'firebase/firestore';
 import React, { useEffect, useState } from 'react';
 import {
   Image, ScrollView, StyleSheet,
-  TouchableOpacity, View,Text
+  Text,
+  TouchableOpacity, View
 } from 'react-native';
-import { LikeIcon, LikeIconActive, StarIcon, StarIconActive } from '../../components/IconSVG';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { auth, db } from '../../backend/db/firebase';
 import Eclipse from '../../components/EclipseSVG';
-import { Colors } from '@/constants/Colors';
-import { ThemedText } from '@/components/ThemedText';
-import { collection, onSnapshot, orderBy, query, getDocs, updateDoc } from 'firebase/firestore';
-import { db } from '../../backend/db/firebase';
+import { LikeIcon, LikeIconActive, StarIcon, StarIconActive } from '../../components/IconSVG';
 
 // Updated type to match database structure
 type SneakerItem = {
@@ -42,21 +44,58 @@ export default function RunwearPage() {
   const [sneakerPosts, setSneakerPosts] = useState<SneakerItem[]>([]);
   const [likedPosts, setLikedPosts] = useState<Set<number>>(new Set());
 
-  useEffect(() => {
-    const unsubscribe = onSnapshot(
-      query(collection(db, 'runwearItem'), orderBy('id', 'desc')),
-      snapshot =>
-        setSneakerPosts(snapshot.docs.map(doc => {
-          const data = doc.data();
-          return {
-            ...data,
-            likes: typeof data.likes === 'number' ? data.likes : 0,
-          } as SneakerItem;
-        }))
-    );
-    return unsubscribe;
-  }, []);
+  const [profile, setProfile] = useState<any>(null);
+    
+    // 현재사용자 글만 구독해서 가져오기
+    useEffect(() => {
+      let unsubscribeSnapshot: (() => void) | null = null;
+      const unsubscribeAuth = onAuthStateChanged(auth, async (user) => {
+        if (!user) {
+          setProfile(null);
+          setSneakerPosts([]);
+          return;
+        }
 
+        // 프로필 가져오기
+        try {
+          const userDoc = await getDoc(doc(db, `users/${user.uid}`));
+          if (userDoc.exists()) setProfile(userDoc.data());
+        } catch (err) {
+          console.warn('프로필 로드 실패', err);
+        }
+
+        // 모든 runwearItem을 구독한 뒤 클라이언트에서 현재 유저가 쓴 글만 필터
+        const q = query(collection(db, 'runwearItem'), orderBy('id', 'desc'));
+        unsubscribeSnapshot = onSnapshot(q, snapshot => {
+          const items = snapshot.docs
+            .map(d => {
+              const data = d.data() as any;
+              return {
+                ...data,
+                _docId: d.id,
+                id: data.id ?? d.id,
+              };
+            })
+            .filter(item => {
+              const ownerId = item.user?.uid || item.userId || item.uid || item.ownerId || null;
+              return ownerId === auth.currentUser?.uid;
+            })
+            .map(item => ({
+              ...item,
+              likes: typeof item.likes === 'number' ? item.likes : 0,
+            })) as SneakerItem[];
+
+          setSneakerPosts(items);
+        }, err => {
+          console.warn('runwearItem 구독 실패', err);
+        });
+      });
+
+      return () => {
+        unsubscribeAuth();
+        if (unsubscribeSnapshot) unsubscribeSnapshot();
+      };
+    }, []);
 
   const toggleLike = async (postId: number) => {
     // Calculate like action BEFORE updating likedPosts

@@ -234,18 +234,18 @@ export default function CommunityPage() {
   }
 
   const renderGalleryTile = (item: ShareRecord) => (
-  <TouchableOpacity 
-    onPress={() => router.push({
-      pathname: '/community/record',
-      params: { 
-        recordId: item.id.toString() // Pass the record ID
-      }
-    })}
-    key={item.id} 
-    style={styles.galleryTile}
-  >
-    <Image source={item.image} style={styles.galleryImg} />
-  </TouchableOpacity>
+    <TouchableOpacity
+      onPress={() => router.push({
+        pathname: '/community/record',
+        params: {
+          recordId: item.id.toString() // Pass the record ID
+        }
+      })}
+      key={item.id}
+      style={styles.galleryTile}
+    >
+      <Image source={item.image} style={styles.galleryImg} />
+    </TouchableOpacity>
   )
 
   const renderFlashRunCard = (item: FlashRunEvent) => {

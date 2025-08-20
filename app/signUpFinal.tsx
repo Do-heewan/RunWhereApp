@@ -45,6 +45,7 @@ export default function SignUpFinal() {
           latitude: latitude,
           longitude: longitude,
         },
+        avatar : "",
       });
       router.replace("/login");
     } catch (e) {
