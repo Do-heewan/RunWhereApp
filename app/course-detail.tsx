@@ -35,14 +35,8 @@ export default function HomeScreen() {
   const isProgrammaticScroll = useRef(false);
 
   // home.tsx에서 전달받은 값들
-  // const userLatitude = Number(params.latitude as string) || 35.5709;
-  // const userLongitude = Number(params.longitude as string) || 129.1868;
-  const userLatitude = 37.5665;
-  const userLongitude = 126.9780; //서울
-
-  // const userLatitude = 35.5709;
-  // const userLongitude = 129.1868; //울산
-
+  const userLatitude = Number(params.latitude as string) || 37.5665;
+  const userLongitude = Number(params.longitude as string) || 126.9780;
   const userDistance = Number(params.distance as string) || 5;
 
 
@@ -335,12 +329,17 @@ export default function HomeScreen() {
           <Ionicons name="chevron-back" size={35} color="white" />
         </TouchableOpacity>
       </View>
+      {loading!? 
+      <></> :
+      <>
       <ThemedText type="h2" style={{ color: Colors.white, alignSelf: 'center' }}>추천 러닝 코스</ThemedText>
       <ThemedText type="body2" style={{ color: Colors.white, alignSelf: 'center' }}>당신과 딱 맞는 {routes.length}가지 동선을 가져왔어요</ThemedText>
+      </>
+      }
       
       {loading ? (
         <View style={styles.loadingContainer}>
-          <ThemedText type="body1" style={{ color: Colors.white }}>경로를 불러오는 중...</ThemedText>
+          <ThemedText type="body1" style={{ color: Colors.white, textAlign: 'center' }}>경로를 불러오는 중...</ThemedText>
         </View>
       ) : routes.length > 0 ? (
         <>
@@ -600,6 +599,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    marginTop: -100, // 더 위쪽으로 이동하여 화면 중앙에 위치
   },
   routeInfo: {
     position: 'absolute',

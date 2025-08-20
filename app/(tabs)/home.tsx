@@ -3,7 +3,6 @@ import { ThemedText } from '@/components/ThemedText';
 import WeatherBar from '@/components/WeatherBar/WeatherBar';
 import { Colors } from '@/constants/Colors';
 import { LinearGradient } from 'expo-linear-gradient';
-import * as Location from 'expo-location';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { Image, Keyboard, SafeAreaView, StyleSheet, TextInput, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
@@ -12,19 +11,27 @@ import Svg, { Circle } from 'react-native-svg';
 export default function CourseDetailScreen() {
   const router = useRouter();
   const [distanceInput, setDistanceInput] = useState("");
-  const [currentLocation, setCurrentLocation] = useState<{
+  const [selectedLocation, setSelectedLocation] = useState<{
     latitude: number;
     longitude: number;
+    name: string;
   } | null>(null);
-  const [locationLoading, setLocationLoading] = useState(true);
+  const [showLocationSelector, setShowLocationSelector] = useState(false);
+
+  // 도시 데이터 정의
+  const cities = [
+    { name: '서울 시내', latitude: 37.5665, longitude: 126.9780 },
+    { name: '울산', latitude: 35.5384, longitude: 129.3114 },
+    { name: '부산', latitude: 35.1796, longitude: 129.0756 },
+  ];
 
   const handleHomePress = () => {
-    if (currentLocation && distanceInput.trim() !== "" && distanceInput.trim() !== "00" && distanceInput.trim() !== "0") {
+    if (selectedLocation && distanceInput.trim() !== "" && distanceInput.trim() !== "00" && distanceInput.trim() !== "0") {
       router.push({
         pathname: '/course-detail',
         params: {
-          latitude: currentLocation.latitude.toString(),
-          longitude: currentLocation.longitude.toString(),
+          latitude: selectedLocation.latitude.toString(),
+          longitude: selectedLocation.longitude.toString(),
           distance: distanceInput,
         },
       });
@@ -36,58 +43,21 @@ export default function CourseDetailScreen() {
     const numericText = text.replace(/[^0-9]/g, '');
     setDistanceInput(numericText);
   };
-  
-  // 현재 위치 가져오기
-  const getCurrentLocation = async () => {
-    try {
-      setLocationLoading(true);
-      
-      // 위치 권한 요청
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') {
-        console.error('위치 권한이 거부되었습니다.');
-        // 기본 위치 설정 (울산)
-        setCurrentLocation({
-          latitude: 35.5384,
-          longitude: 129.3114,
-        });
-        setLocationLoading(false);
-        return;
-      }
 
-      // 현재 위치 가져오기
-      const location = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.High,
-      });
-
-      const { latitude, longitude } = location.coords;
-      
-      // 위치 정보 저장
-      setCurrentLocation({
-        latitude,
-        longitude,
-      });
-
-      // 콘솔에 위치 정보 출력
-      console.log('=== 현재 위치 정보 ===');
-      console.log('위도 (Latitude):', latitude);
-      console.log('경도 (Longitude):', longitude);
-      console.log('========================');
-
-    } catch (error) {
-      console.error('위치 가져오기 실패:', error);
-      // 에러 시 기본 위치 설정 (울산)
-      setCurrentLocation({
-        latitude: 35.5384,
-        longitude: 129.3114,
-      });
-    } finally {
-      setLocationLoading(false);
-    }
+  // 도시 선택 토글
+  const toggleLocationSelector = () => {
+    setShowLocationSelector(!showLocationSelector);
   };
 
+  // 도시 선택
+  const selectCity = (city: { name: string; latitude: number; longitude: number }) => {
+    setSelectedLocation(city);
+    setShowLocationSelector(false);
+  };
+
+  // 초기 위치 설정 (서울로 기본 설정)
   useEffect(() => {
-    getCurrentLocation();
+    setSelectedLocation(cities[0]);
   }, []); 
 
   return (
@@ -96,10 +66,10 @@ export default function CourseDetailScreen() {
         <Eclipse />
         {/* 현재 위도, 경도값이 고정되어있는데, 처음에 회원가입할때 위치 정보를 저장해놓았다가 쓰는 것이 좋을 듯함. 매번 api 호출 해야하는건 좋지 않음. */}
         <View style={styles.headerContainer}>
-          {currentLocation && (
+          {selectedLocation && (
             <WeatherBar 
-              latitude={currentLocation.latitude} 
-              longitude={currentLocation.longitude} 
+              latitude={selectedLocation.latitude} 
+              longitude={selectedLocation.longitude} 
             />
           )}
         </View>     
@@ -111,17 +81,41 @@ export default function CourseDetailScreen() {
           marginTop: 10,
         }}>
           <ThemedText type="h2" style={{color: Colors.primary}}>
-            {locationLoading ? '위치 확인 중...' : 
-             currentLocation ? 
-             `${currentLocation.latitude.toFixed(4)}°, ${currentLocation.longitude.toFixed(4)}°` : 
-             '위치를 가져올 수 없습니다'}
+            {selectedLocation ? selectedLocation.name : '위치를 선택해주세요'}
           </ThemedText>
           <TouchableOpacity
-            onPress={getCurrentLocation}
+            onPress={toggleLocationSelector}
+            style={{ marginLeft: 10 }}
           >
             <Image source={require('@/assets/images/autorenew.png')} style={{ width: 35, height: 35 }} />
           </TouchableOpacity>
         </View>
+        
+        {/* 도시 선택 드롭다운 */}
+        {showLocationSelector && (
+          <View style={styles.locationSelector}>
+            {cities.map((city, index) => (
+              <TouchableOpacity
+                key={index}
+                style={[
+                  styles.cityOption,
+                  selectedLocation?.name === city.name && styles.selectedCityOption
+                ]}
+                onPress={() => selectCity(city)}
+              >
+                <ThemedText 
+                  type="body1" 
+                  style={[
+                    styles.cityText,
+                    selectedLocation?.name === city.name && styles.selectedCityText
+                  ]}
+                >
+                  {city.name}
+                </ThemedText>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
         <View style={{alignItems: 'center', position: 'relative'}}>
           {/* SVG 배경 */}
           <Svg 
@@ -265,5 +259,29 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: Colors.blackGray,
+  },
+  locationSelector: {
+    marginHorizontal: 30,
+    marginTop: 10,
+    backgroundColor: Colors.gray2,
+    borderRadius: 10,
+    padding: 10,
+  },
+  cityOption: {
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    marginBottom: 8,
+  },
+  selectedCityOption: {
+    backgroundColor: Colors.primary,
+  },
+  cityText: {
+    color: Colors.white,
+    textAlign: 'center',
+  },
+  selectedCityText: {
+    color: Colors.blackGray,
+    fontWeight: '600',
   },
 });
