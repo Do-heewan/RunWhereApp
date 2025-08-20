@@ -1,10 +1,12 @@
 import CustomMarker from '@/components/CustomMarker';
 import GradientButton from '@/components/GradientButton';
 import GradientPolyline from '@/components/GradientPolyline';
+import { ThemedText } from '@/components/ThemedText';
 import { Colors } from '@/constants/Colors';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import React from 'react';
-import { SafeAreaView, StyleSheet, View } from 'react-native';
+import React, { useState } from 'react';
+import { SafeAreaView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import MapView, { Marker, Polyline } from 'react-native-maps';
 
 // 경로 데이터 타입 정의
@@ -23,6 +25,7 @@ interface Route {
 export default function RunningScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
+  const [showCompletionPopup, setShowCompletionPopup] = useState(false);
   
   // 선택된 경로 데이터 (실제로는 서버에서 받아올 데이터)
   const selectedRoute: Route = {
@@ -122,7 +125,11 @@ export default function RunningScreen() {
 
   const handleCompletePress = () => {
     console.log('러닝 완료!');
-    // 여기에 러닝 완료 로직 추가
+    setShowCompletionPopup(true);
+  };
+
+  const closeCompletionPopup = () => {
+    setShowCompletionPopup(false);
     router.push('/(tabs)/home');
   };
 
@@ -180,6 +187,51 @@ export default function RunningScreen() {
           textStyle={styles.completeButtonText}
         />
       </View>
+
+      {/* 러닝 완료 팝업 */}
+      {showCompletionPopup && (
+        <View style={styles.popupOverlay}>
+          <View style={styles.popupContainer}>
+            {/* 상단 태그 */}
+            <View style={styles.popupTag}>
+              <ThemedText type="body2" style={styles.popupTagText}># 이미지</ThemedText>
+            </View>
+            
+            {/* 스마트워치 이미지 */}
+            <View style={styles.watchImageContainer}>
+              <View style={styles.smartwatch}>
+                <View style={styles.watchScreen}>
+                  <ThemedText type="h1" style={styles.heartIcon}>❤️</ThemedText>
+                </View>
+              </View>
+            </View>
+            
+            {/* 축하 메시지 */}
+            <View style={styles.messageContainer}>
+              <ThemedText type="h2" style={styles.congratulationText}>
+                오늘 러닝 수고했어요!
+              </ThemedText>
+              <ThemedText type="body1" style={styles.encouragementText}>
+                오늘도 해낸 당신 정말 멋져요!
+              </ThemedText>
+            </View>
+            
+            {/* 확인 버튼 */}
+            <TouchableOpacity style={styles.confirmButton} onPress={closeCompletionPopup}>
+              <LinearGradient
+                colors={['#54F895', '#2AFBEA']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.gradientConfirmButton}
+              >
+                <ThemedText type="button1" style={styles.confirmButtonText}>
+                  확인했어요
+                </ThemedText>
+              </LinearGradient>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
     </SafeAreaView>
   );
 }
@@ -205,6 +257,94 @@ const styles = StyleSheet.create({
   completeButtonText: {
     color: Colors.blackGray,
     fontSize: 18,
+    fontWeight: '600',
+  },
+  // 팝업 스타일
+  popupOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1000,
+  },
+  popupContainer: {
+    backgroundColor: Colors.blackGray,
+    borderRadius: 20,
+    padding: 24,
+    marginHorizontal: 20,
+    alignItems: 'center',
+    minWidth: 300,
+  },
+  popupTag: {
+    backgroundColor: '#8B5CF6',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+    marginBottom: 16,
+  },
+  popupTagText: {
+    color: Colors.white,
+    fontSize: 12,
+  },
+  watchImageContainer: {
+    borderWidth: 2,
+    borderColor: '#8B5CF6',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 20,
+  },
+  smartwatch: {
+    width: 80,
+    height: 80,
+    backgroundColor: '#1F2937',
+    borderRadius: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#54F895',
+  },
+  watchScreen: {
+    width: 60,
+    height: 60,
+    backgroundColor: '#54F895',
+    borderRadius: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  heartIcon: {
+    // fontSize는 Text 컴포넌트에서만 사용 가능하므로 제거
+  },
+  messageContainer: {
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  congratulationText: {
+    color: Colors.white,
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  encouragementText: {
+    color: Colors.white,
+    textAlign: 'center',
+  },
+  confirmButton: {
+    width: '100%',
+    height: 50,
+    borderRadius: 25,
+  },
+  gradientConfirmButton: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 25,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  confirmButtonText: {
+    color: Colors.blackGray,
     fontWeight: '600',
   },
 });
