@@ -317,7 +317,20 @@ export default function HomeScreen() {
 
   const handleStartRunning = () => {
     console.log('선택된 맵:', selectedMapIndex);
-    router.push('/running');
+    if (selectedMapIndex !== null && routes[selectedMapIndex]) {
+      const selectedRoute = routes[selectedMapIndex];
+      router.push({
+        pathname: '/running',
+        params: {
+          routeId: selectedRoute.id,
+          routeName: selectedRoute.name,
+          routeDifficulty: selectedRoute.difficulty,
+          routeDistance: selectedRoute.distance.toString(),
+          routeDuration: selectedRoute.duration.toString(),
+          coordinates: JSON.stringify(selectedRoute.coordinates),
+        },
+      });
+    }
   };
 
   // 템플릿 리터럴을 사용해서 동적으로 URL 생성
