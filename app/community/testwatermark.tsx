@@ -18,12 +18,14 @@ import Svg, { Path } from 'react-native-svg';
 import ViewShot from 'react-native-view-shot';
 import Eclipse from '../../components/EclipseSVG';
 import { AddImageIcon } from '../../components/IconSVG';
-import { SafeAreaView } from 'react-native-safe-area-context';
+
+
 
 // Enable LayoutAnimation for Android
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
 }
+
 
 
 // --- Custom SVG Icons ---
@@ -49,9 +51,10 @@ const CalorieIcon = () => (
 );
 const PaceIcon = () => (
     <Svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-        <Path d="M12.05 13.375L6.125 19.3C5.925 19.5 5.6875 19.6 5.4125 19.6C5.1375 19.6 4.9 19.5 4.7 19.3C4.5 19.1 4.4 18.8625 4.4 18.5875C4.4 18.3125 4.5 18.075 4.7 17.875L13.6 9H11V10C11 10.2833 10.9042 10.5208 10.7125 10.7125C10.5208 10.9042 10.2833 11 10 11C9.71667 11 9.47917 10.9042 9.2875 10.7125C9.09583 10.5208 9 10.2833 9 10V8C9 7.71667 9.09583 7.47917 9.2875 7.2875C9.47917 7.09583 9.71667 7 10 7H14.85C15.1167 7 15.3708 7.05 15.6125 7.15C15.8542 7.25 16.0667 7.39167 16.25 7.575L19.25 10.55C19.5833 10.8833 19.9708 11.1625 20.4125 11.3875C20.8542 11.6125 21.3333 11.775 21.85 11.875C22.1333 11.925 22.3792 12.0542 22.5875 12.2625C22.7958 12.4708 22.9 12.7167 22.9 13C22.9 13.2833 22.7833 13.5167 22.55 13.7C22.3167 13.8833 22.0583 13.9583 21.775 13.925C21.025 13.825 20.3333 13.625 19.7 13.325C19.0667 13.025 18.4833 12.6167 17.95 12.1L16.95 11.05L14.75 13.25L16.075 14.575C16.3083 14.8083 16.4042 15.0875 16.3625 15.4125C16.3208 15.7375 16.1583 15.9833 15.875 16.15L11.325 18.775C11.0917 18.9083 10.8375 18.9417 10.5625 18.875C10.2875 18.8083 10.0833 18.6583 9.95 18.425C9.81667 18.1917 9.7875 17.9375 9.8625 17.6625C9.9375 17.3875 10.0917 17.1833 10.325 17.05L13.75 15.075L12.05 13.375ZM4 13C3.71667 13 3.479167 12.9042 3.2875 12.7125C3.09583 12.5208 3 12.2833 3 12C3 11.7167 3.09583 11.4792 3.2875 11.2875C3.47917 11.0958 3.71667 11 4 11H7C7.28333 11 7.52083 11.0958 7.7125 11.2875C7.90417 11.4792 8 11.7167 8 12C8 12.2833 7.90417 12.5208 7.7125 12.7125C7.52083 12.9042 7.28333 13 7 13H4ZM2 10C1.71667 10 1.47917 9.90417 1.2875 9.7125C1.09583 9.52083 1 9.28333 1 9C1 8.71667 1.09583 8.47917 1.2875 8.2875C1.47917 8.09583 1.71667 8 2 8H5C5.28333 8 5.52083 8.09583 5.7125 8.2875C5.90417 8.47917 6 8.71667 6 9C6 9.28333 5.90417 9.52083 5.7125 9.7125C5.52083 9.90417 5.28333 10 5 10H2ZM19.475 8C18.925 8 18.45 7.80417 18.05 7.4125C17.65 7.02083 17.45 6.55 17.45 6C17.45 5.45 17.65 4.97917 18.05 4.5875C18.45 4.19583 18.925 4 19.475 4C20.025 4 20.5 4.19583 20.9 4.5875C21.3 4.97917 21.5 5.45 21.5 6C21.5 6.55 21.3 7.02083 20.9 7.4125C20.5 7.80417 20.025 8 19.475 8ZM4 7C3.71667 7 3.47917 6.90417 3.2875 6.7125C3.09583 6.52083 3 6.28333 3 6C3 5.71667 3.09583 5.47917 3.2875 5.2875C3.47917 5.09583 3.71667 5 4 5H7C7.28333 5 7.52083 5.09583 7.7125 5.2875C7.90417 5.47917 8 5.71667 8 6C8 6.28333 7.90417 6.52083 7.7125 6.7125C7.52083 6.90417 7.28333 7 7 7H4Z" fill="#FFFFFF" />
+        <Path d="M12.05 13.375L6.125 19.3C5.925 19.5 5.6875 19.6 5.4125 19.6C5.1375 19.6 4.9 19.5 4.7 19.3C4.5 19.1 4.4 18.8625 4.4 18.5875C4.4 18.3125 4.5 18.075 4.7 17.875L13.6 9H11V10C11 10.2833 10.9042 10.5208 10.7125 10.7125C10.5208 10.9042 10.2833 11 10 11C9.71667 11 9.47917 10.9042 9.2875 10.7125C9.09583 10.5208 9 10.2833 9 10V8C9 7.71667 9.09583 7.47917 9.2875 7.2875C9.47917 7.09583 9.71667 7 10 7H14.85C15.1167 7 15.3708 7.05 15.6125 7.15C15.8542 7.25 16.0667 7.39167 16.25 7.575L19.25 10.55C19.5833 10.8833 19.9708 11.1625 20.4125 11.3875C20.8542 11.6125 21.3333 11.775 21.85 11.875C22.1333 11.925 22.3792 12.0542 22.5875 12.2625C22.7958 12.4708 22.9 12.7167 22.9 13C22.9 13.2833 22.7833 13.5167 22.55 13.7C22.3167 13.8833 22.0583 13.9583 21.775 13.925C21.025 13.825 20.3333 13.625 19.7 13.325C19.0667 13.025 18.4833 12.6167 17.95 12.1L16.95 11.05L14.75 13.25L16.075 14.575C16.3083 14.8083 16.4042 15.0875 16.3625 15.4125C16.3208 15.7375 16.1583 15.9833 15.875 16.15L11.325 18.775C11.0917 18.9083 10.8375 18.9417 10.5625 18.875C10.2875 18.8083 10.0833 18.6583 9.95 18.425C9.81667 18.1917 9.7875 17.9375 9.8625 17.6625C9.9375 17.3875 10.0917 17.1833 10.325 17.05L13.75 15.075L12.05 13.375ZM4 13C3.71667 13 3.47917 12.9042 3.2875 12.7125C3.09583 12.5208 3 12.2833 3 12C3 11.7167 3.09583 11.4792 3.2875 11.2875C3.47917 11.0958 3.71667 11 4 11H7C7.28333 11 7.52083 11.0958 7.7125 11.2875C7.90417 11.4792 8 11.7167 8 12C8 12.2833 7.90417 12.5208 7.7125 12.7125C7.52083 12.9042 7.28333 13 7 13H4ZM2 10C1.71667 10 1.47917 9.90417 1.2875 9.7125C1.09583 9.52083 1 9.28333 1 9C1 8.71667 1.09583 8.47917 1.2875 8.2875C1.47917 8.09583 1.71667 8 2 8H5C5.28333 8 5.52083 8.09583 5.7125 8.2875C5.90417 8.47917 6 8.71667 6 9C6 9.28333 5.90417 9.52083 5.7125 9.7125C5.52083 9.90417 5.28333 10 5 10H2ZM19.475 8C18.925 8 18.45 7.80417 18.05 7.4125C17.65 7.02083 17.45 6.55 17.45 6C17.45 5.45 17.65 4.97917 18.05 4.5875C18.45 4.19583 18.925 4 19.475 4C20.025 4 20.5 4.19583 20.9 4.5875C21.3 4.97917 21.5 5.45 21.5 6C21.5 6.55 21.3 7.02083 20.9 7.4125C20.5 7.80417 20.025 8 19.475 8ZM4 7C3.71667 7 3.47917 6.90417 3.2875 6.7125C3.09583 6.52083 3 6.28333 3 6C3 5.71667 3.09583 5.47917 3.2875 5.2875C3.47917 5.09583 3.71667 5 4 5H7C7.28333 5 7.52083 5.09583 7.7125 5.2875C7.90417 5.47917 8 5.71667 8 6C8 6.28333 7.90417 6.52083 7.7125 6.7125C7.52083 6.90417 7.28333 7 7 7H4Z" fill="#FFFFFF" />
     </Svg>
 );
+
 
 // --- Types ---
 interface RunningData {
@@ -63,6 +66,7 @@ interface RunningData {
   calorie?: string;
   heartRate?: string;
 }
+
 
 interface RunningTemplate {
   id: string;
@@ -76,10 +80,11 @@ interface RunningTemplate {
     shadowOffset: { width: number; height: number };
     shadowOpacity: number;
   };
-  layout: 'topCenter_bottomLeft' | 'stackedCenter' | 'topRight_bottomRight' | 'topLeft_center' | 'topLeft_cluster';
+  layout: 'topCenter_bottomLeft' | 'stackedCenter' | 'topRight_bottomRight' | 'topLeft_center' | 'topLeft_cluster' | 'split_cluster';
   fields: Array<keyof RunningData>;
   previewData: RunningData; 
 }
+
 
 interface BackgroundImage {
   id: string;
@@ -87,13 +92,14 @@ interface BackgroundImage {
   source: { uri: string };
 }
 
+
 // --- Data ---
 const runningTemplates: RunningTemplate[] = [
-    { id: 'topCenter_bottomLeft', name: '프로', style: { textColor: '#FFFFFF', fontSize: 24, fontWeight: 'bold', opacity: 1, shadowColor: '#000000', shadowOffset: { width: 1, height: 1 }, shadowOpacity: 0.7 }, layout: 'topCenter_bottomLeft', fields: ['distance', 'time', 'calorie', 'pace'], previewData: { distance: '30.1km', time: '1:54:11', calorie: '1966kcal', pace: "3'48\"/km" } },
-    { id: 'stackedCenter', name: '중앙 정렬', style: { textColor: '#FFFFFF', fontSize: 22, fontWeight: 'normal', opacity: 1, shadowColor: '#000000', shadowOffset: { width: 1, height: 1 }, shadowOpacity: 0.7 }, layout: 'stackedCenter', fields: ['distance', 'time', 'calorie', 'pace'], previewData: { distance: '30.1km', time: '1:54:11', calorie: '1966kcal', pace: "3'48\"/km" } },
-    { id: 'topRight_bottomRight', name: '데이터 리치', style: { textColor: '#FFFFFF', fontSize: 16, fontWeight: 'normal', opacity: 1, shadowColor: '#000000', shadowOffset: { width: 1, height: 1 }, shadowOpacity: 0.7 }, layout: 'topRight_bottomRight', fields: ['date', 'distance', 'heartRate', 'calorie', 'pace'], previewData: { date: '2025.08.20', distance: '30.1km', heartRate: '159 BPM', calorie: '535 kcal', pace: '6:01 /km' } },
-    { id: 'topLeft_center', name: '클래식', style: { textColor: '#FFFFFF', fontSize: 20, fontWeight: 'normal', opacity: 1, shadowColor: '#000000', shadowOffset: { width: 1, height: 1 }, shadowOpacity: 0.7 }, layout: 'topLeft_center', fields: ['time', 'calorie', 'pace', 'distance'], previewData: { distance: '30.1km', time: '1:54:11', calorie: '1966kcal', pace: "3'48\"/km" } },
-    { id: 'topLeft_cluster', name: '아이코닉 레프트', style: { textColor: '#FFFFFF', fontSize: 16, fontWeight: 'normal', opacity: 1, shadowColor: '#000000', shadowOffset: { width: 1, height: 1 }, shadowOpacity: 0.7 }, layout: 'topLeft_cluster', fields: ['distance', 'heartRate', 'calorie', 'pace'], previewData: { distance: '30.1km', heartRate: '159 BPM', calorie: '535 kcal', pace: '6:01 /km' } },
+    { id: 'topCenter_bottomLeft', name: '프로', style: { textColor: '#FFFFFF', fontSize: 24, fontWeight: 'bold', opacity: 1, shadowColor: '#000000', shadowOffset: { width: 1, height: 1 }, shadowOpacity: 0.7 }, layout: 'topCenter_bottomLeft', fields: ['distance', 'time', 'calorie', 'pace'], previewData: { distance: '10.0km' } },
+    { id: 'stackedCenter', name: '중앙 정렬', style: { textColor: '#FFFFFF', fontSize: 22, fontWeight: 'normal', opacity: 1, shadowColor: '#000000', shadowOffset: { width: 1, height: 1 }, shadowOpacity: 0.7 }, layout: 'stackedCenter', fields: ['distance', 'time', 'calorie', 'pace'], previewData: { distance: '10.0km', time: '55:12', pace: '5:31' } },
+    { id: 'topRight_bottomRight', name: '데이터 리치', style: { textColor: '#FFFFFF', fontSize: 16, fontWeight: 'normal', opacity: 1, shadowColor: '#000000', shadowOffset: { width: 1, height: 1 }, shadowOpacity: 0.7 }, layout: 'topRight_bottomRight', fields: ['date', 'distance', 'heartRate', 'calorie', 'pace'], previewData: { date: '2025.08.20', distance: '10.0km' } },
+    { id: 'topLeft_center', name: '클래식', style: { textColor: '#FFFFFF', fontSize: 20, fontWeight: 'normal', opacity: 1, shadowColor: '#000000', shadowOffset: { width: 1, height: 1 }, shadowOpacity: 0.7 }, layout: 'topLeft_center', fields: ['time', 'calorie', 'pace', 'distance'], previewData: { distance: '10.0km', time: '55:12' } },
+    { id: 'topLeft_cluster', name: '아이코닉 레프트', style: { textColor: '#FFFFFF', fontSize: 16, fontWeight: 'normal', opacity: 1, shadowColor: '#000000', shadowOffset: { width: 1, height: 1 }, shadowOpacity: 0.7 }, layout: 'topLeft_cluster', fields: ['distance', 'heartRate', 'calorie', 'pace'], previewData: { distance: '10.0km' } },
 ];
 
 
@@ -107,127 +113,75 @@ const RunningTemplateApp: React.FC = () => {
         { id: '5', name: 'Running', source: require('../../assets/images/runbg5.png') },
     ]);
 
+
     const [selectedBackground, setSelectedBackground] = useState('1');
-    const [selectedTemplate, setSelectedTemplate] = useState('stackedCenter');
+    const [selectedTemplate, setSelectedTemplate] = useState('split_cluster');
     const [activeTab, setActiveTab] = useState<'background' | 'template'>('template');
     const [isDataInputVisible, setIsDataInputVisible] = useState(true);
-    const [runningData, setRunningData] = useState({
-        paceMin: '06',
-        paceSec: '30',
-        distance: '3',
-        timeHr: '1',
-        timeMin: '50',
-        timeSec: '30',
-        dateMonth: '08',
-        dateDay: '20',
-        calorie: '300',
-        heartRate: '100',
+    const [runningData, setRunningData] = useState<RunningData>({
+        distance: '30.1 km',
+        time: '1:54:11',
+        calorie: '535 kcal',
+        pace: '6:01 /km',
+        date: '2025. 08. 20',
+        user: '런웨어',
+        heartRate: '159 BPM',
     });
     const viewShotRef = useRef<ViewShot>(null);
+
 
     const toggleDataInputVisibility = () => {
         LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
         setIsDataInputVisible(!isDataInputVisible);
     };
 
-    const updateField = (field: keyof typeof runningData, value: string) => {
-        setRunningData(prev => ({ ...prev, [field]: value }));
+
+    const updateField = (field: keyof RunningData, value: string) => {
+        setRunningData({ ...runningData, [field]: value });
     };
+
 
     const getCurrentDateTime = () => {
         const now = new Date();
-        updateField('dateMonth', String(now.getMonth() + 1).padStart(2, '0'));
-        updateField('dateDay', String(now.getDate()).padStart(2, '0'));
+        return `${now.getFullYear()}. ${String(now.getMonth() + 1).padStart(2, '0')}. ${String(now.getDate()).padStart(2, '0')}`;
     };
+
 
     const getCurrentBackground = () => backgroundImages.find(bg => bg.id === selectedBackground);
     const getCurrentTemplate = () => runningTemplates.find(template => template.id === selectedTemplate);
 
-    const getFormattedData = (): RunningData => ({
-        distance: `${runningData.distance} km`,
-        time: `${runningData.timeHr}:${runningData.timeMin}:${runningData.timeSec}`,
-        calorie: `${runningData.calorie} kcal`,
-        pace: `${runningData.paceMin}:${runningData.paceSec} /km`,
-        date: `2025. ${runningData.dateMonth}. ${runningData.dateDay}`,
-        heartRate: `${runningData.heartRate} BPM`,
-    });
 
     // --- Renders the main template overlay on the image ---
-    const renderRunningInfo = () => {
+    const renderRunningInfo = (data: RunningData, baseTextStyle: any) => {
         const template = getCurrentTemplate();
         if (!template) return null;
 
-        const formattedData = getFormattedData();
-        const baseTextStyle = {
-            color: template.style.textColor,
-            opacity: template.style.opacity,
-            textShadowColor: template.style.shadowColor,
-            textShadowOffset: template.style.shadowOffset,
-            textShadowRadius: template.style.shadowOpacity * 5,
-        };
 
         const renderFieldWithLabel = (label: string, value: string | undefined, textStyle: any) => (
-            value ? <View style={{ alignItems: 'center' }}>
-                <Text style={textStyle}>{value}</Text>
-                <Text style={{ ...textStyle, fontSize: textStyle.fontSize * 0.6 }}>{label}</Text>
-            </View> : null
+            value ? <View style={{ alignItems: 'center' }}><Text style={textStyle}>{value}</Text><Text style={{ ...textStyle, fontSize: textStyle.fontSize * 0.6 }}>{label}</Text></View> : null
         );
+
 
         const renderIconicStats = (textStyle: any) => (
             <View style={{ alignItems: 'flex-start', gap: 10 }}>
-                <View style={styles.iconStatRow}><FlagIcon /><Text style={{ ...textStyle, fontSize: 22, fontWeight: 'bold' }}>{formattedData.distance}</Text></View>
-                <View style={styles.iconStatRow}><HeartIcon /><Text style={textStyle}>{formattedData.heartRate}</Text></View>
-                <View style={styles.iconStatRow}><CalorieIcon /><Text style={textStyle}>{formattedData.calorie}</Text></View>
-                <View style={styles.iconStatRow}><PaceIcon /><Text style={textStyle}>{formattedData.pace}</Text></View>
+                <View style={styles.iconStatRow}><FlagIcon /><Text style={[textStyle, { color: '#FFFFFF', fontSize: 22, fontWeight: 'bold' }]}>{data.distance}</Text></View>
+                <View style={styles.iconStatRow}><HeartIcon /><Text style={[textStyle, { color: '#FFFFFF' }]}>{data.heartRate}</Text></View>
+                <View style={styles.iconStatRow}><CalorieIcon /><Text style={[textStyle, { color: '#FFFFFF' }]}>{data.calorie}</Text></View>
+                <View style={styles.iconStatRow}><PaceIcon /><Text style={[textStyle, { color: '#FFFFFF' }]}>{data.pace}</Text></View>
             </View>
         );
 
+
         switch (template.layout) {
-            case 'topCenter_bottomLeft':
-                return (
-                    <>
-                        <View style={[styles.infoOverlay, { top: 30, alignSelf: 'center' }]}><Text style={{ ...baseTextStyle, fontSize: 48, fontWeight: 'bold' }}>{formattedData.distance}</Text></View>
-                        <View style={[styles.infoOverlay, { bottom: 45, left: 45, flexDirection: 'row', gap: 20 }]}>
-                            {renderFieldWithLabel('총총시간', formattedData.time, { ...baseTextStyle, fontSize: 20, fontWeight: 'normal' })}
-                            {renderFieldWithLabel('칼로리', formattedData.calorie, { ...baseTextStyle, fontSize: 20, fontWeight: 'normal' })}
-                            {renderFieldWithLabel('평균페이스', formattedData.pace, { ...baseTextStyle, fontSize: 20, fontWeight: 'normal' })}
-                        </View>
-                    </>
-                );
-            case 'stackedCenter':
-                return (
-                    <View style={[styles.infoOverlay, { left:130, top: 0, bottom: 0, justifyContent: 'center', gap: 15,position: 'absolute', }]}>
-                        {renderFieldWithLabel('', formattedData.distance, { ...baseTextStyle, fontSize: 40, fontWeight: 'bold' })}
-                        {renderFieldWithLabel('총시간', formattedData.time, { ...baseTextStyle, fontSize: 22 })}
-                        {renderFieldWithLabel('칼로리', formattedData.calorie, { ...baseTextStyle, fontSize: 22 })}
-                        {renderFieldWithLabel('평균페이스', formattedData.pace, { ...baseTextStyle, fontSize: 22 })}
-                    </View>
-                );
-            case 'topRight_bottomRight':
-                return (
-                    <>
-                        <View style={[styles.infoOverlay, { top: 30, right: 35 }]}><Text style={{ ...baseTextStyle, fontSize: 16 }}>{formattedData.date}</Text></View>
-                        <View style={[styles.infoOverlay, { bottom: 30, right: 30 }]}>{renderIconicStats({ ...baseTextStyle, fontSize: 16 })}</View>
-                    </>
-                );
-            case 'topLeft_cluster':
-                return <View style={[styles.infoOverlay, { top: 30, left: 30 }]}>{renderIconicStats({ ...baseTextStyle, fontSize: 16 })}</View>;
-            case 'topLeft_center':
-                return (
-                    <>
-                        <View style={[styles.infoOverlay, { top: 40, left: 50, flexDirection: 'row', gap: 20 }]}>
-                            {renderFieldWithLabel('총시간', formattedData.time, { ...baseTextStyle, fontSize: 20 })}
-                            {renderFieldWithLabel('칼로리', formattedData.calorie, { ...baseTextStyle, fontSize: 20 })}
-                            {renderFieldWithLabel('평균페이스', formattedData.pace, { ...baseTextStyle, fontSize: 20 })}
-                        </View>
-                        <View style={[styles.infoOverlay, { left:110,top: 0, bottom: 0, justifyContent: 'center', alignItems: 'center' }]}>
-                            <View style={[styles.iconStatRow, { gap: 10 }]}><FlagIcon /><Text style={{ ...baseTextStyle, fontSize: 48, fontWeight: 'bold' }}>{formattedData.distance}</Text></View>
-                        </View>
-                    </>
-                );
+            case 'topCenter_bottomLeft': return (<><View style={[styles.infoOverlay, { top: 30, alignSelf: 'center' }]}><Text style={{ ...baseTextStyle, fontSize: 48, fontWeight: 'bold' }}>{data.distance}</Text></View><View style={[styles.infoOverlay, { bottom: 30, left: 30, flexDirection: 'row', gap: 20 }]}>{renderFieldWithLabel('총시간', data.time, { ...baseTextStyle, fontSize: 20, fontWeight: 'normal' })}{renderFieldWithLabel('칼로리', data.calorie, { ...baseTextStyle, fontSize: 20, fontWeight: 'normal' })}{renderFieldWithLabel('평균페이스', data.pace, { ...baseTextStyle, fontSize: 20, fontWeight: 'normal' })}</View></>);
+            case 'stackedCenter': return (<View style={[styles.infoOverlay, { top: 0, bottom: 0, justifyContent: 'center', alignItems: 'center', gap: 15 }]}>{renderFieldWithLabel('', data.distance, { ...baseTextStyle, fontSize: 40, fontWeight: 'bold' })}{renderFieldWithLabel('총시간', data.time, { ...baseTextStyle, fontSize: 22 })}{renderFieldWithLabel('칼로리', data.calorie, { ...baseTextStyle, fontSize: 22 })}{renderFieldWithLabel('평균페이스', data.pace, { ...baseTextStyle, fontSize: 22 })}</View>);
+            case 'topRight_bottomRight': case 'split_cluster': return (<><View style={[styles.infoOverlay, { top: 30, right: 30 }]}><Text style={{ ...baseTextStyle, fontSize: 16 }}>{data.date}</Text></View><View style={[styles.infoOverlay, { bottom: 30, right: 30 }]}>{renderIconicStats({ ...baseTextStyle, fontSize: 16 })}</View></>);
+            case 'topLeft_cluster': return <View style={[styles.infoOverlay, { top: 30, left: 30 }]}>{renderIconicStats({ ...baseTextStyle, fontSize: 16 })}</View>;
+            case 'topLeft_center': return (<><View style={[styles.infoOverlay, { top: 30, left: 30, flexDirection: 'row', gap: 20 }]}>{renderFieldWithLabel('총시간', data.time, { ...baseTextStyle, fontSize: 20 })}{renderFieldWithLabel('칼로리', data.calorie, { ...baseTextStyle, fontSize: 20 })}{renderFieldWithLabel('평균페이스', data.pace, { ...baseTextStyle, fontSize: 20 })}</View><View style={[styles.infoOverlay, { top: 0, bottom: 0, justifyContent: 'center', alignItems: 'center' }]}><View style={[styles.iconStatRow, { gap: 10 }]}><FlagIcon /><Text style={{ ...baseTextStyle, fontSize: 48, fontWeight: 'bold' }}>{data.distance}</Text></View></View></>);
             default: return null;
         }
     };
+
 
     // --- Renders a miniature preview of the template layout ---
     const renderTemplatePreview = (template: RunningTemplate) => {
@@ -239,19 +193,21 @@ const RunningTemplateApp: React.FC = () => {
         const SmallText = ({ children, style }: { children: React.ReactNode, style?: any }) => <Text style={[styles.templatePreviewText, previewStyles, style]}>{children}</Text>;
         const SmallField = ({ label, value, style }: { label: string, value?: string, style?: any }) => value ? <View style={{ alignItems: 'center' }}><SmallText style={style}>{value}</SmallText><SmallText style={{...style, fontSize: previewStyles.fontSize * 0.7}}>{label}</SmallText></View> : null;
 
+
         switch (template.layout) {
-            case 'topCenter_bottomLeft': return (<><View style={{ position: 'absolute', top: 10, alignSelf: 'center' }}><SmallText style={{ fontSize: 14, fontWeight: 'bold' }}>{template.previewData.distance}</SmallText></View><View style={{ position: 'absolute', bottom: 10, left: 10, flexDirection: 'row', gap: 8 }}><SmallField label="총시간" value={template.previewData.time} /><SmallField label="페이스" value={template.previewData.pace} /></View></>);
-            case 'stackedCenter': return (<View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', gap: 3 }}><SmallText style={{ fontSize: 14, fontWeight: 'bold' }}>{template.previewData.distance}</SmallText><SmallField label="총시간" value={template.previewData.time} /><SmallField label="페이스" value={template.previewData.pace} /></View>);
-            case 'topRight_bottomRight': return (<><View style={{ position: 'absolute', top: 10, right: 10 }}><SmallText>{template.previewData.date}</SmallText></View><View style={{ position: 'absolute', bottom: 10, right: 10, alignItems: 'flex-start', gap: 3 }}><SmallText style={{ fontWeight: 'bold' }}>{template.previewData.distance}</SmallText><SmallText>{template.previewData.heartRate}</SmallText></View></>);
+            case 'topCenter_bottomLeft': return (<><View style={{ position: 'absolute', top: 10, alignSelf: 'center' }}><SmallText style={{ fontSize: 18, fontWeight: 'bold' }}>{template.previewData.distance}</SmallText></View><View style={{ position: 'absolute', bottom: 10, left: 10, flexDirection: 'row', gap: 8 }}><SmallField label="시간" value={template.previewData.time} /><SmallField label="페이스" value={template.previewData.pace} /></View></>);
+            case 'stackedCenter': return (<View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', gap: 3 }}><SmallText style={{ fontSize: 14, fontWeight: 'bold' }}>{template.previewData.distance}</SmallText><SmallField label="시간" value={template.previewData.time} /><SmallField label="페이스" value={template.previewData.pace} /></View>);
+            case 'topRight_bottomRight': case 'split_cluster': return (<><View style={{ position: 'absolute', top: 10, right: 10 }}><SmallText>{template.previewData.date}</SmallText></View><View style={{ position: 'absolute', bottom: 10, right: 10, alignItems: 'flex-start', gap: 3 }}><SmallText style={{ fontWeight: 'bold' }}>{template.previewData.distance}</SmallText><SmallText>{template.previewData.heartRate}</SmallText></View></>);
             case 'topLeft_cluster': return (<View style={{ position: 'absolute', top: 10, left: 10, alignItems: 'flex-start', gap: 3 }}><SmallText style={{ fontWeight: 'bold' }}>{template.previewData.distance}</SmallText><SmallText>{template.previewData.heartRate}</SmallText></View>);
-            case 'topLeft_center': return (<><View style={{ position: 'absolute', top: 10, left: 10, flexDirection: 'row', gap: 8 }}><SmallField label="총시간" value={template.previewData.time} /></View><View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}><SmallText style={{ fontSize: 18, fontWeight: 'bold' }}>{template.previewData.distance}</SmallText></View></>);
+            case 'topLeft_center': return (<><View style={{ position: 'absolute', top: 10, left: 10, flexDirection: 'row', gap: 8 }}><SmallField label="시간" value={template.previewData.time} /></View><View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}><SmallText style={{ fontSize: 18, fontWeight: 'bold' }}>{template.previewData.distance}</SmallText></View></>);
             default: return null;
         }
     };
-
+    
     const pickImage = async () => {
         const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
         if (status !== 'granted') return alert('Permission to access gallery is required!');
+
 
         const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images, quality: 1 });
         if (!result.canceled && result.assets.length > 0) {
@@ -260,6 +216,7 @@ const RunningTemplateApp: React.FC = () => {
             setSelectedBackground(newCustomImage.id);
         }
     };
+
 
     const handleSave = async () => {
         if (!viewShotRef.current?.capture) return;
@@ -279,33 +236,41 @@ const RunningTemplateApp: React.FC = () => {
         }
     };
 
-    const MultiPartInput = ({ label, parts, unit }: { label: string, parts: Array<{ key: keyof typeof runningData, unit: string }>, unit?: string }) => (
-        <View style={styles.inputGroup}>
-            <Text style={styles.label}>{label}</Text>
-            <View style={styles.inputRow}>
-                {parts.map(part => (
-                    <React.Fragment key={part.key}>
-                        <TextInput style={styles.input} value={runningData[part.key]} onChangeText={text => updateField(part.key, text)} keyboardType="numeric" />
-                        <Text style={styles.unit}>{part.unit}</Text>
-                    </React.Fragment>
-                ))}
-                {unit && <Text style={styles.unit}>{unit}</Text>}
+
+    const renderInputForField = (field: keyof RunningData) => {
+        const placeholders = { name: '운동 이름', pace: '6:01 /km', distance: '30.1 km', time: '1:54:11', calorie: '535 kcal', user: '닉네임', heartRate: '159 BPM', date: '' };
+        const labels = { name: '제목', pace: '페이스', distance: '거리', time: '시간', calorie: '칼로리', user: '닉네임', heartRate: '심박수', date: '날짜' };
+
+
+        if (field === 'date') {
+            return (
+                <View style={styles.inputGroup} key="date">
+                    <Text style={styles.label}>날짜:</Text>
+                    <View style={styles.dateRow}>
+                        <TextInput style={[styles.input, { flex: 1 }]} value={runningData.date} onChangeText={value => updateField('date', value)} />
+                        <TouchableOpacity style={styles.nowButton} onPress={() => updateField('date', getCurrentDateTime())}><Text style={styles.nowButtonText}>오늘</Text></TouchableOpacity>
+                    </View>
+                </View>
+            );
+        }
+
+
+        return (
+            <View style={styles.inputGroup} key={field}>
+                <Text style={styles.label}>{labels[field]}:</Text>
+                <TextInput style={styles.input} value={runningData[field]} onChangeText={value => updateField(field, value)} placeholder={placeholders[field]} />
             </View>
-        </View>
-    );
+        );
+    };
 
-    const renderDataInputs = () => (
-        <View style={styles.dataInputContainer}>
-            <MultiPartInput label="페이스를 입력해주세요" parts={[{ key: 'paceMin', unit: '분' }, { key: 'paceSec', unit: '초' }]} />
-            <MultiPartInput label="거리를 입력해주세요" parts={[{ key: 'distance', unit: '' }]} unit="km" />
-            <MultiPartInput label="걸린 총시간을 입력해주세요" parts={[{ key: 'timeHr', unit: '총시간' }, { key: 'timeMin', unit: '분' }, { key: 'timeSec', unit: '초' }]} />
-            <MultiPartInput label="날짜를 입력해주세요" parts={[{ key: 'dateMonth', unit: '월' }, { key: 'dateDay', unit: '일' }]} />
-            <MultiPartInput label="소모한 칼로리를 입력해주세요" parts={[{ key: 'calorie', unit: '' }]} unit="kcal" />
-            <MultiPartInput label="심박수를 입력해주세요" parts={[{ key: 'heartRate', unit: '' }]} unit="bpm" />
-        </View>
 
-        
-    );
+    const renderDataInputs = () => {
+        const template = getCurrentTemplate();
+        return template ? template.fields.map(renderInputForField) : null;
+    };
+    
+    const currentTemplate = getCurrentTemplate();
+
 
     return (
         <View style={styles.container}>
@@ -318,14 +283,23 @@ const RunningTemplateApp: React.FC = () => {
                 </TouchableOpacity>
             </View>
 
+
             <ViewShot ref={viewShotRef} options={{ format: 'png', quality: 1.0 }} style={styles.previewContainer}>
-                <ImageBackground source={getCurrentBackground()?.source} style={styles.previewImage} imageStyle={styles.backgroundImage}>{renderRunningInfo()}</ImageBackground>
+                <ImageBackground source={getCurrentBackground()?.source} style={styles.previewImage} imageStyle={styles.backgroundImage}>
+                    {currentTemplate && renderRunningInfo(runningData, currentTemplate.style)}
+                </ImageBackground>
             </ViewShot>
 
+
             <View style={styles.tabsContainer}>
-                <TouchableOpacity style={[styles.tabButton, activeTab === 'background' && styles.activeTabButton]} onPress={() => setActiveTab('background')}><Text style={[styles.tabButtonText, activeTab === 'background' && styles.activeTabButtonText]}>배경 선택</Text></TouchableOpacity>
-                <TouchableOpacity style={[styles.tabButton, activeTab === 'template' && styles.activeTabButton]} onPress={() => setActiveTab('template')}><Text style={[styles.tabButtonText, activeTab === 'template' && styles.activeTabButtonText]}>템플릿 선택</Text></TouchableOpacity>
+                <TouchableOpacity style={[styles.tabButton, activeTab === 'background' && styles.activeTabButton]} onPress={() => setActiveTab('background')}>
+                    <Text style={[styles.tabButtonText, activeTab === 'background' && styles.activeTabButtonText]}>배경 선택</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={[styles.tabButton, activeTab === 'template' && styles.activeTabButton]} onPress={() => setActiveTab('template')}>
+                    <Text style={[styles.tabButtonText, activeTab === 'template' && styles.activeTabButtonText]}>템플릿 선택</Text>
+                </TouchableOpacity>
             </View>
+
 
             <ScrollView
                 style={styles.controlsContainer}
@@ -359,7 +333,8 @@ const RunningTemplateApp: React.FC = () => {
                             <Text style={styles.sectionTitle}>러닝정보 입력하기</Text>
                             <ChevronIcon isExpanded={isDataInputVisible} />
                         </TouchableOpacity>
-                        {isDataInputVisible && renderDataInputs()}
+                        {isDataInputVisible && <View>{renderDataInputs()}</View>}
+
 
                         <View style={styles.sectionContainer}>
                             <ScrollView horizontal showsHorizontalScrollIndicator={false} >
@@ -368,6 +343,7 @@ const RunningTemplateApp: React.FC = () => {
                                         <View style={[styles.templatePreview, selectedTemplate === template.id && styles.selectedTemplatePreview]}>
                                             {renderTemplatePreview(template)}
                                         </View>
+                                        <Text style={styles.templateName}>{template.name}</Text>
                                     </TouchableOpacity>
                                 ))}
                             </ScrollView>
@@ -379,15 +355,16 @@ const RunningTemplateApp: React.FC = () => {
     );
 };
 
+
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#000000' },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 50, paddingHorizontal: 30, paddingBottom: 15,marginTop:20 },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 50, paddingHorizontal: 30, paddingBottom: 15 },
   headerTitle: { color: '#FFFFFF', fontSize: 18, fontWeight: 'bold', flex: 1, textAlign: 'center' },
   headerSide: { width: 64 },
   headerSaveButton: { backgroundColor: '#54F895', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20 },
   headerSaveButtonText: { color: '#000', fontWeight: 'bold' },
   previewContainer: { height: 320, marginHorizontal: 20, borderRadius: 15, overflow: 'hidden', borderWidth: 1, borderColor: 'rgba(255, 255, 255, 0.2)' },
-  previewImage: { flex: 1 },
+  previewImage: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   backgroundImage: { borderRadius: 15 },
   infoOverlay: { position: 'absolute' },
   iconStatRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
@@ -401,7 +378,7 @@ const styles = StyleSheet.create({
   dropdownHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10, marginTop: 10 },
   sectionTitle: { color: '#54F895', fontSize: 16, fontWeight: 'bold' },
   backgroundItem: { marginRight: 15, alignItems: 'center' },
-  thumbnail: { width: 114, height: 95, borderRadius: 8, marginBottom: 5, overflow: 'hidden', justifyContent: 'center', alignItems: 'center' },
+  thumbnail: { width: 95, height: 95, borderRadius: 8, marginBottom: 5, overflow: 'hidden', justifyContent: 'center', alignItems: 'center' },
   selectedThumbnail: {
     borderColor: '#54F895',
     borderWidth: 2,
@@ -422,28 +399,17 @@ const styles = StyleSheet.create({
       textShadowRadius: 5,
   },
   templateItem: { marginRight: 15, alignItems: 'center' },
-  templatePreview: { width: 114, height: 95, backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: 8, marginBottom: 5, borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)', padding: 4, position: 'relative', overflow: 'hidden' },
+  templatePreview: { width: 95, height: 95, backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: 8, marginBottom: 5, borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)', padding: 4, position: 'relative', overflow: 'hidden' },
   selectedTemplatePreview: { backgroundColor: 'rgba(255, 255, 255, 0.25)', borderColor: '#54F895' },
   templateName: { color: '#FFFFFF', fontSize: 12, textAlign: 'center' },
-  selectedTemplateName: { color: '#54F895', fontWeight: 'bold' },
   templatePreviewText: { color: '#FFFFFF', opacity: 0.9, textShadowColor: 'rgba(0,0,0,0.8)', textShadowOffset: { width: 1, height: 1 }, textShadowRadius: 2, },
-  dataInputContainer: { paddingHorizontal: 10, paddingBottom: 20 },
-  inputGroup: { marginBottom: 20 },
-  label: { color: 'rgba(255,255,255,0.8)', fontSize: 16, marginBottom: 12 },
-  inputRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  input: {
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    color: '#FFFFFF',
-    paddingHorizontal: 15,
-    paddingVertical: 12,
-    borderRadius: 8,
-    fontSize: 16,
-    minWidth: 60,
-    textAlign: 'center',
-  },
-  unit: { color: 'rgba(255,255,255,0.7)', fontSize: 16 },
+  inputGroup: { marginBottom: 15 },
+  label: { color: 'rgba(255,255,255,0.7)', fontSize: 14, marginBottom: 5 },
+  input: { backgroundColor: 'rgba(255, 255, 255, 0.1)', color: '#FFFFFF', padding: 12, borderRadius: 8, fontSize: 16 },
+  dateRow: { flexDirection: 'row', alignItems: 'center' },
   nowButton: { backgroundColor: 'rgba(255, 255, 255, 0.2)', paddingHorizontal: 15, paddingVertical: 12, borderRadius: 8, marginLeft: 10 },
   nowButtonText: { color: '#FFFFFF', fontSize: 14, fontWeight: 'bold' },
 });
+
 
 export default RunningTemplateApp;

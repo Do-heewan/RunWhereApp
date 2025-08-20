@@ -22,7 +22,7 @@ export default function Login() {
             Alert.alert('로그인 성공!', `런웨어로 돌아오셨군요!, ${userCredential.user.email}`);
             router.push('/home');
         } catch (error) {
-            console.error('로그인 실패:', error);
+            console.log('로그인 실패:', error);
             Alert.alert('로그인 실패', 'ID 또는 비밀번호가 잘못되었습니다.');
         }
     };
