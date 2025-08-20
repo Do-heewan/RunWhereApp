@@ -1,30 +1,25 @@
-import { ThemedText } from '../../components/ThemedText';
-import ThemedTextInput from '../../components/ThemedTextInput';
-import { Colors } from '../../constants/Colors';
 import CustomAlert from '@/components/CustomAlert';
 import { Ionicons } from '@expo/vector-icons';
-import { useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { router } from 'expo-router';
-import { collection, doc, getDoc, getDocs,updateDoc } from 'firebase/firestore';
+import { router, useLocalSearchParams } from 'expo-router';
+import { collection, doc, getDoc, getDocs, updateDoc } from 'firebase/firestore';
 import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
-  Image,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
   StyleSheet,
   TouchableOpacity,
-  View,
- Alert
+  View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { auth, db, storage } from '../../backend/db/firebase';
+import { auth, db } from '../../backend/db/firebase';
 import Eclipse from '../../components/EclipseSVG';
 import { StarIcon, StarIconActive } from '../../components/IconSVG';
-
-
+import { ThemedText } from '../../components/ThemedText';
+import ThemedTextInput from '../../components/ThemedTextInput';
+import { Colors } from '../../constants/Colors';
 
 const EditRunwear = () => {
   const { id, description, rating: initialRating, imageUri } = useLocalSearchParams();
@@ -73,6 +68,7 @@ const EditRunwear = () => {
         review: reviewText,
         rating,
       });
+      console.log(imageUri)
       alert('수정 완료!');
       router.back();
     } else {
@@ -127,12 +123,12 @@ const handleDelete = () => {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Add Photo Section */}
+        {/* Add Photo Section
         {imageUri && (
         <View style={styles.photoBox}>
-            <Image source={{ uri: imageUri as string }} style={styles.photo} />
+          <Image source={imageUri} style={styles.photo} />
         </View>
-        )}
+        )} */}
 
         {/* Review Input */}
         <ThemedText type="sub1" style={styles.sub1Text}>텍스트 후기</ThemedText>

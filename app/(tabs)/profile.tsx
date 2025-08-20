@@ -1,5 +1,3 @@
-import { auth, db } from '@/backend/db/firebase';
-import { ChatNotificationIcon } from '@/components/IconSVG';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { signOut } from 'firebase/auth';
@@ -14,6 +12,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { auth, db } from '../../backend/db/firebase';
 import { ThemedText } from '../../components/ThemedText';
 import { Colors } from '../../constants/Colors';
 
@@ -127,12 +126,6 @@ export default function ProfileScreen() {
       <ScrollView contentContainerStyle={styles.scrollViewContent}>
         <View style={styles.profileCard}>
         <View style={styles.header}>
-            <TouchableOpacity style={styles.chatButton}>
-              <ChatNotificationIcon />
-            </TouchableOpacity>
-            <View style={styles.chatJoined}>
-              <ThemedText style={styles.chatJoinedText}>1</ThemedText>
-            </View>
         </View>
           <View style={styles.profileImageContainer}>
             {profile?.profileImageUrl ? (

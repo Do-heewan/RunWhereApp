@@ -103,7 +103,7 @@ export default function MyFlashRun() {
           <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
             <Ionicons name="chevron-back" size={24} color={Colors.white} />
           </TouchableOpacity>
-          <ThemedText type="h2" style={styles.headerTitle}>내가 만든 번개런</ThemedText>
+          <ThemedText type="h2" style={styles.headerTitle}>참여중인 번개런</ThemedText>
         <View style={styles.backButton} />
       </View>
 
@@ -124,9 +124,9 @@ export default function MyFlashRun() {
               <View style={styles.roomBody}>
                 <ThemedText type="sub1" style={styles.roomTitle}>{room.title}</ThemedText>
                 <View style={styles.roomMeta}>
-                  <ThemedText type="body3" style={styles.metaText}>운영자</ThemedText>
+                  <ThemedText type="body3" style={styles.metaText}>{room.organizer[0].name || 'null'}</ThemedText>
                   <ThemedText type="body3" style={styles.metaText}>·</ThemedText>
-                  <ThemedText type="body3" style={styles.metaText}>{room.participants ?? 0}명</ThemedText>
+                  <ThemedText type="body3" style={styles.metaText}>{room.organizer.length || 0}명</ThemedText>
                 </View>
               </View>
             </TouchableOpacity>
