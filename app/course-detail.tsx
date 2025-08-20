@@ -34,8 +34,10 @@ export default function HomeScreen() {
   const carouselRef = useRef<any>(null);
 
   // home.tsx에서 전달받은 값들
-  const userLatitude = Number(params.latitude as string) || 37.5665;
-  const userLongitude = Number(params.longitude as string) || 126.9780;
+  // const userLatitude = Number(params.latitude as string) || 37.5665;
+  // const userLongitude = Number(params.longitude as string) || 126.9780;
+  const userLatitude = 37.5665;
+  const userLongitude = 126.9780;
   const userDistance = Number(params.distance as string) || 5;
 
 
@@ -161,18 +163,55 @@ export default function HomeScreen() {
         if (response.ok) {
           const serverData = await response.json();
           console.log('서버 응답 데이터:', serverData);
+          console.log('서버 응답 데이터 타입:', typeof serverData);
+          console.log('서버 응답 데이터 키들:', Object.keys(serverData || {}));
           
-          // 서버에서 routes.json 형식으로 응답이 왔는지 확인
-          if (serverData && serverData.routes && serverData.routes.length > 0) {
-            console.log('서버에서 받은 경로 데이터 사용:', serverData.routes.length, '개');
+          // 서버 응답 구조 확인 및 안전한 처리
+          let routesArray = null;
+          
+          // 다양한 응답 형식 처리
+          if (serverData && Array.isArray(serverData)) {
+            // 배열 형태로 직접 반환된 경우
+            routesArray = serverData;
+            console.log('서버에서 배열 형태로 응답 받음:', routesArray.length, '개');
+          } else if (serverData && serverData.candidates && Array.isArray(serverData.candidates)) {
+            // candidates 객체 안에 배열이 있는 경우 (실제 경로 데이터)
+            routesArray = serverData.candidates;
+            console.log('서버에서 candidates 객체로 응답 받음:', routesArray.length, '개');
+          } else if (serverData && serverData.routes && Array.isArray(serverData.routes)) {
+            // routes 객체 안에 배열이 있는 경우
+            routesArray = serverData.routes;
+            console.log('서버에서 routes 객체로 응답 받음:', routesArray.length, '개');
+          } else if (serverData && serverData.data && Array.isArray(serverData.data)) {
+            // data 객체 안에 배열이 있는 경우
+            routesArray = serverData.data;
+            console.log('서버에서 data 객체로 응답 받음:', routesArray.length, '개');
+          }
+          
+          if (routesArray && routesArray.length > 0) {
+            console.log('서버에서 받은 경로 데이터 사용:', routesArray.length, '개');
             
             // 서버 데이터를 Route 형식으로 변환
-            const serverRoutes = serverData.routes.map((route: any) => {
-              // coords 배열에서 좌표 추출 (경도가 첫 번째, 위도가 두 번째)
-              const coordinates = route.coords.map((coord: number[]) => ({
-                latitude: coord[1],  // 두 번째 값이 위도
-                longitude: coord[0]  // 첫 번째 값이 경도
-              }));
+            const serverRoutes = routesArray.map((route: any, index: number) => {
+              console.log(`경로 ${index + 1} 데이터:`, route);
+              console.log(`경로 ${index + 1} 전체 속성:`, Object.keys(route));
+              
+              // coords 배열 확인 및 안전한 처리
+              let coordinates = [];
+              if (route.coords && Array.isArray(route.coords)) {
+                coordinates = route.coords.map((coord: number[]) => ({
+                  latitude: coord[1] || 0,  // 두 번째 값이 위도
+                  longitude: coord[0] || 0  // 첫 번째 값이 경도
+                }));
+                console.log(`경로 ${index + 1} coords 개수:`, route.coords.length);
+              } else if (route.coordinates && Array.isArray(route.coordinates)) {
+                coordinates = route.coordinates.map((coord: any) => ({
+                  latitude: coord.latitude || coord.lat || 0,
+                  longitude: coord.longitude || coord.lng || 0
+                }));
+              } else {
+                console.log(`경로 ${index + 1}에 coords 데이터가 없습니다.`);
+              }
               
               // 난이도 결정 (score 기반)
               let difficulty = 'easy';
@@ -180,22 +219,23 @@ export default function HomeScreen() {
               else if (route.score > 0.1) difficulty = 'medium';
               
               return {
-                id: `route_${route.id}`,
-                name: `${route.kind} 코스 ${route.id}`,
+                id: `route_${route.idx || route.id || index + 1}`,
+                name: `${route.kind || '러닝'} 코스 ${route.idx || route.id || index + 1}`,
                 difficulty: difficulty,
                 coordinates: coordinates,
-                distance: route.length_km,
-                duration: Math.round(route.length_km * 6), // 6분/km 가정
+                distance: route.length_km || route.distance || 5,
+                duration: Math.round((route.length_km || route.distance || 5) * 6), // 6분/km 가정
               };
             });
             
             setRoutes(serverRoutes);
             console.log('서버에서 받은 경로 로딩 완료:', serverRoutes.length, '개');
-                      } else {
-              console.log('서버에서 경로 데이터가 없어서 로컬 데이터 사용');
-              const localRoutes = createLocalRoutes();
-              setRoutes(localRoutes);
-            }
+          } else {
+            console.log('서버에서 유효한 경로 데이터가 없어서 로컬 데이터 사용');
+            console.log('서버 응답 전체:', JSON.stringify(serverData, null, 2));
+            const localRoutes = createLocalRoutes();
+            setRoutes(localRoutes);
+          }
         } else {
           console.error('서버 응답 오류:', response.status, response.statusText);
           
@@ -286,6 +326,8 @@ export default function HomeScreen() {
                     longitudeDelta: 0.02,
                   }}
                   onPress={() => handleMapPress(index)}
+                  showsUserLocation={true}
+                  showsMyLocationButton={true}
                 >
                   {/* 시작점 마커 */}
                   <Marker
